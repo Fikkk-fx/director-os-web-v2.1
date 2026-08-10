@@ -1,85 +1,76 @@
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
-import os
-import subprocess
-import json
-import tempfile
-import shutil
 from typing import Optional
+import os
+import httpx
+import base64
 
 router = APIRouter()
 
-# The path to the skills directory
-SKILLS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "skills")
+ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
+ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
+CHAT_MODEL = "openai/gpt-5.6-sol"
 
-@router.get("/skills")
-async def get_skills():
-    """Reads the skills directory and returns available skills."""
-    try:
-        skills = []
-        if os.path.exists(SKILLS_DIR):
-            for item in os.listdir(SKILLS_DIR):
-                item_path = os.path.join(SKILLS_DIR, item)
-                if os.path.isdir(item_path):
-                    # It's a folder, check if SKILL.md exists
-                    if os.path.exists(os.path.join(item_path, "SKILL.md")):
-                        skills.append({"id": item, "name": item.capitalize(), "type": "Directory"})
-                elif item.endswith(".md"):
-                    skills.append({"id": item, "name": item.replace(".md", ""), "type": "Markdown"})
-        
-        # Sort alphabetically
-        skills = sorted(skills, key=lambda x: x["name"])
-        return {"skills": skills}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+def _headers():
+    return {
+        "Authorization": f"Bearer {ATLAS_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
 
 @router.post("/chat")
 async def chat_with_agent(
     prompt: str = Form(...),
     reference_image: Optional[UploadFile] = File(None)
 ):
-    """General chat endpoint using GPT 5.6 Sol."""
-    temp_img_path = None
-    try:
-        # Save uploaded image to a temporary file if provided
-        if reference_image:
-            ext = os.path.splitext(reference_image.filename)[1] or ".png"
-            fd, temp_img_path = tempfile.mkstemp(suffix=ext)
-            with os.fdopen(fd, 'wb') as out_file:
-                shutil.copyfileobj(reference_image.file, out_file)
-                
-        # Build the command for atlas chat
-        cmd = [
-            "atlas", "chat", 
-            "--model", "openai/gpt-5.6-sol", 
-            "--system", 
-            "You are Director OS, a cinematic AI assistant. Help the user develop their film concepts, screenplays, and visual ideas."
-        ]
-        
-        # We'll use subprocess.run with shell=True for Windows compatibility
-        shell_cmd = f'atlas chat --model openai/gpt-5.6-sol --system "You are Director OS, a cinematic AI assistant. Help the user develop their film concepts, screenplays, and visual ideas."'
-        
-        if temp_img_path:
-            safe_path = temp_img_path.replace('\\', '/')
-            shell_cmd += f' --image "@{safe_path}"'
-            
-        safe_prompt = prompt.replace('"', "'")
-        shell_cmd += f' "{safe_prompt}"'
+    """Chat with GPT-5.6 Sol via Atlas Cloud /v1/chat/completions"""
+    if not ATLAS_API_KEY:
+        return {"response": "[Mock] ATLAS_API_KEY not set. Please configure it on your hosting platform."}
 
-        result = subprocess.run(shell_cmd, shell=True, capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            error_msg = result.stderr or result.stdout
-            raise HTTPException(status_code=500, detail=f"Atlas chat failed: {error_msg}")
-            
-        output = result.stdout.strip()
-        return {"response": output}
-            
+    try:
+        # Build message content
+        content: list = [{"type": "text", "text": prompt}]
+
+        if reference_image:
+            raw = await reference_image.read()
+            b64 = base64.b64encode(raw).decode("utf-8")
+            mime = reference_image.content_type or "image/png"
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{mime};base64,{b64}"}
+            })
+
+        payload = {
+            "model": CHAT_MODEL,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are Director OS, a world-class cinematic AI assistant. "
+                        "Help the user develop film concepts, write detailed screenplays, "
+                        "design characters and environments, and craft professional video prompts. "
+                        "Be specific, creative, and highly detailed in your responses."
+                    )
+                },
+                {"role": "user", "content": content}
+            ],
+            "stream": False
+        }
+
+        async with httpx.AsyncClient(timeout=120) as client:
+            r = await client.post(
+                f"{ATLAS_BASE_URL}/chat/completions",
+                headers=_headers(),
+                json=payload
+            )
+
+        if r.status_code != 200:
+            raise HTTPException(status_code=r.status_code, detail=r.text)
+
+        data = r.json()
+        text = data["choices"][0]["message"]["content"]
+        return {"response": text}
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Clean up the temporary file
-        if temp_img_path and os.path.exists(temp_img_path):
-            try:
-                os.remove(temp_img_path)
-            except Exception as e:
-                print(f"Error removing temp file {temp_img_path}: {e}")

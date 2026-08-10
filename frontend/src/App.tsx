@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video, Home, FolderKanban } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'ai';
@@ -68,11 +70,11 @@ function App() {
   }, [messagesHome, messagesImage, messagesVideo, activeTab]);
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/health')
+    axios.get(`${API_BASE}/api/health`)
       .then(() => setHealthStatus(`System: Online`))
       .catch(() => setHealthStatus(`System: Offline`));
     
-    axios.get('http://localhost:8000/api/atlas/models')
+    axios.get(`${API_BASE}/api/atlas/models`)
       .then(res => {
         setModels(res.data.models);
         const firstVideo = res.data.models.find((m: any) => m.type === 'Video');
@@ -109,7 +111,7 @@ function App() {
       formData.append('prompt', userPrompt);
       if (refFileHome) formData.append('reference_image', refFileHome);
 
-      const response = await axios.post('http://localhost:8000/api/chat', formData, {
+      const response = await axios.post(`${API_BASE}/api/chat`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
@@ -172,7 +174,7 @@ function App() {
         formData.append('reference_file', refFile);
       }
 
-      const response = await axios.post('http://localhost:8000/api/atlas/generate', formData, {
+      const response = await axios.post(`${API_BASE}/api/atlas/generate`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
