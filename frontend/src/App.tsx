@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video, Home, FolderKanban } from 'lucide-react';
+import { Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video, Home, FolderKanban, Trash2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -20,16 +20,25 @@ function App() {
   const [activeTab, setActiveTab] = useState<'Home' | 'Image' | 'Video' | 'Assets'>('Home');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
+  // Initial Welcome Messages
+  const initialWelcomeHome: ChatMessage = { id: 'welcome-home', role: 'ai', content: 'Hello, Director. I am GPT-5.6 Sol. What are we creating today?', timestamp: new Date().toLocaleTimeString() };
+  const initialWelcomeImage: ChatMessage = { id: 'welcome-image', role: 'ai', content: 'Ready to generate images. Describe your vision.', timestamp: new Date().toLocaleTimeString() };
+  const initialWelcomeVideo: ChatMessage = { id: 'welcome-video', role: 'ai', content: 'Ready to generate cinematic videos. What is the scene?', timestamp: new Date().toLocaleTimeString() };
+
+  const loadMessages = (key: string, defaultMsg: ChatMessage) => {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : [defaultMsg];
+  };
+
   // Messages State
-  const [messagesHome, setMessagesHome] = useState<ChatMessage[]>([{
-    id: 'welcome-home', role: 'ai', content: 'Hello, Director. I am GPT-5.6 Sol. What are we creating today?', timestamp: new Date().toLocaleTimeString()
-  }]);
-  const [messagesImage, setMessagesImage] = useState<ChatMessage[]>([{
-    id: 'welcome-image', role: 'ai', content: 'Ready to generate images. Describe your vision.', timestamp: new Date().toLocaleTimeString()
-  }]);
-  const [messagesVideo, setMessagesVideo] = useState<ChatMessage[]>([{
-    id: 'welcome-video', role: 'ai', content: 'Ready to generate cinematic videos. What is the scene?', timestamp: new Date().toLocaleTimeString()
-  }]);
+  const [messagesHome, setMessagesHome] = useState<ChatMessage[]>(() => loadMessages('chat_home', initialWelcomeHome));
+  const [messagesImage, setMessagesImage] = useState<ChatMessage[]>(() => loadMessages('chat_image', initialWelcomeImage));
+  const [messagesVideo, setMessagesVideo] = useState<ChatMessage[]>(() => loadMessages('chat_video', initialWelcomeVideo));
+
+  // Sync to localStorage
+  useEffect(() => { localStorage.setItem('chat_home', JSON.stringify(messagesHome)); }, [messagesHome]);
+  useEffect(() => { localStorage.setItem('chat_image', JSON.stringify(messagesImage)); }, [messagesImage]);
+  useEffect(() => { localStorage.setItem('chat_video', JSON.stringify(messagesVideo)); }, [messagesVideo]);
 
   // Prompts State
   const [promptHome, setPromptHome] = useState('');
@@ -217,6 +226,14 @@ function App() {
   const activeMessages = activeTab === 'Home' ? messagesHome : activeTab === 'Image' ? messagesImage : messagesVideo;
   const isGenerating = activeTab === 'Home' ? isGeneratingHome : activeTab === 'Image' ? isGeneratingImage : isGeneratingVideo;
   
+  const handleClearHistory = () => {
+    if (window.confirm("Are you sure you want to clear the chat history for this tab?")) {
+      if (activeTab === 'Home') setMessagesHome([initialWelcomeHome]);
+      else if (activeTab === 'Image') setMessagesImage([initialWelcomeImage]);
+      else if (activeTab === 'Video') setMessagesVideo([initialWelcomeVideo]);
+    }
+  };
+  
   return (
     <div className="app-layout">
       {/* Sidebar */}
@@ -262,7 +279,12 @@ function App() {
         <div className="main-canvas liquid-glass" style={{ flex: 1, position: 'relative' }}>
           {activeTab !== 'Assets' ? (
             <>
-              <div className="feed-area">
+              <div className="feed-area" style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
+                  <button onClick={handleClearHistory} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px' }}>
+                    <Trash2 size={14} /> Clear Chat
+                  </button>
+                </div>
                 {activeMessages.map((msg) => (
                   <div key={msg.id} className={`message ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
                     {msg.role === 'ai' && <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginBottom: '4px', fontWeight: 600 }}>{activeTab === 'Home' ? 'GPT-5.6 Sol' : `Agent ${activeTab}`}</div>}
