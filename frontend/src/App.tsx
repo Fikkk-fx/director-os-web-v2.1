@@ -69,8 +69,8 @@ function App() {
 
   useEffect(() => {
     axios.get('http://localhost:8000/api/health')
-      .then(res => setHealthStatus(`System: Online`))
-      .catch(err => setHealthStatus(`System: Offline`));
+      .then(() => setHealthStatus(`System: Online`))
+      .catch(() => setHealthStatus(`System: Offline`));
     
     axios.get('http://localhost:8000/api/atlas/models')
       .then(res => {
