@@ -394,41 +394,42 @@ function App() {
 
               {/* Prompt Bar */}
               <div className="prompt-bar-container">
-                {activeTab === 'Home' && (
-                  <div style={{ marginBottom: '8px', padding: '0 12px' }}>
-                    <select 
-                      value={selectedHomeModel}
-                      onChange={(e) => setSelectedHomeModel(e.target.value)}
-                      style={{ 
-                        background: 'var(--glass-bg)', 
-                        border: '1px solid var(--glass-border)', 
-                        color: 'var(--text-secondary)', 
-                        borderRadius: '6px', 
-                        padding: '4px 8px',
-                        fontSize: '12px',
-                        outline: 'none',
-                        cursor: 'pointer'
+                <div className="prompt-bar liquid-glass" style={{ border: '1px solid var(--primary-color)', boxShadow: '0 8px 32px rgba(0, 113, 227, 0.15)', flexDirection: 'column', alignItems: 'stretch' }}>
+                  
+                  {activeTab === 'Home' && (
+                    <div style={{ marginBottom: '4px' }}>
+                      <select 
+                        value={selectedHomeModel}
+                        onChange={(e) => setSelectedHomeModel(e.target.value)}
+                        style={{ 
+                          background: 'transparent', 
+                          border: 'none', 
+                          color: 'var(--text-primary)', 
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="openai/gpt-5.6-sol">GPT-5.6 Sol</option>
+                        <option value="moonshot/kimi-k3">Kimi K3</option>
+                        <option value="deepseek/deepseek-v4-pro">Deepseek V4 Pro</option>
+                      </select>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', width: '100%' }}>
+                    {/* File Upload Button */}
+                    <button 
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
+                      onClick={() => {
+                        if (activeTab === 'Home') fileInputRefHome.current?.click();
+                        if (activeTab === 'Image') fileInputRefImage.current?.click();
+                        if (activeTab === 'Video') fileInputRefVideo.current?.click();
                       }}
                     >
-                      <option value="openai/gpt-5.6-sol">GPT-5.6 Sol</option>
-                      <option value="moonshot/kimi-k3">Kimi K3</option>
-                      <option value="deepseek/deepseek-v4-pro">Deepseek V4 Pro</option>
-                    </select>
-                  </div>
-                )}
-                <div className="prompt-bar liquid-glass" style={{ border: '1px solid var(--primary-color)', boxShadow: '0 8px 32px rgba(0, 113, 227, 0.15)' }}>
-                  
-                  {/* File Upload Button */}
-                  <button 
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '8px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center' }}
-                    onClick={() => {
-                      if (activeTab === 'Home') fileInputRefHome.current?.click();
-                      if (activeTab === 'Image') fileInputRefImage.current?.click();
-                      if (activeTab === 'Video') fileInputRefVideo.current?.click();
-                    }}
-                  >
-                    <Upload size={20} color={(activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo) ? '#34c759' : 'currentColor'} />
-                  </button>
+                      <Upload size={20} color={(activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo) ? '#34c759' : 'currentColor'} />
+                    </button>
                   
                   {/* Hidden File Inputs */}
                   <input type="file" accept="image/*" ref={fileInputRefHome} style={{ display: 'none' }} onChange={(e) => { if (e.target.files && e.target.files.length > 0) setRefFileHome(e.target.files[0]); }} />
@@ -460,8 +461,9 @@ function App() {
                     }}
                     disabled={isGenerating || (activeTab === 'Home' ? (!promptHome.trim() && !refFileHome) : activeTab === 'Image' ? !promptImage.trim() : !promptVideo.trim())}
                   >
-                    <Send size={18} style={{ marginLeft: '2px' }} />
-                  </button>
+                      <Send size={18} style={{ marginLeft: '2px' }} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
