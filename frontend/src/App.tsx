@@ -75,6 +75,19 @@ function App() {
     if (activeTab !== tab) setActiveTab(tab);
   };
 
+  const handleTabChange = (newTab: 'Home' | 'Image' | 'Video' | 'Assets') => {
+    setActiveTab(newTab);
+    if (newTab !== 'Assets') {
+      // Need to find existing session for this tab to avoid rendering previous tab's messages
+      const existingSessionsForTab = sessions.filter(s => s.tab === newTab);
+      if (existingSessionsForTab.length > 0) {
+        setActiveSessionId(existingSessionsForTab[0].id);
+      } else {
+        createNewSession(newTab);
+      }
+    }
+  };
+
   const updateActiveSessionMessages = (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
     setSessions(prevSessions => prevSessions.map(session => {
       if (session.id === activeSessionId) {
@@ -325,16 +338,16 @@ function App() {
           </button>
 
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
-            <div className={`nav-item ${activeTab === 'Home' ? 'active' : ''}`} onClick={() => setActiveTab('Home')}>
+            <div className={`nav-item ${activeTab === 'Home' ? 'active' : ''}`} onClick={() => handleTabChange('Home')}>
               <Home size={18} /><span>Home</span>
             </div>
-            <div className={`nav-item ${activeTab === 'Image' ? 'active' : ''}`} onClick={() => setActiveTab('Image')}>
+            <div className={`nav-item ${activeTab === 'Image' ? 'active' : ''}`} onClick={() => handleTabChange('Image')}>
               <ImageIcon size={18} /><span>Image</span>
             </div>
-            <div className={`nav-item ${activeTab === 'Video' ? 'active' : ''}`} onClick={() => setActiveTab('Video')}>
+            <div className={`nav-item ${activeTab === 'Video' ? 'active' : ''}`} onClick={() => handleTabChange('Video')}>
               <Video size={18} /><span>Video</span>
             </div>
-            <div className={`nav-item ${activeTab === 'Assets' ? 'active' : ''}`} onClick={() => setActiveTab('Assets')}>
+            <div className={`nav-item ${activeTab === 'Assets' ? 'active' : ''}`} onClick={() => handleTabChange('Assets')}>
               <FolderKanban size={18} /><span>Assets</span>
             </div>
           </nav>
