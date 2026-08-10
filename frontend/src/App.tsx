@@ -9,8 +9,16 @@ interface ChatMessage {
   role: 'user' | 'ai';
   content: string;
   timestamp: string;
-  imageUrl?: string; // for user uploaded image or generated output
-  videoUrl?: string; // for generated output
+  imageUrl?: string;
+  videoUrl?: string;
+}
+
+interface ChatSession {
+  id: string;
+  title: string;
+  tab: 'Home' | 'Image' | 'Video';
+  messages: ChatMessage[];
+  updatedAt: number;
 }
 
 function App() {
@@ -20,25 +28,76 @@ function App() {
   const [activeTab, setActiveTab] = useState<'Home' | 'Image' | 'Video' | 'Assets'>('Home');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-  // Initial Welcome Messages
-  const initialWelcomeHome: ChatMessage = { id: 'welcome-home', role: 'ai', content: 'Hello, Director. I am GPT-5.6 Sol. What are we creating today?', timestamp: new Date().toLocaleTimeString() };
-  const initialWelcomeImage: ChatMessage = { id: 'welcome-image', role: 'ai', content: 'Ready to generate images. Describe your vision.', timestamp: new Date().toLocaleTimeString() };
-  const initialWelcomeVideo: ChatMessage = { id: 'welcome-video', role: 'ai', content: 'Ready to generate cinematic videos. What is the scene?', timestamp: new Date().toLocaleTimeString() };
-
-  const loadMessages = (key: string, defaultMsg: ChatMessage) => {
-    const saved = localStorage.getItem(key);
-    return saved ? JSON.parse(saved) : [defaultMsg];
-  };
-
-  // Messages State
-  const [messagesHome, setMessagesHome] = useState<ChatMessage[]>(() => loadMessages('chat_home', initialWelcomeHome));
-  const [messagesImage, setMessagesImage] = useState<ChatMessage[]>(() => loadMessages('chat_image', initialWelcomeImage));
-  const [messagesVideo, setMessagesVideo] = useState<ChatMessage[]>(() => loadMessages('chat_video', initialWelcomeVideo));
+  // Sessions State
+  const [sessions, setSessions] = useState<ChatSession[]>(() => {
+    const saved = localStorage.getItem('chat_sessions');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
+    return localStorage.getItem('active_session_id');
+  });
 
   // Sync to localStorage
-  useEffect(() => { localStorage.setItem('chat_home', JSON.stringify(messagesHome)); }, [messagesHome]);
-  useEffect(() => { localStorage.setItem('chat_image', JSON.stringify(messagesImage)); }, [messagesImage]);
-  useEffect(() => { localStorage.setItem('chat_video', JSON.stringify(messagesVideo)); }, [messagesVideo]);
+  useEffect(() => { localStorage.setItem('chat_sessions', JSON.stringify(sessions)); }, [sessions]);
+  useEffect(() => { 
+    if (activeSessionId) localStorage.setItem('active_session_id', activeSessionId); 
+    else localStorage.removeItem('active_session_id');
+  }, [activeSessionId]);
+
+  // Derived state for current session
+  const activeSession = sessions.find(s => s.id === activeSessionId);
+  const activeMessages = activeSession ? activeSession.messages : [];
+  
+  // Ensure we switch to the right tab if a session is selected
+  useEffect(() => {
+    if (activeSession && activeSession.tab !== activeTab) {
+      setActiveTab(activeSession.tab);
+    }
+  }, [activeSessionId]);
+
+  const createNewSession = (tab: 'Home' | 'Image' | 'Video') => {
+    const newSession: ChatSession = {
+      id: Date.now().toString(),
+      title: 'New Chat',
+      tab: tab,
+      messages: [{ 
+        id: 'welcome', 
+        role: 'ai', 
+        content: tab === 'Home' ? 'Hello, Director. I am GPT-5.6 Sol. What are we creating today?' : 
+                 tab === 'Image' ? 'Ready to generate images. Describe your vision.' : 
+                 'Ready to generate cinematic videos. What is the scene?', 
+        timestamp: new Date().toLocaleTimeString() 
+      }],
+      updatedAt: Date.now()
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+    if (activeTab !== tab) setActiveTab(tab);
+  };
+
+  const updateActiveSessionMessages = (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setSessions(prevSessions => prevSessions.map(session => {
+      if (session.id === activeSessionId) {
+        const newMessages = updater(session.messages);
+        // Update title based on first user message if it's still 'New Chat'
+        let title = session.title;
+        if (title === 'New Chat') {
+          const firstUserMsg = newMessages.find(m => m.role === 'user');
+          if (firstUserMsg) title = firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '');
+        }
+        return { ...session, messages: newMessages, title, updatedAt: Date.now() };
+      }
+      return session;
+    }).sort((a, b) => b.updatedAt - a.updatedAt));
+  };
+  
+  const deleteSession = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm("Delete this chat session?")) {
+      setSessions(prev => prev.filter(s => s.id !== id));
+      if (activeSessionId === id) setActiveSessionId(null);
+    }
+  };
 
   // Prompts State
   const [promptHome, setPromptHome] = useState('');
@@ -76,7 +135,7 @@ function App() {
 
   useEffect(() => {
     feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messagesHome, messagesImage, messagesVideo, activeTab]);
+  }, [activeMessages, activeTab]);
 
   useEffect(() => {
     axios.get(`${API_BASE}/api/health`)
@@ -100,6 +159,7 @@ function App() {
 
   const handleSendHome = async () => {
     if (!promptHome.trim() && !refFileHome) return;
+    if (!activeSessionId) createNewSession('Home'); // Ensure session exists
     
     const userPrompt = promptHome.trim();
     setPromptHome(''); 
@@ -112,13 +172,13 @@ function App() {
       timestamp: new Date().toLocaleTimeString()
     };
     
-    setMessagesHome(prev => [...prev, newUserMsg]);
+    updateActiveSessionMessages(prev => [...prev, newUserMsg]);
     setIsGeneratingHome(true);
     
     try {
       const formData = new FormData();
       formData.append('prompt', userPrompt);
-      const historyPayload = messagesHome.map(m => ({ role: m.role, content: m.content }));
+      const historyPayload = activeSession ? activeSession.messages.map(m => ({ role: m.role, content: m.content })) : [];
       formData.append('history', JSON.stringify(historyPayload));
       if (refFileHome) formData.append('reference_image', refFileHome);
 
@@ -132,10 +192,10 @@ function App() {
         content: response.data.response,
         timestamp: new Date().toLocaleTimeString()
       };
-      setMessagesHome(prev => [...prev, newAiMsg]);
+      updateActiveSessionMessages(prev => [...prev, newAiMsg]);
       setRefFileHome(null);
     } catch (error: any) {
-      setMessagesHome(prev => [...prev, {
+      updateActiveSessionMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         role: 'ai',
         content: `**Error:** ${error.response?.data?.detail || error.message}`,
@@ -153,6 +213,7 @@ function App() {
     const selectedModel = isImage ? selectedImageModel : selectedVideoModel;
     
     if (!prompt.trim() || !selectedModel) return;
+    if (!activeSessionId) createNewSession(isImage ? 'Image' : 'Video');
     
     const userPrompt = prompt.trim();
     if (isImage) setPromptImage(''); else setPromptVideo('');
@@ -167,8 +228,7 @@ function App() {
       timestamp: new Date().toLocaleTimeString()
     };
     
-    if (isImage) setMessagesImage(prev => [...prev, newUserMsg]);
-    else setMessagesVideo(prev => [...prev, newUserMsg]);
+    updateActiveSessionMessages(prev => [...prev, newUserMsg]);
     
     if (isImage) setIsGeneratingImage(true);
     else setIsGeneratingVideo(true);
@@ -196,20 +256,14 @@ function App() {
         timestamp: new Date().toLocaleTimeString()
       };
       
-      if (isImage) {
-        setMessagesImage(prev => [...prev, newAiMsg]);
-        setRefFileImage(null);
-      } else {
-        setMessagesVideo(prev => [...prev, newAiMsg]);
-        setRefFileVideo(null);
-      }
+      updateActiveSessionMessages(prev => [...prev, newAiMsg]);
+      if (isImage) setRefFileImage(null); else setRefFileVideo(null);
 
     } catch (error: any) {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(), role: 'ai', content: `**Error:** ${error.message}`, timestamp: new Date().toLocaleTimeString()
       };
-      if (isImage) setMessagesImage(prev => [...prev, errorMsg]);
-      else setMessagesVideo(prev => [...prev, errorMsg]);
+      updateActiveSessionMessages(prev => [...prev, errorMsg]);
     } finally {
       if (isImage) setIsGeneratingImage(false);
       else setIsGeneratingVideo(false);
@@ -223,44 +277,68 @@ function App() {
     }
   };
 
-  const activeMessages = activeTab === 'Home' ? messagesHome : activeTab === 'Image' ? messagesImage : messagesVideo;
   const isGenerating = activeTab === 'Home' ? isGeneratingHome : activeTab === 'Image' ? isGeneratingImage : isGeneratingVideo;
-  
-  const handleClearHistory = () => {
-    if (window.confirm("Are you sure you want to clear the chat history for this tab?")) {
-      if (activeTab === 'Home') setMessagesHome([initialWelcomeHome]);
-      else if (activeTab === 'Image') setMessagesImage([initialWelcomeImage]);
-      else if (activeTab === 'Video') setMessagesVideo([initialWelcomeVideo]);
-    }
-  };
   
   return (
     <div className="app-layout">
       {/* Sidebar */}
-      <div className="sidebar">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '40px', padding: '0 10px' }}>
-          <Film size={24} color="var(--primary-color)" />
-          <h2 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.5px' }}>Director OS</h2>
+      <div className="sidebar" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', padding: '0 10px' }}>
+            <Film size={24} color="var(--primary-color)" />
+            <h2 style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.5px' }}>Director OS</h2>
+          </div>
+          
+          <button 
+            style={{ width: '100%', padding: '10px', marginBottom: '20px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--primary-color)', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+            onClick={() => createNewSession(activeTab === 'Assets' ? 'Home' : activeTab)}
+          >
+            + New Chat
+          </button>
+
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px' }}>
+            <div className={`nav-item ${activeTab === 'Home' ? 'active' : ''}`} onClick={() => setActiveTab('Home')}>
+              <Home size={18} /><span>Home</span>
+            </div>
+            <div className={`nav-item ${activeTab === 'Image' ? 'active' : ''}`} onClick={() => setActiveTab('Image')}>
+              <ImageIcon size={18} /><span>Image</span>
+            </div>
+            <div className={`nav-item ${activeTab === 'Video' ? 'active' : ''}`} onClick={() => setActiveTab('Video')}>
+              <Video size={18} /><span>Video</span>
+            </div>
+            <div className={`nav-item ${activeTab === 'Assets' ? 'active' : ''}`} onClick={() => setActiveTab('Assets')}>
+              <FolderKanban size={18} /><span>Assets</span>
+            </div>
+          </nav>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div className={`nav-item ${activeTab === 'Home' ? 'active' : ''}`} onClick={() => setActiveTab('Home')}>
-            <Home size={18} />
-            <span>Home</span>
+        <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 10px', marginBottom: '8px', textTransform: 'uppercase' }}>Recent Chats</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            {sessions.map(session => (
+              <div 
+                key={session.id} 
+                className={`nav-item ${activeSessionId === session.id ? 'active' : ''}`} 
+                style={{ padding: '8px 10px', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                onClick={() => setActiveSessionId(session.id)}
+              >
+                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+                   {session.title}
+                </div>
+                <button 
+                  onClick={(e) => deleteSession(e, session.id)} 
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', opacity: activeSessionId === session.id ? 1 : 0.4 }}
+                  className="delete-session-btn"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+            {sessions.length === 0 && (
+              <div style={{ padding: '0 10px', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No recent chats.</div>
+            )}
           </div>
-          <div className={`nav-item ${activeTab === 'Image' ? 'active' : ''}`} onClick={() => setActiveTab('Image')}>
-            <ImageIcon size={18} />
-            <span>Image</span>
-          </div>
-          <div className={`nav-item ${activeTab === 'Video' ? 'active' : ''}`} onClick={() => setActiveTab('Video')}>
-            <Video size={18} />
-            <span>Video</span>
-          </div>
-          <div className={`nav-item ${activeTab === 'Assets' ? 'active' : ''}`} onClick={() => setActiveTab('Assets')}>
-            <FolderKanban size={18} />
-            <span>Assets</span>
-          </div>
-        </nav>
+        </div>
 
         <div className="theme-toggle" onClick={toggleTheme}>
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
@@ -280,11 +358,12 @@ function App() {
           {activeTab !== 'Assets' ? (
             <>
               <div className="feed-area" style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
-                  <button onClick={handleClearHistory} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: '1px solid var(--glass-border)', color: 'var(--text-secondary)', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer', fontSize: '12px' }}>
-                    <Trash2 size={14} /> Clear Chat
-                  </button>
-                </div>
+                {!activeSessionId && (
+                   <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                     <p>Select a chat from the sidebar or start a new one.</p>
+                     <button onClick={() => createNewSession(activeTab as 'Home'|'Image'|'Video')} style={{ marginTop: '12px', padding: '8px 16px', background: 'var(--primary-color)', color: 'white', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>Start New Chat</button>
+                   </div>
+                )}
                 {activeMessages.map((msg) => (
                   <div key={msg.id} className={`message ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
                     {msg.role === 'ai' && <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginBottom: '4px', fontWeight: 600 }}>{activeTab === 'Home' ? 'GPT-5.6 Sol' : `Agent ${activeTab}`}</div>}
