@@ -131,6 +131,15 @@ function App() {
   // Generation Settings State
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
   const [aspectRatioVid, setAspectRatioVid] = useState('16:9');
+  
+  // Advanced Image Parameters
+  const [negPromptImg, setNegPromptImg] = useState('');
+  const [numOutputsImg, setNumOutputsImg] = useState<number>(1);
+  const [formatImg, setFormatImg] = useState('webp');
+  const [qualityImg, setQualityImg] = useState<number>(80);
+  const [guidanceImg, setGuidanceImg] = useState<string>('');
+  const [stepsImg, setStepsImg] = useState<string>('');
+  const [seedImg, setSeedImg] = useState<string>('');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -247,7 +256,18 @@ function App() {
       formData.append('prompt', userPrompt);
       formData.append('model_keyword', selectedModel);
       formData.append('aspect_ratio', isImage ? aspectRatioImg : aspectRatioVid);
-      if (!isImage) formData.append('duration', durationVid);
+      
+      if (isImage) {
+        if (negPromptImg.trim()) formData.append('negative_prompt', negPromptImg.trim());
+        if (numOutputsImg > 1) formData.append('num_outputs', numOutputsImg.toString());
+        if (formatImg !== 'webp') formData.append('output_format', formatImg);
+        if (qualityImg !== 80) formData.append('output_quality', qualityImg.toString());
+        if (guidanceImg) formData.append('guidance_scale', guidanceImg);
+        if (stepsImg) formData.append('num_inference_steps', stepsImg);
+        if (seedImg) formData.append('seed', seedImg);
+      } else {
+        formData.append('duration', durationVid);
+      }
       
       if (refFile && currentModelData?.supports_image) {
         formData.append('reference_file', refFile);
@@ -532,6 +552,52 @@ function App() {
                 </div>
               )}
             </div>
+
+            {activeTab === 'Image' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Negative Prompt</label>
+                  <textarea className="apple-input" style={{ fontSize: '13px', minHeight: '60px' }} value={negPromptImg} onChange={(e) => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted..." />
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Outputs</label>
+                    <input type="number" min="1" max="4" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={numOutputsImg} onChange={(e) => setNumOutputsImg(parseInt(e.target.value) || 1)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Format</label>
+                    <select className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={formatImg} onChange={(e) => setFormatImg(e.target.value)}>
+                      <option value="webp">WebP</option>
+                      <option value="png">PNG</option>
+                      <option value="jpg">JPG</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Quality (1-100)</label>
+                    <input type="number" min="1" max="100" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={qualityImg} onChange={(e) => setQualityImg(parseInt(e.target.value) || 80)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Seed</label>
+                    <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Random" value={seedImg} onChange={(e) => setSeedImg(e.target.value)} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>CFG Scale</label>
+                    <input type="number" step="0.1" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={guidanceImg} onChange={(e) => setGuidanceImg(e.target.value)} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Steps</label>
+                    <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={stepsImg} onChange={(e) => setStepsImg(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div style={{ marginTop: '24px', padding: '16px', background: 'var(--sidebar-bg)', borderRadius: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>
               <strong>Tip:</strong> Click the Upload icon in the prompt bar to attach a reference image before sending your prompt.

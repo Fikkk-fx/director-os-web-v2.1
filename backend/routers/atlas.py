@@ -272,6 +272,13 @@ async def generate_asset(
     model_keyword: str = Form(...),
     aspect_ratio: str = Form("16:9"),
     duration: str = Form("5s"),
+    negative_prompt: Optional[str] = Form(None),
+    num_outputs: Optional[int] = Form(None),
+    output_format: Optional[str] = Form(None),
+    output_quality: Optional[int] = Form(None),
+    guidance_scale: Optional[float] = Form(None),
+    num_inference_steps: Optional[int] = Form(None),
+    seed: Optional[int] = Form(None),
     reference_file: Optional[UploadFile] = File(None)
 ):
     """Submit generation task to Atlas Cloud REST API."""
@@ -300,6 +307,15 @@ async def generate_asset(
             payload["duration"] = duration
         if ref_b64:
             payload["image"] = f"data:image/jpeg;base64,{ref_b64}"
+            
+        # Add optional advanced parameters
+        if negative_prompt: payload["negative_prompt"] = negative_prompt
+        if num_outputs: payload["num_outputs"] = num_outputs
+        if output_format: payload["output_format"] = output_format
+        if output_quality: payload["output_quality"] = output_quality
+        if guidance_scale: payload["guidance_scale"] = guidance_scale
+        if num_inference_steps: payload["num_inference_steps"] = num_inference_steps
+        if seed is not None: payload["seed"] = seed
 
         async with httpx.AsyncClient(timeout=120) as client:
             r = await client.post(
