@@ -2,103 +2,120 @@
 
 [![Powered by Atlas Cloud](https://www.atlascloud.ai/oss-program/powered-by-atlas-cloud.svg)](https://www.atlascloud.ai/?ref=WUVP6C)
 
-**Director OS** adalah web app untuk produksi film bertenaga AI — dari ideasi naskah hingga generasi gambar & video sinematik, semua dalam satu antarmuka agen yang sederhana dan elegan.
+**Director OS** is a web app for AI-powered film production — from screenplay ideation to cinematic image & video generation, all within a single clean agent interface.
 
 ---
 
-## ✨ Fitur Utama
+## ✨ Key Features
 
-| Fitur | Deskripsi |
+| Feature | Description |
 |---|---|
-| 🏠 **Home Agent** | Chat langsung dengan GPT-5.6 Sol untuk ideasi, naskah, & strategi kreatif |
-| 🖼️ **Image Agent** | Generate gambar storyboard & aset visual via 400+ model di Atlas Cloud |
-| 🎥 **Video Agent** | Generate video sinematik (Seedance, Kling, dll) dengan pilihan durasi & aspect ratio |
-| 📁 **Asset Library** | Tampilan dashboard semua hasil generate (gambar & video) dalam satu galeri |
+| 🏠 **Home Agent** | Chat directly with GPT-5.6 Sol for ideation, screenwriting, and creative strategy |
+| 🖼️ **Image Agent** | Generate storyboard images & visual assets via 400+ models on Atlas Cloud |
+| 🎥 **Video Agent** | Generate cinematic videos (Seedance, Kling, etc.) with custom duration & aspect ratio |
+| 📁 **Asset Library** | A dashboard gallery for all generated images and videos in one place |
 
 ---
 
-## 🏗️ Arsitektur
+## 🏗️ Architecture
 
 ```
 director-os-web-v2.1/
-├── backend/           # FastAPI + Atlas Cloud CLI integration
+├── backend/                   # FastAPI + Atlas Cloud CLI integration
 │   ├── main.py
 │   ├── routers/
-│   │   ├── atlas.py       # Model listing & generation endpoints
-│   │   └── workflow.py    # Chat / LLM endpoints
-│   ├── skills/        # Director OS skill library (34+ skills)
-│   ├── .env           # ⚠️ TIDAK pernah di-commit (lihat .gitignore)
+│   │   ├── atlas.py           # Model listing & generation endpoints
+│   │   └── workflow.py        # Chat / LLM endpoints
+│   ├── skills/                # Director OS skill library (34+ skills)
+│   ├── .env                   # ⚠️ Never committed (see .gitignore)
 │   └── video_models.json
-└── frontend/          # Vite + React + TypeScript
+└── frontend/                  # Vite + React + TypeScript
     └── src/
-        ├── App.tsx    # Main Agent UI (Home / Image / Video / Assets)
-        └── index.css  # Apple Liquid Glass design system
+        ├── App.tsx            # Main Agent UI (Home / Image / Video / Assets)
+        └── index.css          # Apple Liquid Glass design system
 ```
 
 ---
 
-## 🚀 Setup & Menjalankan
+## 🚀 Getting Started
 
-### 1. Clone repo
+### 1. Clone the repository
 ```bash
 git clone https://github.com/Fikkk-fx/director-os-web-v2.1.git
 cd director-os-web-v2.1
 ```
 
-### 2. Setup Backend
+### 2. Set up the Backend
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate        # Windows
+
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
+
 pip install fastapi uvicorn python-multipart
 ```
 
-Buat file `backend/.env` dan isi dengan API Key Atlas Cloud Anda:
+Create a `backend/.env` file and add your Atlas Cloud API key:
 ```env
 ATLAS_API_KEY=your_atlas_cloud_api_key_here
 ```
 
-> ⚠️ **Jangan pernah meng-commit file `.env` ke repository publik!** File ini sudah di-exclude via `.gitignore`.
+> ⚠️ **Never commit your `.env` file to a public repository.** It is already excluded via `.gitignore`.
 
-Jalankan backend:
+Start the backend server:
 ```bash
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 3. Setup Frontend
+### 3. Set up the Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Buka [http://localhost:5173](http://localhost:5173) di browser Anda.
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 🔌 Integrasi Atlas Cloud
+## 🔌 Atlas Cloud Integration
 
-Proyek ini menggunakan [**Atlas Cloud**](https://www.atlascloud.ai/?ref=WUVP6C) sebagai AI provider utama — satu API key untuk akses ke **400+ model** lintas modalitas:
+This project uses [**Atlas Cloud**](https://www.atlascloud.ai/?ref=WUVP6C) as its core AI provider — one API key unlocking **400+ models** across all modalities:
 
-- **LLM:** GPT-5.6 Sol, DeepSeek, GLM, dan lainnya
-- **Image:** GPT Image 2, Seedream 5.0, Flux, dan lainnya  
-- **Video:** Seedance 2.5, Kling 3.0, Wan, dan lainnya
+- **LLM:** GPT-5.6 Sol, DeepSeek, GLM, and more
+- **Image:** GPT Image 2, Seedream 5.0, Flux, and more
+- **Video:** Seedance 2.5, Kling 3.0, Wan, and more
 
-Integrasi dilakukan via **Atlas CLI** (`atlas chat`, `atlas generate`) yang dipanggil dari backend FastAPI menggunakan `subprocess`. API key disimpan aman di file `.env` lokal dan **tidak pernah di-push ke repo publik**.
-
----
-
-## 🔒 Keamanan API Key
-
-- API Key Atlas Cloud disimpan di `backend/.env`
-- File `.env` sudah di-exclude dari git via `.gitignore` di root
-- Untuk deployment, gunakan **GitHub Secrets** atau environment variables dari platform hosting Anda
+Integration is done via the **Atlas CLI** (`atlas chat`, `atlas generate`) invoked from the FastAPI backend using `subprocess`. The API key is securely stored in a local `.env` file and **never pushed to the public repository**.
 
 ---
 
-## 📄 Lisensi
+## 🔒 API Key Security
 
-MIT License — bebas digunakan dan dikembangkan.
+- Atlas Cloud API key is stored in `backend/.env`
+- The `.env` file is excluded from git via the root `.gitignore`
+- For deployment, use **GitHub Secrets** or environment variables from your hosting platform
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Vite + React + TypeScript |
+| Styling | Vanilla CSS (Apple Liquid Glass) |
+| Backend | FastAPI (Python) |
+| AI Provider | Atlas Cloud (via CLI) |
+| LLM Model | GPT-5.6 Sol |
+
+---
+
+## 📄 License
+
+MIT License — free to use and extend.
 
 ---
 
