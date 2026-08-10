@@ -341,9 +341,9 @@ function App() {
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 10px', marginBottom: '8px', textTransform: 'uppercase' }}>Recent Chats</div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', padding: '0 10px', marginBottom: '8px', textTransform: 'uppercase' }}>Recent {activeTab} Chats</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {sessions.map(session => (
+            {sessions.filter(s => s.tab === activeTab).map(session => (
               <div 
                 key={session.id} 
                 className={`nav-item ${activeSessionId === session.id ? 'active' : ''}`} 
@@ -362,7 +362,7 @@ function App() {
                 </button>
               </div>
             ))}
-            {sessions.length === 0 && (
+            {sessions.filter(s => s.tab === activeTab).length === 0 && (
               <div style={{ padding: '0 10px', fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>No recent chats.</div>
             )}
           </div>
