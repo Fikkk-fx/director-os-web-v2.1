@@ -16,7 +16,7 @@ Sebelum melakukan audit prompt, AI WAJIB menjalankan riset mendalam pada 3 Pilar
 ## 📋 THE 20-POINT ZERO-DEFECT AUDIT CHECKLIST
 
 ### 1. ACTION-FIRST INVERSION AUDIT
-* Baris pertama `[PROSE]` WAJIB langsung meledakkan aksi kinetik di bawah 3 detik pertama (misal: *"[RAPID PUSH-IN] Striker vaults forward..."*). DILARANG diawali dengan deskripsi diam/pasif.
+* Baris pertama `[PROSE]` WAJIB langsung meledakkan aksi kinetik di bawah 3 detik pertama (misal: *"Rapid Push-in Striker vaults forward..."*). DILARANG diawali dengan deskripsi diam/pasif.
 
 ### 2. SINGLE-TAG REFERENCE AUDIT
 * Tag `@image1`, `@image2` WAJIB muncul TEPAT 1 KALI di dalam `[PROSE]` dan 0 KALI di luar `[PROSE]`. Dilarang mengulang tag `@image` di `[SPATIAL DEPTH ENGINE]` atau `[GLOBAL LOCK]`.
@@ -104,10 +104,76 @@ Sebelum melakukan audit prompt, AI WAJIB menjalankan riset mendalam pada 3 Pilar
 
 ### 30. MULTI-DURATION ADAPTIVE CHARACTER CAP AUDIT
 * Panjang karakter kode prompt WAJIB diverifikasi dan terkunci presisi sesuai durasi klip video:
-  - **Durasi 10s – 15s:** Wajib strictly between **1.900 – 1.950 Karakter (Max 2.000)**.
+  - **Durasi 10s – 15s:** Wajib strictly between **1.900 – 1.950 Karakter (Max 2.000 Karakter)**.
   - **Durasi 16s – 20s:** Wajib strictly between **2.800 – 2.950 Karakter (Max 3.000)**.
   - **Durasi 21s – 30s:** Wajib strictly between **3.700 – 3.950 Karakter (Max 4.000)**.
   - Zero text truncation across extended native video architectures.
+
+### 31. MANDATORY PANAVISION CAMERA AUDIT (FOR LIVE-ACTION; EXEMPT FOR UGC & ANIME)
+* Seluruh prompt live-action sinematik (film, drama, aksi, horor, komersial) WAJIB mengunci spesifikasi kamera Panavision: `"Shot on Panavision Millennium DXL2 Large Format cinema camera, Panavision Primo 70 prime lens, Light Iron Color 3 science"`.
+  - GENRE SHIELD EXEMPTION 1: UGC / Creator Content WAJIB menggunakan `"Shot on iPhone 15 Pro main camera 24mm f/1.7, raw UGC smartphone photo aesthetic"`.
+  - GENRE SHIELD EXEMPTION 2: 2D Anime / Sakuga WAJIB dibersihkan total dari seluruh istilah kamera live-action dan otomatis LULUS audit tanpa menyuntikkan Panavision.
+
+### 32. ANTI-AI EYE FATIGUE & VISUAL NAUSEA AUDIT (DE-AI-IFICATION VERIFICATION)
+* Seluruh prompt live-action WAJIB mengunci 5 Jangkar Anti-Slop Kuantum (Otomatis EXEMPT untuk 2D Anime):
+  (1) Kamera bernapas alami (organic subtle human-held breath sway, zero 3D rail sliding),
+  (2) True 24fps 180-degree film shutter angle (zero 60fps soap-opera smoothness),
+  (3) Panavision DXL2 + Light Iron Color 3 (deep black shadow separation, optical halation),
+  (4) Physical atmospheric depth glue (volumetric haze/humidity mist between lens and subject),
+  (5) Calm deliberative gaze (occasional single blink every 4-5s) & smooth organic velvet skin.
+
+### 33. PHYSICAL IMAGING CHAIN ENGINE (PICE V19.5) AUDIT (FOR LIVE-ACTION; EXEMPT FOR ANIME)
+* Seluruh prompt live-action WAJIB menguji 7 Komponen Rantai Perilaku Kamera Fisik Nyata (Otomatis EXEMPT untuk 2D Anime):
+  (1) Physical Optical Behavior (plausible optical rendering, natural lens falloff, chromatic aberration, focus falloff, veiling glare),
+  (2) Authentic Exposure Motion Blur (integrated over 180-degree shutter interval, velocity relationship),
+  (3) Temporal World Consistency (persistent 100% world physics, locked skin microtexture, zero mid-clip texture morphing),
+  (4) Causal Lighting Interaction (light source -> surface bounce -> specular highlights -> eye reflections),
+  (5) Material Response (natural skin microtexture, subtle SSS, imperfect specular oil layer, zero 8K pattern sharpening),
+  (6) Sensor Physics (Panavision DXL2 sensor response, Light Iron Color 3, subtle physical sensor noise, restrained sharpening),
+  (7) Real-World Camera Inertia (physical operator mass, acceleration/deceleration cadence, micro-operator correction).
+  * Catatan Tier 1: Dapat disajikan melalui frasa ringkas PICE V19.5 Compact Synthesis Payload untuk memenuhi batas 1.950 karakter.
+
+### 34. 4-PANEL CARDINAL COMPASS ENVSHEET AUDIT (FOR MULTI-CLIP PRODUCTIONS >1 KLIP)
+* Jika lokasi/tempat muncul di **LEBIH DARI 1 KLIP (>1 klip)**, sistem WAJIB menghasilkan prompt `EnvSheet` 4 Panel Cardinal Compass sebelum prompt video dibuat:
+  (1) Format grid 2x2 seamless, rasio 4:3 (`--ar 4:3`), full no-bezel borderless,
+  (2) Panel 1 (Top-Left): `PANEL 1: NORTH VECTOR` (Utara / Landmark Utama),
+  (3) Panel 2 (Top-Right): `PANEL 2: EAST VECTOR` (Timur / Sisi Kanan),
+  (4) Panel 3 (Bottom-Left): `PANEL 3: SOUTH VECTOR` (Selatan / 180° Reverse Angle),
+  (5) Panel 4 (Bottom-Right): `PANEL 4: WEST VECTOR` (Barat / Sisi Kiri),
+  (6) Seluruh prompt video berikutnya WAJIB mencantumkan orientasi panel aktif (contoh: `[CAMERA ORIENTATION: Facing PANEL 3 SOUTH VECTOR REVERSE ANGLE relative to @image_env1]`).
+
+### 35. 4-PANEL EUCLIDEAN ROOM TOPOLOGY CONTINUITY AUDIT
+* Seluruh prompt `EnvSheet` 4-Panel WAJIB mengunci kesambungan spasial 360° yang dapat diverifikasi:
+  (1) Corner Junction Stitching: Panel 1 Right ≡ Panel 2 Left (North-East corner), Panel 2 Right ≡ Panel 3 Left (East-South corner), Panel 3 Right ≡ Panel 4 Left (South-West corner), Panel 4 Right ≡ Panel 1 Left (West-North corner),
+  (2) 180-Degree Parallax Inversion: Panel 3 (South 180° Reverse Angle) menginversi fitur kiri Panel 1 ke posisi kanan,
+  (3) Shared Core Anchor: Plafon dan lantai 100% identik di keempat panel,
+  (4) Explicit Prompt Clause: Menyuntikkan klausa `"100% Euclidean continuous room topology"` secara eksplisit.
+
+### 36. ADAPTIVE ACTIVE-PANEL ENVSHEET AUDIT
+* Sistem WAJIB secara cerdas menghitung jumlah vektor kamera aktif yang benar-benar terlihat di dalam naskah:
+  (1) Jika naskah hanya memperlihatkan 2 sudut (contoh: Establishing + Reverse Angle), sistem WAJIB membuat EnvSheet 2-Panel (`--ar 16:9`),
+  (2) Jika naskah memperlihatkan 3 sudut, buat EnvSheet 3-Panel (`--ar 16:9` / `--ar 4:3`),
+  (3) Jika naskah memperlihatkan 4 sudut 360°, buat EnvSheet 4-Panel (`--ar 4:3`),
+  (4) DILARANG memaksa membuat panel 4 jika sudut ke-4 sama sekali tidak pernah terlihat di seluruh klip!
+
+### 37. MOTIVATED LARGE FORMAT LENS SELECTION AUDIT
+* Pemilihan lensa kamera WAJIB 100% didasari oleh motif emosi naskah & genre di Fase 0 RNG Initiative:
+  (1) Epic / Sci-Fi Monoliths ➔ ARRI Rental DNA LF Custom Primes,
+  (2) Gritty Action / Thriller ➔ Tribe7 Blackwing7 T-Tuned OR Lomo Soviet Anamorphic,
+  (3) Intimate Drama / Romance ➔ Canon K35 Vintage 1970s Primes (f/1.3) OR Cooke S4/i Panchro,
+  (4) Neo-Noir / Cyberpunk ➔ Zeiss Supreme Prime Radiance (T* Blue Flare) OR Atlas Orion Anamorphic,
+  (5) Period Piece / Nostalgia ➔ Kowa Evolution 2X Vintage Anamorphic OR Ultra Panavision 70,
+  (6) High-End Fashion / Luxury ➔ Panavision Primo Artiste Primes OR ARRI Signature Prime,
+  (7) Dynamic Multi-Focal Action ➔ Angénieux Optimo Ultra 12X LF Zoom.
+  DILARANG HARDCODE LENSA ACOK TANPA LOGIKA NARASI!
+
+### 38. ZERO-DEFECT LENS PROTECTION SHIELD (ANTI-GENERIC FOOTAGE SHIELD V19.5)
+* Seluruh prompt live-action WAJIB mengunci 5 Jangkar Pelindung Lensa untuk membasmi 100% potensi footage generik:
+  (1) Multi-Plane Stepped Bokeh (Micro-defocus foreground -> sharp subject -> painterly oval background bokeh discs),
+  (2) Anti-Flat Camera Height Lock (Wajib mengunci tinggi kamera: knee-level, chest-level, atau over-the-shoulder),
+  (3) Physical Optical Imperfection Glue (Natural optical falloff, veiling glare, subtle chromatic aberration, optical halation),
+  (4) Zero-Morphing Lens Shift Physics (Mengunci identitas fisik subjek saat transisi lensa kinetik),
+  (5) Ban Word Overlaps (Haram kata sifat pasaran 8K, ultra realistic, ARRI Alexa generik di prompt utama).
 
 ---
 

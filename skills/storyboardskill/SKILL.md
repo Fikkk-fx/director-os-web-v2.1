@@ -8,7 +8,7 @@ description: Bertugas mengonversi rancangan akhir prompt video (Director O.S.) m
 
 ## 1. THE GRID EXTRACTION (Pemecahan 10 Detik)
 Ketika skill ini dipanggil, Anda **WAJIB** membaca blok `[PROSE]` dari *prompt video* dan memecahnya secara mendetail menjadi 10 adegan berurutan.
-*   Jika di *video prompt* terjadi `[RAPID PUSH-IN]` di detik ke-4, maka Panel 4 harus mendeskripsikan *Close-Up*.
+*   Jika di *video prompt* terjadi `Rapid Push-in` di detik ke-4, maka Panel 4 harus mendeskripsikan *Close-Up*.
 *   Jika detik ke-8 karakter terlempar ke udara, maka Panel 8 harus mendeskripsikan karakter melayang dari sudut pandang kamera yang sesuai.
 
 ## 2. THE IMAGE PROMPT FORMAT (Keluaran Akhir)

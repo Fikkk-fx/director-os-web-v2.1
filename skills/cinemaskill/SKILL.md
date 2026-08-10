@@ -18,13 +18,14 @@ To simulate a world-class film director and cinematographer. This skill dictates
 ### LIVE ACTION PHYSICS & DIRECTING
 **Trigger:** User requests a realistic film, live-action, or standard cinematic video.
 - **Master Cinema Camera:** **Panavision Millennium DXL2 Large Format cinema camera + Panavision Primo 70 prime lens + Light Iron Color 3 science** (delivers ultra-organic human skin latitude, creamy highlight roll-off, and physical 3D pop without digital plastic artifacts).
+- **Physical Imaging Chain Engine (PICE V19.4):** Target real-world physical camera behavior (*Physically plausible optical rendering, natural lens falloff, subtle chromatic aberration, authentic depth-dependent exposure motion blur integrated over 180-degree shutter interval, persistent 100% temporal world consistency, physically coherent causal lighting interaction, natural skin microtexture, subtle SSS, imperfect specular oil layer, restrained digital sharpening, real-world camera inertia with micro-operator correction*).
 - **Physics:** Grounded realism, realistic gravity, realistic lighting, and natural human behavior.
-- **Camera Science:** Observe first, react second. Never anticipate. Use realistic Steadicam, drone, or handheld motions. 
+- **Camera Science:** Observe first, react second. Never anticipate. Use realistic Steadicam, drone, or handheld motions with real-world operator inertia. 
 - **Lens Science:** Define focal length (e.g. 24mm for spatial tension, 35mm for documentary, 50mm/70mm for portrait, 85mm for intimate emotion).
 - **Stepped Multi-Plane Bokeh ("Bokeh Bertangga"):** Enforce multi-plane depth layering: Layer 1 (Foreground soft micro-defocus) -> Layer 2 (Razor-sharp subject focus) -> Layer 3 (Mid-ground elliptical falloff) -> Layer 4 (Far-background painterly oval bokeh discs).
 - **Default Medium Shot Bokeh Boost:** For Medium Shots (waist-up/chest-up), automatically boost background defocus strength: *"Enhanced f/1.2-f/1.4 ultra-shallow depth of field for Medium Shots, razor-sharp subject isolation, multi-plane stepped bokeh falloff"*.
 - **Human Behavior:** Micro-expressions, body physics, gait, breathing, weight.
-- **Global Style Tag:** Start every prompt with: *"Cinematic live-action photography, high-end commercial editorial quality, shot on Panavision Millennium DXL2 Large Format, Panavision Primo 70 prime lens, layered studio lighting."*
+- **Global Style Tag:** Start every prompt with: *"Cinematic live-action photography, high-end commercial editorial quality, shot on Panavision Millennium DXL2 Large Format, Panavision Primo 70 prime lens, physically plausible optical rendering."*
 - **Identity Lock:** *"Preserve exact facial structure, skin texture fidelity, and clothing details with 100% fidelity. Do not airbrush or beautify."*
 </LIVE_ACTION_ENGINE>
 
@@ -142,7 +143,7 @@ AI models fail and merge identities when two characters interact closely (e.g., 
 ### D2. Ocular Deliberative Gaze Engine (Anti-Flutter & Anti-Dead Eye)
 **CRITICAL:** AI video models swing between creepy unblinking plastic stares OR high-frequency eyelid twitching/fluttering.
 - **BANNED:** Never write `"unblinking stare"`, `"wide unblinking eyes"`, `"frozen gaze"`, or `"rapid blinks"`.
-- **MANDATORY INJECTION:** Append to all live-action prompts: *"Calm grounded gaze, occasional single deliberative micro-blink every 4-5 seconds, fluid resting eyelids, wet tear-film specular corneal reflections, zero rapid eyelid fluttering, zero nervous eye twitching, zero frozen staring, zero plastic mannequin gaze."*
+- **MANDATORY INJECTION:** Append to all live-action prompts: *"Calm grounded gaze, occasional single deliberative eyelid motion every 4-5 seconds, fluid resting eyelids, wet tear-film specular corneal reflections, zero rapid eyelid fluttering, zero nervous eye twitching, zero frozen staring, zero plastic mannequin gaze."*
 - **Environmental Reflexes:** In rain/wind/sweat/strobe scenes: *"occasional protective squinting, natural single eyelid reflex, zero glitchy eye spasms"*.
 
 ### D3. The 6 Biological Realism Layers (The Smooth Velvet Complexion)
@@ -182,7 +183,7 @@ AI models fail and merge identities when two characters interact closely (e.g., 
 ### H. THE HYBRID EDITING PROTOCOL (Single-Take vs Multi-Shot)
 **CRITICAL:** Sesuai dengan mandat **The Action-Reaction Multi-Shot (The King of Multi-Shot)**, sistem Anda kini memiliki kendali absolut untuk memecah kebosanan *Single-Frame*. AI Video modern mampu melakukan transisi potongan dalam satu *prompt*.
 - **The Phantom Camera (Ilusi Single-Take):** Jika adegan menuntut aliran waktu yang terus menyambung tanpa terputus, gunakan pergerakan kinetik ilusi (Misal: *180-Degree Orbit, Whip Pan, Crash Zoom*) tanpa memotong waktu.
-- **The Action-Reaction Hard Cut:** Jika ada banyak titik fokus (Orang 1, Orang 2, TV/Objek Penting), Anda **WAJIB** memecahnya menggunakan pemotongan agresif (Dar-Der-Dor) di dalam satu *prompt* (menggunakan pembagian waktu misal: `[0s-3s] [CLOSE-UP] Aksi... [3s-6s] [HARD CUT TO] Layar TV...`). DILARANG merender semua elemen penting di dalam satu bidikan lebar (*wide shot*) yang malas.
+- **The Action-Reaction Hard Cut:** Jika ada banyak titik fokus (Orang 1, Orang 2, TV/Objek Penting), Anda **WAJIB** memecahnya menggunakan pemotongan agresif (Dar-Der-Dor) di dalam satu *prompt* (menggunakan pembagian waktu misal: `[0s-3s] Close-up pada aksi... [3s-6s] [HARD CUT] Layar TV...`). DILARANG merender semua elemen penting di dalam satu bidikan lebar (*wide shot*) yang malas.
 - Aturan ini menyetujui dan berkolaborasi mutlak dengan *PromptSkill Rule 11 (Explicit Cut Syntax)*.
 
 ### I. THE MATT FLANNERY PROTOCOL (Universal Fight Cinematography)
@@ -213,7 +214,7 @@ AI models fail and merge identities when two characters interact closely (e.g., 
 - **Recording:** ARRIRAW, REDCODE RAW, Blackmagic RAW, ProRes 4444 XQ, 16-bit RAW, 12-bit Log, 4:4:4 chroma, Open Gate, OpenEXR workflow.
 - **Exposure:** Smooth highlight roll-off, Highlight retention, Shadow separation, Deep black levels, Balanced exposure, Rich tonal range, Filmic contrast, Soft shoulder, Gentle toe curve.
 - **Lighting:** Motivated/Practical lighting, Soft wraparound key light, Negative fill, Edge/Rim light, Bounce fill, Volumetric lighting, Atmospheric haze, Directional sunlight, Global illumination.
-- **Lens Glass:** Panavision Primo / Ultra Vista, Cooke S4 / Speed Panchro, ARRI Signature Prime, Zeiss Supreme Prime, Leica Summilux-C, Atlas Orion / Hawk Anamorphic, Vintage anamorphic glass, Organic lens rendering, Minimal focus breathing, High microcontrast, Natural optical falloff.
+- **Lens Glass & Large Format Optics Suite (Panavision DXL2 Native & Companions):** Panavision Primo 70 Large Format Primes, Panavision Primo Artiste Primes, Ultra Panavision 70mm Anamorphic, Panavision C-Series & E-Series Vintage Anamorphic, ARRI Rental DNA LF Custom Primes, Tribe7 Blackwing7 T-Tuned/S-Tuned Large Format Primes, Canon K35 Vintage 1970s Primes (f/1.3), Kowa Evolution 2X Vintage Anamorphic, Zeiss Supreme Prime Radiance (T* Blue Flare), Angénieux Optimo Ultra 12X Large Format Zoom, Lomo Soviet Vintage Anamorphic, Cooke S4/i & Speed Panchro, ARRI Signature Prime, Leica Summilux-C, Atlas Orion / Hawk Anamorphic. Organic lens rendering, zero harsh digital edge lines, natural optical falloff, minimal focus breathing, high microcontrast, painterly oval bokeh discs.
 - **Image Characteristics & Film Stock:** Organic highlight bloom, Halation, Gate weave, Fine film grain, Lens breathing, Anamorphic oval bokeh, Barrel distortion, Natural vignette, Blooming highlights, Subtle chromatic aberration. Kodak Vision3 250D/500T/50D, Kodak 2383 Print Film LUT, Fuji Eterna 250D, Cineon Film Density, Film print emulation.
 - **Finishing:** ACES color managed, HDR master, Dolby Vision grade, SDR trim pass, Digital Intermediate (DI), HDR10 mastering, Film emulation LUT, Color-managed pipeline.
 

@@ -131,8 +131,4 @@ description: Pustaka estetika Sinema Indonesia kelas festival (Joko Anwar, Timo 
    - **Jawa / Melayu / Sumatra / Bali:** Kulit kuning langsat/keemasan/sawo matang eksotis (*warm golden-honey, luminous olive, or rich tan*).
    - **Maluku / NTT / Papua:** Kulit mahogani pekat (*rich dark mahogany skin, expressive eyes, curly hair*).
 
-**ATURAN MUTLAK KETIKA SKILL INI DIPANGGIL:**
-1. Parameter Visual **WAJIB** dimasukkan ke dalam Kerangka V19.1.
-2. Parameter Dialog **WAJIB** menggantikan gaya dialog Hollywood di Fase 1 (Elite Screenwriting).
-3. **HARAM** menggunakan lampu outdoor neon pink/green/blue. Gunakan Sodium Amber, Mercury Teal, atau Warm Tungsten.
-4. Selalu asumsikan warna kulit (*skin tone*) karakter adalah sawo matang khas Nusantara (*Southeast Asian golden-brown complexion*).
+4. DILARANG KERAS mengasumsikan warna kulit sebagai sawo matang saja. Sistem WAJIB secara dinamis menentukan warna kulit (putih gading/porselen, kuning langsat, sawo matang eksotis, atau mahogani perunggu) sesuai latar belakang etnis karakter yang diminta cerita!

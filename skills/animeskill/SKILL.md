@@ -1,148 +1,116 @@
 ---
-name: animeskill
-description: >-
-  Kompilasi mutlak untuk generasi prompt Video Anime tingkat pro. Menggabungkan
-  Sistem Prompt AI Video (Reference Gathering, DNA Character), The 12 Principles of
-  Animation (Fisika & Fluiditas), dan Master Director Template — Anime Edition.
-  Dirancang untuk Kling 3.0, Veo 3.1, Sora 2, Runway Gen-4.5, Luma, dan Pika.
+name: "AnimeSkill — The Pure 2D Sakuga & Cel Animation Engine v1.0"
+description: >
+  Specialized master engine for generating pure 2D traditional Japanese anime, Sakuga keyframe animation, 
+  cel-shaded production stills, and manga video prompts using Industry-Standard Technical Medium Specification Tokens.
 ---
 
-# 🎌 ULTIMATE ANIME VIDEO PROMPT ENGINE v2.0
-Gabungan dari **AI Image/Video Prompt Engine**, **AnimationSkill (Anime Edition)**, dan **JapanSkill**.
+# AnimeSkill — The Pure 2D Sakuga & Cel Animation Engine v1.0
 
-Engine ini memastikan pembuatan video anime AI yang **bebas dari animasi kaku (stiff)**, **konsisten dalam desain karakter (100% lock)**, mematuhi **fisika anime (12 Principles)**, dan memiliki **sinematografi serta ritme yang termotivasi (motivated cinematography)**.
+## 1. PURPOSE & THE ZERO-3D PARADIGM SHIFT
+AI Video and Image Generators (Kling, Sora, Seedance, Runway, Midjourney, Flux) are trained on vast datasets containing 3D CGI video game cutscenes and PBR renders. If given natural language prompts describing lighting (e.g. `volumetric depth`, `6500K lighting`, `specular reflections`), the AI's text encoder maps the scene to 3D pipelines.
 
----
-
-## 🔍 STEP 0: REFERENCE GATHERING (MANDATORY)
-Sebelum menulis prompt, LAKUKAN PENCARIAN VISUAL (Google, X, Instagram, YouTube) untuk mendapatkan data nyata mengenai gaya anime, referensi pencahayaan, dan komposisi.
-
-**Ekstraksi Data Visual:**
-- **🎨 Color & Art Style:** Cel-shaded, watercolor backgrounds, high-contrast shonen?
-- **💡 Lighting:** Direction, color temp (e.g., sunset glow, harsh neon).
-- **📐 Composition:** Tatami-shot, dynamic angles, depth of field?
-- **📹 Motion & Timing:** Cepat (action) atau meditatif (slice-of-life)?
+**AnimeSkill** enforces **The Technical Medium Specification Law**: It completely purges all weak negative commands (like "no 3D") and replaces them with **Authoritative Technical 2D Medium Specification Tokens** and **Sakugabooru-style Animation Shorthand Tags** to guarantee 100% flat 2D raster rendering.
 
 ---
 
-## 🧬 STEP 1: CHARACTER CONSISTENCY & DNA LOCK
-Penyakit utama AI Video adalah *character drift* (wajah/baju berubah) dan animasi yang kaku (zombie/robotic) ketika mencoba menjaga konsistensi.
+## 2. THE SAKUGABOORU TECHNICAL TAG DATABASE
 
-**1. CHARACTER DNA CARD (Anchor)**
-Letakkan blok ini di awal setiap prompt karakter:
-```markdown
-[CHARACTER ANCHOR — DO NOT DEVIATE]
-Character: [Nama & Peran]
-Face: [Bentuk mata, gaya highlight, rambut, proporsi wajah anime]
-Body: [Postur, tinggi, bentuk badan]
-Costume: [Detail baju, warna dominan]
-FORBIDDEN: [No western 3D, no realistic human skin, no robotic stiffness]
-[END ANCHOR]
-```
+To force the AI text encoder into flat raster rendering, compile prompts using these explicit technical tags from animation datasets:
 
-**2. THE ANIME PERFORMANCE LOCK (Anti-Stiffness)**
-*Character design lock (100% design consistency)* HARUS diimbangi dengan *fluid performance*:
-- **Wajib Ada:** Micro-expressions anime alami (perubahan pupil mata, kedipan, alis), *hair dynamics* (rambut bergerak mengikuti angin/gerakan), dan *cloth physics* (kain berayun).
-- **Forbidden:** No frozen/stiff characters, no limited keyframe movement, no zombie stares.
+### A. Kinetics & Action Physics (Fisika Gerak Laga)
+- **`impact_frames`** (Brief high-contrast black/white flashing frames to accentuate hits).
+- **`obake_smears`** / **`smear_frames`** (Hand-drawn elongated motion smears replacing optical blur).
+- **`speed_lines`** / **`shuuchuusen`** (Action lines radiating from center to convey high velocity).
+- **`blocky_cube_debris`** (Yutaka Nakamura-style blocky, square debris shards flying off surfaces).
+- **`paint_splatter_impact`** (Brutal hits rendered as flat 2D ink/paint splatters).
+- **`smoky_explosions`** (Thick, flat, balloon-like hand-drawn smoke plumes).
 
----
+### B. Linework & Contour Anatomy (Anatomi Garis Tinta)
+- **`clean vector contour line art`** / **`bold outlines`** (Solid black outlines on all assets).
+- **`tsukegami ink contours`** (Varying ink line weight: thick outer edges, thin inner facial lines).
+- **`zero-blend black contours`** (Completely solid ink lines that never blend with background color).
+- **`constant line-weight ink stroke`** (Maintains clean flat lines without 3D depth shadowing).
 
-## 🎬 STEP 2: ANIME PHYSICS & THE 12 PRINCIPLES OF ANIMATION
-AI cenderung merender gerakan secara linier. Injeksi prinsip ini ke dalam **[PHYSICS VECTORS]**:
+### C. Shading & Color Palette (Pewarnaan & Shadow Cel)
+- **`cel shading`** / **`two-tone shading`** (Sharp shadow cuts without soft gradients).
+- **`flat color fills`** / **`flat matte paint fills`** (Untextured matte color planes).
+- **`limited color palette`** (Blocks AI from generating millions of gradient shades).
+- **`flat tone shadow cutlines (kage-gaki)`** (Technical anime shadow shape cuts).
+- **`solid white specular linework`** (Pantulan cahaya berupa sapuan garis putih padat).
 
-1. **Anticipation & Follow Through:** `0.3s pre-action wind-up`, `hair/appendage drag physics and momentum decay`.
-2. **Slow In / Slow Out (S-Curve):** `organic acceleration ramping`, `damped inertia arrival`. Tidak boleh ada kecepatan linier.
-3. **Squash & Stretch (Khusus Aksi/Komedi):** `kinetic compression on impact`, `elastic volume retention`.
-4. **Secondary Action:** `subconscious micro-gestures`, `ambient eye highlights shifting`.
-
----
-
-## ⛩️ STEP 3: STUDIO SIGNATURES & NIHON AESTHETICS (JAPAN-SKILL)
-Tentukan genre dan demografi untuk mengunci estetika.
-
-- **Shonen (Action/Epic):** `Bold dynamic linework, high-energy pacing, high-contrast shading, sweeping circular swing dynamics.`
-- **Ghibli / Slice-of-Life:** `Painterly watercolor backgrounds, grounded natural movement, soft ambient lighting, Hayao Miyazaki aesthetic.`
-- **Ozu / Cinematic Drama (Shomin-geki):** `Tatami-Shot (low eye-level), dead-center symmetry, Bressonian restraint, hidden emotions behind polite smiles.`
-- **Cyberpunk / Sci-Fi Anime:** `Neon atmospheric lighting, hyper-detailed mechanical parts, claustrophobic urban decay.`
+### D. Broadcast Format Anchors (Jangkar Format Penyiaran)
+- **`anime screencap`** / **`screencap`** (Forces format of a television broadcast capture frame).
+- **`production still`** / **`still from anime episode`** (Forces flat 2D raster cel format).
+- **`retro anime still`** (Invokes pre-CGI traditional animation database properties).
 
 ---
 
-## 📝 STEP 4: THE MASTER DIRECTOR TEMPLATE (ANIME EDITION)
-*(Gunakan kerangka di bawah ini untuk menghasilkan prompt final dengan memaksimalkan batas karakter absolut spesifik dari model yang dituju (misal: tepat maks 2.500 karakter untuk Kling 3.0 / Seedance 2.5, maks 1.500 untuk Runway. Untuk Hailuo/Minimax gunakan mode padat maks 350-450 karakter))*
+## 3. THE 4 GREAT ANIME DIRECTOR ARCHETYPES
 
-```markdown
-TITLE: [Judul]
-DURATION: [Durasi, misal: 5s / 10s]
-GENRE: [Misal: Shonen Action / Slice of Life]
-STYLE: High-Quality Modern Anime Production, clean expressive linework, vibrant balanced color palette, smooth fluid animation with professional timing.
+Steer visual style by invoking these technical studio/director profiles:
 
-----------------------------------------
-REFERENCE LOCK (STRICT)
-----------------------------------------
-IMAGE A (Main Character): Exact anime design match. 100% fluid anime performance, lively eye highlights, natural micro-expressions, hair/cloth physics responding to movement. No stiff/frozen acting.
-IMAGE B (Environment): Exact geographical layout, continuous anime art style.
+### 1. MAPPA / Wit / Ufotable Modern Action Seinen (Crisp & High-Budget)
+- *Aesthetic:* `modern high-budget 2D TV anime screencap, crisp digital cel paint fills, sharp clean outlines, dramatic digital shadow cutlines, high visual density`.
+- *Use Case:* High-intensity modern martial arts, gritty crime, realistic urban sequences.
 
-----------------------------------------
-SPATIAL GEOGRAPHY & CONTINUITY
-----------------------------------------
-- Camera North established. All movement relative to this fixed north.
-- Room layout and anchor objects are 100% identical. Object permanence is absolute.
+### 2. Studio Bones Sakuga Action (The Yutaka Nakamura Cadence)
+- *Aesthetic:* `peak 2D Sakuga animation keyframe, blocky cube debris shards, dynamic impact frames, extreme perspective warp, exaggerated Obake smears, hand-drawn motion velocity`.
+- *Use Case:* Destructive action, superpowered hits, complex camera sweeps.
 
-----------------------------------------
-BLOCKING & CAMERA PACKAGE
-----------------------------------------
-- Motivated anime camera movement (e.g., dynamic 3D orbital tracking or static Tatami-shot).
-- S-curve easing on all camera moves.
+### 3. Studio Ghibli / Kyoto Animation Atmospheric (Organic & Detailed)
+- *Aesthetic:* `retro hand-painted anime background still, digital gouache painted scenery, atmospheric sunlight shafts (Komorebi), delicate line weights, soft organic flat colors`.
+- *Use Case:* Quiet dramatic dialogue, emotional beats, outdoor natural settings.
 
-----------------------------------------
-ACTION & ANIMATION PHYSICS (TEMPORAL BLUEPRINT)
-----------------------------------------
-[0.0s-1.5s]: Anticipation - (e.g., Mata menyipit, angin meniup rambut ke belakang)
-[1.5s-4.0s]: Primary Action - (e.g., Loncatan cepat dengan motion blur, cloth physics)
-[4.0s-5.0s]: Follow Through - (e.g., Mendarat dengan berat, inersia rambut perlahan berhenti)
-
-----------------------------------------
-AUDIO (Untuk Veo 3.1 / Kling 3.0)
-----------------------------------------
-[Ambient layer] + [Action foley / SFX] + [Anime Score/Music]
-
-----------------------------------------
-NEGATIVE PROMPTS (MANDATORY)
-----------------------------------------
-No AI stiffness, no robotic movement, no 3D western CGI, no Disney/Pixar style, no hyper-real human skin, no frozen hair/clothes, no design drift, no unexplained geography changes, no watermark, no logo, no text overlay.
-```
+### 4. Gainax / Trigger Kinetic Retro Cel (Stylized & Stylistic)
+- *Aesthetic:* `1990s Gainax retro anime still, thick black ink strokes, high-velocity speedlines, exaggerated perspective distortion, high contrast color block fills`.
+- *Use Case:* Over-the-top comedy, retro sci-fi, chaotic combat.
 
 ---
 
-## 💎 STEP 5: THE ABSOLUTE FLATTENED PROMPT STRUCTURE (V19.1)
-Untuk output akhir (terutama saat menggunakan Seedance 2.5, Kling 3.0, atau model yang membutuhkan prompt padat dan kinetik), **WAJIB** meratakan (*flatten*) seluruh instruksi ke dalam **Struktur 3-Blok Mutlak** di bawah ini. Jangan gunakan bullet points.
+## 4. THE ANIME IMAGE COMPILER GUIDE (Midjourney Niji v6 & Flux)
 
-Gunakan format ini sebagai *Output Akhir* yang akan disalin ke AI Generator:
+When generating character reference sheets (`CharSheet`), environment references (`EnvSheet`), or prop sheets (`PropSheet`), apply these technical structures:
 
+### A. Character Model Sheet (`CharSheet`):
 ```text
-[PROSE & IN-LINE SPATIAL & GLOBAL LOCK]:
-[0s-3s]: [Aksi kinetik pertama, pergerakan kamera, dan penguncian geometri/fisika awal].
-[3s-6s]: [HARD CUT TO: ANGLE BARU] [Deskripsi kelanjutan aksi, interaksi karakter, dan penguncian konsistensi desain 100%].
-[6s-10s]: [HARD CUT TO: ANGLE BARU] [Aksi resolusi/follow-through, stasis protocol jika ada, dan penguncian lingkungan].
+[Subject Description], 2D anime screencap, character model sheet, multi-angle view sheet, front view, side profile, clean digital outline ink lines, flat shading, flat color fills, pure solid white background, no shadows --niji 6 --style raw --s 200
+```
 
-[ACTING & LIGHTING SCIENCE]:
-High-quality modern anime production, [Style spesifik]. [COLOR GRADE LOCK]: Primary Triadic Separation ([Warna 1, Warna 2, Warna 3]). Atmospheric lighting [Sumber dan arah cahaya]. Cel-shaded animation with rich gradient shading, expressive natural eye highlights, zero flat plastic shading, zero robotic stiffness.
-
-[CAMERA SCIENCE & KINETIC PHYSICS]:
-Fluid 24fps cinema motion, anime-standard shutter angle, zero temporal warping. [Lensa], cinematic shallow depth of field, sharp subject separation. Organic subtle human-held camera physics, smooth S-curve easing on all character micro-motions, strict 3D volume preservation across all shots.
+### B. Environment Reference Sheet (`EnvSheet`):
+```text
+[Environment Description], 2D anime screencap background layout, hand-painted digital art layers, flat colors, poster color scenery painting --niji 6 --style raw
 ```
 
 ---
 
-## 🎞️ SPECIALIZED EXTENSIONS
+## 5. THE VIDEO COMPILER GUIDE (Kling, Sora, Runway, Seedance)
 
-### 1. Match-Cut Anime Montage (Pixar/Anime Commercial Style)
-Jika meminta iklan sinematik dengan perpindahan lokasi yang dinamis:
-- Gunakan **Hero Object (Match-Cut)**: Sebuah objek (misal bola voli atau kelopak bunga sakura) berada di posisi, skala, dan lintasan yang sama persis di setiap potongan scene.
-- Potongan bergeser mengikuti ritme / beat musik.
+### A. Frame Rate Modulation (Cadence)
+To prevent the AI from generating smooth 3D interpolation ("tweening"), which creates a fluid CGI/3D look, explicitly dictate the keyframing cadence in `[CAMERA SCIENCE & KINETIC PHYSICS]` using positive technical tags:
+*   *Acting/Dialogue Cadence:* **`animating on twos with a hand-drawn 12fps motion cadence`**, **`staggered 12fps hand-drawn keyframe pacing`**, **`limited-rate frame-by-frame cadence`**, **`discrete cell updates`**.
+*   *Action/Combat Cadence:* **`kinetic staggered 12fps hand-drawn keyframe pacing`**, **`hand-drawn Obake smear interpolation replacing fluid motion blur`**, **`impact frames`**.
+*   *Anti-Tweening Rules:* Never allow smooth fluid motions. Command: **`limited frame rate cadence, discrete keyframed intervals, hand-drawn 12fps timing`** (strictly mandate 12fps, zero 24fps elements).
 
-### 2. Anime Storyboard Sheet / Shot Breakdown
-Jika pengguna meminta "Storyboard Anime" berupa satu gambar grid:
-- **Format:** `1 landscape sheet, 12 panels in 3x4 grid`.
-- **Gaya Visual:** `Black-and-white, hand-drawn anime pencil sketch (Genga style), numbered panels with motion arrows.`
-- (Ini adalah pengecualian untuk aturan larangan teks, karena nomor panel dan panah gerakan diperlukan).
+### B. 2D Camera Motion Mechanics
+AI Video engines default to 3D camera tracks. Ban Dolly and Crane track syntax, and replace them with **2D multi-plane panning** terms:
+*   *Instead of Dolly In:* **`Dynamic 2D camera push-in tracking, background layer parallax`**.
+*   *Instead of Pan/Tilt:* **`Multi-plane 2D camera sweep, 2D panning layout, background panning parallax`**.
+
+---
+
+## 6. MASTER SANDBOX RULES (ANTI-BLEED SAFEGUARDS)
+
+To ensure this rich database never leaks or corrupts other genres:
+1.  **Strict Isolation Check:** The compiler MUST check if the project genre is `2D ANIME / SAKUGA`. If not, all terms in this document are **BLOCKED** from the prompt.
+2.  **No Camera Science Bleed:** Live-action terms like `cinéma vérité`, `Panavision Millennium`, `f/1.4 lens`, or `35mm lens` are strictly forbidden inside anime prompts.
+3.  **No PBR Shading Bleed:** Terms like `ambient occlusion`, `subsurface scattering`, `volumetric light`, `photorealistic`, or `Kelvin temperatures` are strictly forbidden inside anime prompts.
+
+---
+
+## 7. THE MASTER ANIME STYLE INHERITANCE & TEXTURE SYNCHRONIZATION LAW
+
+To prevent style collisions between Text-to-Image reference sheets (`CharSheet`, `EnvSheet`, `PropSheet`) and Image-to-Video / Text-to-Video prompts:
+1. **Phase 0 Master Style Anchor:** The specific anime director/studio archetype selected in Phase 0 (e.g. MAPPA Modern Seinen, Studio Trigger Retro Cel, Studio Bones Sakuga, Studio Ghibli Gouache) MUST be logged in `[SYS-LOG: RNG INITIATIVE]` as `[MASTER ANIME STYLE LOCK]`.
+2. **Mandatory Inheritance across All Phases:** EVERY single prompt generated in Phase 3 (reference sheets) AND Phase 4 (video prompts) MUST explicitly inherit the exact same `[MASTER ANIME STYLE LOCK]` technical specification tokens.
+3. **Zero Style Collision Guarantee:** This guarantees 100% texture, line-weight, shading, and aesthetic synchronization between Midjourney Niji / Flux reference sheets and Kling / Sora / Seedance video generation!
