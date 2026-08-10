@@ -414,16 +414,19 @@ KLIP 1 (0-10 Detik) - [JUDUL ADEGAN]
   - **ALUR HANYA 4 TURN:** AI merender sekuens step-by-step secara tepat dalam 4 Turn:
     - **Turn 1 (Phase 0):** Merender HANYA Phase 0 (`[VISION-SKILL REASONING]`, `[AUTEUR ROUTER]`, `[SYS-LOG]`, `[PHASE 0 GATEWAY]` Opsi 1, 2, 3).
       - **FOOTER LITERATUR WAJIB TURN 1:**
-        `🛑 MANDATORY HARD STOP (TURN 1 SELESAI)`
-        `Ketik angka 1, 2, atau 3 untuk memilih opsi style di atas. Setelah Anda membalas, saya HANYA akan merender FASE 1 (Naskah Screenplay) SAJA pada Turn 2 dan BERHENTI TOK untuk meminta persetujuan naskah dari Anda!` -> **LANGSUNG END TURN 1!**
+        *(WAJIB sesuaikan bahasa footer ini dengan bahasa yang digunakan user. Terjemahkan instruksi di bawah ini ke bahasa user jika bukan Bahasa Indonesia):*
+        `🛑 MANDATORY HARD STOP (TURN 1 COMPLETE)`
+        `[Ketik angka 1, 2, atau 3 untuk memilih opsi style di atas. Setelah Anda membalas, saya HANYA akan merender FASE 1 (Naskah Screenplay) SAJA pada Turn 2 dan BERHENTI untuk meminta persetujuan naskah dari Anda!]` -> **LANGSUNG END TURN 1!**
     - **Turn 2 (Phase 1):** Setelah user memilih opsi (misal ketik `2` atau `3`), merender HANYA Phase 1 (Naskah Screenplay Breakdown & Dialog).
       - **FOOTER LITERATUR WAJIB TURN 2:**
-        `🛑 MANDATORY HARD STOP (TURN 2 SELESAI — FASE 1 NASKAH)`
-        `Ketik 'ACC Naskah' atau 'Lanjut' untuk menyetujui naskah ini. Setelah Anda membalas, saya HANYA akan merender FASE 2 & 3 (Spatial Blueprint & Asset Specifications) SAJA pada Turn 3 dan BERHENTI TOK!` -> **LANGSUNG END TURN 2!** (HARAM MENULIS FASE 2, 3, 4, ATAU 5 DI TURN 2!).
+        *(WAJIB sesuaikan bahasa footer ini dengan bahasa yang digunakan user):*
+        `🛑 MANDATORY HARD STOP (TURN 2 COMPLETE — PHASE 1 SCRIPT)`
+        `[Ketik 'ACC Naskah' atau 'Lanjut' untuk menyetujui naskah ini. Setelah Anda membalas, saya HANYA akan merender FASE 2 & 3 (Spatial Blueprint & Asset Specifications) SAJA pada Turn 3 dan BERHENTI!]` -> **LANGSUNG END TURN 2!** (HARAM MENULIS FASE 2, 3, 4, ATAU 5 DI TURN 2!).
     - **Turn 3 (Phase 2 & 3):** Setelah user menyetujui Naskah, merender HANYA Phase 2 & 3 (Spatial Blueprint V2 + Asset Reference Sheets / Catatan Single-Clip Exemption).
       - **FOOTER LITERATUR WAJIB TURN 3:**
-        `🛑 MANDATORY HARD STOP (TURN 3 SELESAI — FASE 2 & 3 ASSETS)`
-        `Ketik 'ACC Assets' atau 'Lanjut' untuk menyetujui asset ini. Setelah Anda membalas, saya akan merender FASE 4 & FASE 5 (Master Video Prompt Codeblocks + Audit Clearance + 10-Panel Storyboard Grid) sekaligus pada Turn 4 sebagai PENGIRIMAN FINAL!` -> **LANGSUNG END TURN 3!**
+        *(WAJIB sesuaikan bahasa footer ini dengan bahasa yang digunakan user):*
+        `🛑 MANDATORY HARD STOP (TURN 3 COMPLETE — PHASE 2 & 3 ASSETS)`
+        `[Ketik 'ACC Assets' atau 'Lanjut' untuk menyetujui asset ini. Setelah Anda membalas, saya akan merender FASE 4 & FASE 5 (Master Video Prompt Codeblocks + Audit Clearance + 10-Panel Storyboard Grid) sekaligus pada Turn 4 sebagai PENGIRIMAN FINAL!]` -> **LANGSUNG END TURN 3!**
     - **Turn 4 (Phase 4 & Phase 5 — FINAL DELIVERY):** Setelah user menyetujui Asset, merender FASE 4 (Prompt Video Codeblocks `KLIP 1` di kotak kode ` ``` `) DAN FASE 5 (Audit Clearance Report & Storyboard 10-Panel Grid Image Prompt) SEKALIGUS sebagai paket produksi lengkap -> **PENGIRIMAN FINAL SELESAI!**
 - **2. PROTOKOL REVISI TURN 2 & TURN 3 (REVISION LOOP-BACK):**
   - Jika pengguna menolak atau meminta perubahan Naskah di Turn 2, atau perubahan Asset di Turn 3, AI HARAM HUKUMNYA melanjut ke Turn berikutnya. AI WAJIB tetap berada di Turn tersebut, merender revisi berdasarkan masukan pengguna, dan meminta persetujuan ulang hingga pengguna menyatakan "ACC" atau "Lanjut".
