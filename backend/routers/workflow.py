@@ -1,6 +1,7 @@
+import os
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 from typing import Optional
-import os
 import httpx
 import base64
 
@@ -9,6 +10,20 @@ router = APIRouter()
 ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 CHAT_MODEL = "openai/gpt-5.6-sol"
+
+# Load workflow and skills context globally to save disk I/O per request
+BASE_DIR = Path(__file__).resolve().parent.parent
+try:
+    with open(BASE_DIR / "director_os_master_workflow.txt", "r", encoding="utf-8") as f:
+        MASTER_WORKFLOW = f.read()
+except Exception:
+    MASTER_WORKFLOW = "Master workflow context is unavailable."
+
+try:
+    with open(BASE_DIR / "skills" / "Rangkuman_dan_Kompilasi_Skill.md", "r", encoding="utf-8") as f:
+        SKILLS_CONTEXT = f.read()
+except Exception:
+    SKILLS_CONTEXT = "Skills context is unavailable."
 
 def _headers():
     return {
@@ -39,17 +54,24 @@ async def chat_with_agent(
                 "image_url": {"url": f"data:{mime};base64,{b64}"}
             })
 
+        system_prompt = (
+            "You are Director OS, a world-class cinematic AI assistant. "
+            "Help the user develop film concepts, write detailed screenplays, "
+            "design characters and environments, and craft professional video prompts. "
+            "Be specific, creative, and highly detailed in your responses.\n\n"
+            "=== DIRECTOR OS MASTER WORKFLOW ===\n"
+            f"{MASTER_WORKFLOW}\n\n"
+            "=== AVAILABLE SKILLS ===\n"
+            f"{SKILLS_CONTEXT}\n\n"
+            "Use the above workflow and skills knowledge to assist the user effectively."
+        )
+
         payload = {
             "model": CHAT_MODEL,
             "messages": [
                 {
                     "role": "system",
-                    "content": (
-                        "You are Director OS, a world-class cinematic AI assistant. "
-                        "Help the user develop film concepts, write detailed screenplays, "
-                        "design characters and environments, and craft professional video prompts. "
-                        "Be specific, creative, and highly detailed in your responses."
-                    )
+                    "content": system_prompt
                 },
                 {"role": "user", "content": content}
             ],
