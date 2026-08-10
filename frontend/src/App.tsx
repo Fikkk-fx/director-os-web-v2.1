@@ -105,9 +105,10 @@ function App() {
   const [promptVideo, setPromptVideo] = useState('');
 
   // Generation Loading State
-  const [isGeneratingHome, setIsGeneratingHome] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [durationVid, setDurationVid] = useState('5s');
+  
+  // Track generation state per session ID
+  const [generatingSessions, setGeneratingSessions] = useState<Record<string, boolean>>({});
 
   // File Inputs
   const [refFileHome, setRefFileHome] = useState<File | null>(null);
@@ -127,7 +128,6 @@ function App() {
   // Generation Settings State
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
   const [aspectRatioVid, setAspectRatioVid] = useState('16:9');
-  const [durationVid, setDurationVid] = useState('5s');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -173,7 +173,11 @@ function App() {
     };
     
     updateActiveSessionMessages(prev => [...prev, newUserMsg]);
-    setIsGeneratingHome(true);
+    
+    // Capture the session ID to track generation state accurately
+    const targetSessionId = activeSessionId || sessions[0]?.id; // Fallback if just created
+    
+    setGeneratingSessions(prev => ({ ...prev, [targetSessionId]: true }));
     
     try {
       const formData = new FormData();
@@ -202,7 +206,7 @@ function App() {
         timestamp: new Date().toLocaleTimeString()
       }]);
     } finally {
-      setIsGeneratingHome(false);
+      setGeneratingSessions(prev => ({ ...prev, [targetSessionId]: false }));
     }
   };
 
@@ -230,8 +234,8 @@ function App() {
     
     updateActiveSessionMessages(prev => [...prev, newUserMsg]);
     
-    if (isImage) setIsGeneratingImage(true);
-    else setIsGeneratingVideo(true);
+    const targetSessionId = activeSessionId || sessions[0]?.id;
+    setGeneratingSessions(prev => ({ ...prev, [targetSessionId]: true }));
     
     try {
       const formData = new FormData();
@@ -265,8 +269,8 @@ function App() {
       };
       updateActiveSessionMessages(prev => [...prev, errorMsg]);
     } finally {
-      if (isImage) setIsGeneratingImage(false);
-      else setIsGeneratingVideo(false);
+      const targetSessionId = activeSessionId || sessions[0]?.id;
+      setGeneratingSessions(prev => ({ ...prev, [targetSessionId]: false }));
     }
   };
 
@@ -277,7 +281,7 @@ function App() {
     }
   };
 
-  const isGenerating = activeTab === 'Home' ? isGeneratingHome : activeTab === 'Image' ? isGeneratingImage : isGeneratingVideo;
+  const isGenerating = activeSessionId ? !!generatingSessions[activeSessionId] : false;
   
   return (
     <div className="app-layout">
