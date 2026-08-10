@@ -2,8 +2,10 @@ import os
 from pathlib import Path
 from fastapi import APIRouter, HTTPException, File, UploadFile, Form
 from typing import Optional
+import os
 import httpx
 import base64
+import json
 
 router = APIRouter()
 
@@ -35,6 +37,7 @@ def _headers():
 @router.post("/chat")
 async def chat_with_agent(
     prompt: str = Form(...),
+    history: str = Form("[]"),
     reference_image: Optional[UploadFile] = File(None)
 ):
     """Chat with GPT-5.6 Sol via Atlas Cloud /v1/chat/completions"""
@@ -66,15 +69,24 @@ async def chat_with_agent(
             "Use the above workflow and skills knowledge to assist the user effectively."
         )
 
+        try:
+            past_messages = json.loads(history)
+        except Exception:
+            past_messages = []
+
+        messages_payload = [{"role": "system", "content": system_prompt}]
+        
+        for msg in past_messages:
+            role = "assistant" if msg.get("role") == "ai" else "user"
+            text = msg.get("content", "")
+            if text:
+                messages_payload.append({"role": role, "content": text})
+
+        messages_payload.append({"role": "user", "content": content})
+
         payload = {
             "model": CHAT_MODEL,
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {"role": "user", "content": content}
-            ],
+            "messages": messages_payload,
             "stream": False
         }
 

@@ -109,6 +109,8 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('prompt', userPrompt);
+      const historyPayload = messagesHome.map(m => ({ role: m.role, content: m.content }));
+      formData.append('history', JSON.stringify(historyPayload));
       if (refFileHome) formData.append('reference_image', refFileHome);
 
       const response = await axios.post(`${API_BASE}/api/chat`, formData, {
