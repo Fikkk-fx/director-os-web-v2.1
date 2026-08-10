@@ -527,6 +527,7 @@ function App() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: activeTab === 'Video' ? '1fr 1fr' : '1fr', gap: '12px', marginTop: '12px' }}>
+              {(activeTab === 'Image' ? models.find(m => m.id === selectedImageModel)?.supported_params?.includes('aspect_ratio') : models.find(m => m.id === selectedVideoModel)?.supported_params?.includes('aspect_ratio')) && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Aspect Ratio</label>
                   <select className="apple-input" style={{ padding: '10px', fontSize: '13px' }} 
@@ -542,6 +543,7 @@ function App() {
                     <option value="21:9">21:9</option>
                   </select>
                 </div>
+              )}
               {activeTab === 'Video' && (
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Duration</label>
@@ -555,47 +557,67 @@ function App() {
 
             {activeTab === 'Image' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-                <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Negative Prompt</label>
-                  <textarea className="apple-input" style={{ fontSize: '13px', minHeight: '60px' }} value={negPromptImg} onChange={(e) => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted..." />
-                </div>
+                {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('negative_prompt') && (
+                  <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '16px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Negative Prompt</label>
+                    <textarea className="apple-input" style={{ fontSize: '13px', minHeight: '60px' }} value={negPromptImg} onChange={(e) => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted..." />
+                  </div>
+                )}
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Outputs</label>
-                    <input type="number" min="1" max="4" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={numOutputsImg} onChange={(e) => setNumOutputsImg(parseInt(e.target.value) || 1)} />
+                {(models.find(m => m.id === selectedImageModel)?.supported_params?.includes('num_outputs') || models.find(m => m.id === selectedImageModel)?.supported_params?.includes('output_format')) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('num_outputs') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Outputs</label>
+                        <input type="number" min="1" max="4" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={numOutputsImg} onChange={(e) => setNumOutputsImg(parseInt(e.target.value) || 1)} />
+                      </div>
+                    )}
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('output_format') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Format</label>
+                        <select className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={formatImg} onChange={(e) => setFormatImg(e.target.value)}>
+                          <option value="webp">WebP</option>
+                          <option value="png">PNG</option>
+                          <option value="jpg">JPG</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Format</label>
-                    <select className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={formatImg} onChange={(e) => setFormatImg(e.target.value)}>
-                      <option value="webp">WebP</option>
-                      <option value="png">PNG</option>
-                      <option value="jpg">JPG</option>
-                    </select>
-                  </div>
-                </div>
+                )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Quality (1-100)</label>
-                    <input type="number" min="1" max="100" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={qualityImg} onChange={(e) => setQualityImg(parseInt(e.target.value) || 80)} />
+                {(models.find(m => m.id === selectedImageModel)?.supported_params?.includes('output_quality') || models.find(m => m.id === selectedImageModel)?.supported_params?.includes('seed')) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('output_quality') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Quality (1-100)</label>
+                        <input type="number" min="1" max="100" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} value={qualityImg} onChange={(e) => setQualityImg(parseInt(e.target.value) || 80)} />
+                      </div>
+                    )}
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('seed') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Seed</label>
+                        <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Random" value={seedImg} onChange={(e) => setSeedImg(e.target.value)} />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Seed</label>
-                    <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Random" value={seedImg} onChange={(e) => setSeedImg(e.target.value)} />
-                  </div>
-                </div>
+                )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>CFG Scale</label>
-                    <input type="number" step="0.1" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={guidanceImg} onChange={(e) => setGuidanceImg(e.target.value)} />
+                {(models.find(m => m.id === selectedImageModel)?.supported_params?.includes('guidance_scale') || models.find(m => m.id === selectedImageModel)?.supported_params?.includes('num_inference_steps')) && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('guidance_scale') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>CFG Scale</label>
+                        <input type="number" step="0.1" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={guidanceImg} onChange={(e) => setGuidanceImg(e.target.value)} />
+                      </div>
+                    )}
+                    {models.find(m => m.id === selectedImageModel)?.supported_params?.includes('num_inference_steps') && (
+                      <div>
+                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Steps</label>
+                        <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={stepsImg} onChange={(e) => setStepsImg(e.target.value)} />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '13px', color: 'var(--text-secondary)' }}>Steps</label>
-                    <input type="number" className="apple-input" style={{ padding: '10px', fontSize: '13px' }} placeholder="Default" value={stepsImg} onChange={(e) => setStepsImg(e.target.value)} />
-                  </div>
-                </div>
+                )}
               </div>
             )}
             

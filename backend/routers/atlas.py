@@ -207,47 +207,64 @@ def _headers():
     }
 
 
+def _get_supported_params(mtype, mid):
+    params = ["aspect_ratio"]
+    if mtype == "Image":
+        params.append("seed")
+        if not any(k in mid.lower() for k in ["gpt-image", "imagen", "gemini"]):
+            params.extend(["negative_prompt", "guidance_scale", "num_inference_steps"])
+        params.extend(["num_outputs", "output_format", "output_quality"])
+    return params
+
 @router.get("/models")
 async def get_models():
-    """Return full model catalogue — live from Atlas Cloud API or built-in fallback."""
+    """Return full model catalogue — live from Atlas Cloud API merged with built-in fallback."""
     global MODEL_LIST_CACHE
     if MODEL_LIST_CACHE:
         return {"models": MODEL_LIST_CACHE}
 
-    if not ATLAS_API_KEY:
-        MODEL_LIST_CACHE = FALLBACK_MODELS
-        return {"models": FALLBACK_MODELS}
+    # Initialize with enriched fallback models
+    base_models = {}
+    for m in FALLBACK_MODELS:
+        m_copy = dict(m)
+        m_copy["supported_params"] = _get_supported_params(m["type"], m["id"])
+        base_models[m["id"]] = m_copy
 
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(f"{ATLAS_BASE_URL}/models", headers=_headers())
-            if r.status_code == 200:
-                data = r.json()
-                raw = data.get("data", data) if isinstance(data, dict) else data
-                mapped = []
-                for m in raw:
-                    mid = m.get("id", "")
-                    if any(k in mid for k in ["image", "flux", "seedream", "dall-e", "gpt-image", "imagen", "nano-banana", "youchuan", "reve", "ideogram", "z-image", "mai-image"]):
-                        mtype = "Image"
-                    elif any(k in mid for k in ["video", "seedance", "kling", "wan-2", "sora", "veo", "vidu", "pixverse", "hailuo", "minimax/h", "happyhorse", "grok-imagine-video"]):
-                        mtype = "Video"
-                    else:
-                        mtype = "LLM"
-                    if mtype in ("Image", "Video"):
-                        mapped.append({
-                            "id": mid,
-                            "name": m.get("name", mid.split("/")[-1]),
-                            "type": mtype,
-                            "supports_image": "image-to" in mid or "i2v" in mid or "edit" in mid or "reference" in mid
-                        })
-                if mapped:
-                    MODEL_LIST_CACHE = mapped
-                    return {"models": mapped}
-    except Exception as e:
-        print(f"Atlas API model fetch failed: {e}")
+    if ATLAS_API_KEY:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                r = await client.get(f"{ATLAS_BASE_URL}/models", headers=_headers())
+                if r.status_code == 200:
+                    data = r.json()
+                    raw = data.get("data", data) if isinstance(data, dict) else data
+                    for m in raw:
+                        mid = m.get("id", "")
+                        # Inherit type if it's already in fallback
+                        if mid in base_models:
+                            base_models[mid]["name"] = m.get("name", base_models[mid]["name"])
+                            continue
+                            
+                        # Otherwise categorize it
+                        if any(k in mid for k in ["image", "flux", "seedream", "dall-e", "gpt-image", "imagen", "nano-banana", "youchuan", "reve", "ideogram", "z-image", "mai-image"]):
+                            mtype = "Image"
+                        elif any(k in mid for k in ["video", "seedance", "kling", "wan-2", "sora", "veo", "vidu", "pixverse", "hailuo", "minimax/h", "happyhorse", "grok-imagine-video"]):
+                            mtype = "Video"
+                        else:
+                            mtype = "LLM"
+                            
+                        if mtype in ("Image", "Video"):
+                            base_models[mid] = {
+                                "id": mid,
+                                "name": m.get("name", mid.split("/")[-1]),
+                                "type": mtype,
+                                "supports_image": "image-to" in mid or "i2v" in mid or "edit" in mid or "reference" in mid,
+                                "supported_params": _get_supported_params(mtype, mid)
+                            }
+        except Exception as e:
+            print(f"Atlas API model fetch failed: {e}")
 
-    MODEL_LIST_CACHE = FALLBACK_MODELS
-    return {"models": FALLBACK_MODELS}
+    MODEL_LIST_CACHE = list(base_models.values())
+    return {"models": MODEL_LIST_CACHE}
 
 
 @router.get("/models/{model_id:path}")
