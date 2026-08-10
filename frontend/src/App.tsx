@@ -63,7 +63,7 @@ function App() {
       messages: [{ 
         id: 'welcome', 
         role: 'ai', 
-        content: tab === 'Home' ? 'Hello, Director. I am GPT-5.6 Sol. What are we creating today?' : 
+        content: tab === 'Home' ? `Hello, Director. What are we creating today?` : 
                  tab === 'Image' ? 'Ready to generate images. Describe your vision.' : 
                  'Ready to generate cinematic videos. What is the scene?', 
         timestamp: new Date().toLocaleTimeString() 
@@ -109,6 +109,9 @@ function App() {
   
   // Track generation state per session ID
   const [generatingSessions, setGeneratingSessions] = useState<Record<string, boolean>>({});
+
+  // Selected Text Model
+  const [selectedHomeModel, setSelectedHomeModel] = useState('openai/gpt-5.6-sol');
 
   // File Inputs
   const [refFileHome, setRefFileHome] = useState<File | null>(null);
@@ -182,6 +185,7 @@ function App() {
     try {
       const formData = new FormData();
       formData.append('prompt', userPrompt);
+      formData.append('model', selectedHomeModel);
       const historyPayload = activeSession ? activeSession.messages.map(m => ({ role: m.role, content: m.content })) : [];
       formData.append('history', JSON.stringify(historyPayload));
       if (refFileHome) formData.append('reference_image', refFileHome);
@@ -370,7 +374,7 @@ function App() {
                 )}
                 {activeMessages.map((msg) => (
                   <div key={msg.id} className={`message ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}>
-                    {msg.role === 'ai' && <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginBottom: '4px', fontWeight: 600 }}>{activeTab === 'Home' ? 'GPT-5.6 Sol' : `Agent ${activeTab}`}</div>}
+                    {msg.role === 'ai' && <div style={{ fontSize: '12px', color: 'var(--primary-color)', marginBottom: '4px', fontWeight: 600 }}>{activeTab === 'Home' ? (selectedHomeModel === 'moonshot/kimi-k3' ? 'Kimi K3' : selectedHomeModel === 'deepseek/deepseek-v4-pro' ? 'Deepseek V4 Pro' : 'GPT-5.6 Sol') : `Agent ${activeTab}`}</div>}
                     {msg.imageUrl && (
                        <img src={msg.imageUrl} alt="Reference" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '8px', marginBottom: '8px', border: '1px solid var(--glass-border)' }} />
                     )}
@@ -381,7 +385,7 @@ function App() {
                 {isGenerating && (
                   <div className="message msg-ai">
                     <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>
-                      {activeTab === 'Home' ? 'GPT-5.6 Sol is thinking...' : 'Sending request to Atlas Cloud...'}
+                      {activeTab === 'Home' ? `${selectedHomeModel === 'moonshot/kimi-k3' ? 'Kimi K3' : selectedHomeModel === 'deepseek/deepseek-v4-pro' ? 'Deepseek V4 Pro' : 'GPT-5.6 Sol'} is thinking...` : 'Sending request to Atlas Cloud...'}
                     </span>
                   </div>
                 )}
@@ -390,6 +394,28 @@ function App() {
 
               {/* Prompt Bar */}
               <div className="prompt-bar-container">
+                {activeTab === 'Home' && (
+                  <div style={{ marginBottom: '8px', padding: '0 12px' }}>
+                    <select 
+                      value={selectedHomeModel}
+                      onChange={(e) => setSelectedHomeModel(e.target.value)}
+                      style={{ 
+                        background: 'var(--glass-bg)', 
+                        border: '1px solid var(--glass-border)', 
+                        color: 'var(--text-secondary)', 
+                        borderRadius: '6px', 
+                        padding: '4px 8px',
+                        fontSize: '12px',
+                        outline: 'none',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="openai/gpt-5.6-sol">GPT-5.6 Sol</option>
+                      <option value="moonshot/kimi-k3">Kimi K3</option>
+                      <option value="deepseek/deepseek-v4-pro">Deepseek V4 Pro</option>
+                    </select>
+                  </div>
+                )}
                 <div className="prompt-bar liquid-glass" style={{ border: '1px solid var(--primary-color)', boxShadow: '0 8px 32px rgba(0, 113, 227, 0.15)' }}>
                   
                   {/* File Upload Button */}
@@ -411,7 +437,7 @@ function App() {
 
                   <textarea 
                     className="prompt-input"
-                    placeholder={`Message ${activeTab === 'Home' ? 'GPT-5.6 Sol' : `Agent ${activeTab}`}...`}
+                    placeholder={`Message ${activeTab === 'Home' ? (selectedHomeModel === 'moonshot/kimi-k3' ? 'Kimi K3' : selectedHomeModel === 'deepseek/deepseek-v4-pro' ? 'Deepseek V4 Pro' : 'GPT-5.6 Sol') : `Agent ${activeTab}`}...`}
                     value={activeTab === 'Home' ? promptHome : activeTab === 'Image' ? promptImage : promptVideo}
                     onChange={(e) => {
                       if (activeTab === 'Home') setPromptHome(e.target.value);

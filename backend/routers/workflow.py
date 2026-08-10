@@ -11,7 +11,7 @@ router = APIRouter()
 
 ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
-CHAT_MODEL = "openai/gpt-5.6-sol"
+DEFAULT_CHAT_MODEL = "openai/gpt-5.6-sol"
 
 # Load workflow and skills context globally to save disk I/O per request
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +38,7 @@ def _headers():
 async def chat_with_agent(
     prompt: str = Form(...),
     history: str = Form("[]"),
+    model: str = Form(DEFAULT_CHAT_MODEL),
     reference_image: Optional[UploadFile] = File(None)
 ):
     """Chat with GPT-5.6 Sol via Atlas Cloud /v1/chat/completions"""
@@ -85,7 +86,7 @@ async def chat_with_agent(
         messages_payload.append({"role": "user", "content": content})
 
         payload = {
-            "model": CHAT_MODEL,
+            "model": model,
             "messages": messages_payload,
             "stream": False
         }
