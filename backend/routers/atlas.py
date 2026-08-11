@@ -42,8 +42,8 @@ _CATALOGUE = [
     {"id": "youchuan/v8.1/text-to-image", "provider": "Midjourney", "name": "Youchuan V8.1 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "google/nano-banana-2/reference-to-image", "provider": "Google", "name": "Nano Banana 2 Reference to Image", "type": "Image", "mode": "reference-to-image", "supports_image": True},
     {"id": "google/nano-banana-2/reference-to-image-developer", "provider": "Google", "name": "Nano Banana 2 Reference to Image Developer", "type": "Image", "mode": "reference-to-image", "supports_image": True},
-    {"id": "openai/gpt-image-2/text-to-image", "provider": "Openai", "name": "Openai GPT Image 2 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "openai/gpt-image-2/edit", "provider": "Openai", "name": "Openai GPT Image 2 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-2/text-to-image", "provider": "OpenAI", "name": "Openai GPT Image 2 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-2/edit", "provider": "OpenAI", "name": "Openai GPT Image 2 Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "alibaba/wan-2.7/text-to-image", "provider": "Wan", "name": "Wan-2.7 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "alibaba/wan-2.7/image-edit", "provider": "Wan", "name": "Wan-2.7 Image-to-image", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "alibaba/wan-2.7-pro/text-to-image", "provider": "Wan", "name": "Wan-2.7 Pro Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
@@ -60,14 +60,14 @@ _CATALOGUE = [
     {"id": "bytedance/seedream-v5.0-lite/sequential", "provider": "ByteDance", "name": "Seedream v5.0 Lite Sequential", "type": "Image", "mode": "other", "supports_image": True},
     {"id": "bytedance/seedream-v5.0-lite/edit", "provider": "ByteDance", "name": "Seedream v5.0 Lite Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "bytedance/seedream-v5.0-lite", "provider": "ByteDance", "name": "Seedream v5.0 Lite", "type": "Image", "mode": "other", "supports_image": True},
-    {"id": "openai/gpt-image-1.5/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1.5 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "openai/gpt-image-1.5/edit", "provider": "Openai", "name": "Openai GPT Image-1.5 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-1.5/text-to-image", "provider": "OpenAI", "name": "Openai GPT Image-1.5 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1.5/edit", "provider": "OpenAI", "name": "Openai GPT Image-1.5 Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "alibaba/qwen-image/edit-plus-20251215", "provider": "Wan", "name": "Qwen-Image Edit Plus 20251215", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "alibaba/wan-2.6/image-edit", "provider": "Wan", "name": "Wan-2.6 Image-to-image", "type": "Image", "mode": "edit", "supports_image": True},
-    {"id": "openai/gpt-image-1/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "openai/gpt-image-1/edit", "provider": "Openai", "name": "Openai GPT Image-1 Edit", "type": "Image", "mode": "edit", "supports_image": True},
-    {"id": "openai/gpt-image-1-mini/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1 Mini Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "openai/gpt-image-1-mini/edit", "provider": "Openai", "name": "Openai GPT Image-1 Mini Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-1/text-to-image", "provider": "OpenAI", "name": "Openai GPT Image-1 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1/edit", "provider": "OpenAI", "name": "Openai GPT Image-1 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-1-mini/text-to-image", "provider": "OpenAI", "name": "Openai GPT Image-1 Mini Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1-mini/edit", "provider": "OpenAI", "name": "Openai GPT Image-1 Mini Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "bytedance/seedream-v4.5", "provider": "ByteDance", "name": "Seedream v4.5", "type": "Image", "mode": "other", "supports_image": True},
     {"id": "bytedance/seedream-v4.5/edit", "provider": "ByteDance", "name": "Seedream v4.5 Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "bytedance/seedream-v4.5/sequential", "provider": "ByteDance", "name": "Seedream v4.5 Sequential", "type": "Image", "mode": "other", "supports_image": True},
@@ -79,9 +79,9 @@ _CATALOGUE = [
     {"id": "alibaba/qwen-image/text-to-image-max", "provider": "Wan", "name": "Qwen-Image Text-to-image Max", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "alibaba/qwen-image/text-to-image-plus", "provider": "Wan", "name": "Qwen-Image Text-to-image Plus", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "google/nano-banana-pro/edit", "provider": "Google", "name": "Nano Banana Pro Edit", "type": "Image", "mode": "edit", "supports_image": True},
-    {"id": "openai/gpt-image-2-developer/edit", "provider": "Openai", "name": "GPT Image 2 Developer Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-2-developer/edit", "provider": "OpenAI", "name": "GPT Image 2 Developer Edit", "type": "Image", "mode": "edit", "supports_image": True},
     {"id": "alibaba/wan-2.5/image-edit", "provider": "Wan", "name": "Wan-2.5 Image Edit", "type": "Image", "mode": "edit", "supports_image": True},
-    {"id": "openai/gpt-image-2-developer/text-to-image", "provider": "Openai", "name": "GPT Image 2 Developer Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-2-developer/text-to-image", "provider": "OpenAI", "name": "GPT Image 2 Developer Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "alibaba/wan-2.5/text-to-image", "provider": "Wan", "name": "Wan-2.5 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
     {"id": "bytedance/seedream-v4", "provider": "ByteDance", "name": "Seedream v4", "type": "Image", "mode": "other", "supports_image": True},
     {"id": "bytedance/seedream-v4/sequential", "provider": "ByteDance", "name": "Seedream v4 Sequential", "type": "Image", "mode": "other", "supports_image": True},
@@ -206,9 +206,9 @@ _CATALOGUE = [
 def _get_supported_params(provider: str, type: str) -> list:
     if type == "Video":
         if provider == "ByteDance":
-            return ["aspect_ratio", "duration", "resolution", "output_format", "generate_audio", "watermark", "return_last_frame"]
+            return ["aspect_ratio", "duration", "resolution", "generate_audio", "watermark", "return_last_frame"]
         if provider == "MiniMax":
-            return ["aspect_ratio", "duration", "resolution"]
+            return ["duration"]
         if provider == "Kling":
             return ["aspect_ratio", "duration", "generate_audio", "negative_prompt"]
         if provider == "Wan":

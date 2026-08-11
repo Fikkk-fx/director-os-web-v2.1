@@ -74,7 +74,9 @@ export function SettingsModal({
   weird, setWeird,
   sref, setSref,
   watermark, setWatermark,
-  returnLastFrame, setReturnLastFrame
+  returnLastFrame, setReturnLastFrame,
+  thinkingLevel, setThinkingLevel,
+  mediaResolution, setMediaResolution
 }: SettingsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const activeModalModel = models.find(m => m.id === selectedModelId);
