@@ -326,7 +326,9 @@ async def get_model_details(model_id: str):
 
 
 @router.post("/generate")
+@limiter.limit("10/minute")
 async def generate_asset(
+    request: Request,
     type: str = Form(...),
     prompt: str = Form(...),
     model_keyword: str = Form(...),
@@ -464,4 +466,5 @@ async def generate_asset(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Atlas Cloud generation failed")
+        raise HTTPException(status_code=500, detail="Internal server error")

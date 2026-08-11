@@ -1,11 +1,16 @@
 import os
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Request
 from typing import Optional
-import os
 import httpx
 import base64
 import json
+import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
@@ -35,7 +40,9 @@ def _headers():
 
 
 @router.post("/chat")
+@limiter.limit("10/minute")
 async def chat_with_agent(
+    request: Request,
     prompt: str = Form(...),
     history: str = Form("[]"),
     model: str = Form(DEFAULT_CHAT_MODEL),
@@ -50,6 +57,11 @@ async def chat_with_agent(
         content: list = [{"type": "text", "text": prompt}]
 
         if reference_image:
+            if reference_image.size and reference_image.size > 10 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="File size exceeds 10MB limit")
+            if not reference_image.content_type.startswith("image/"):
+                raise HTTPException(status_code=400, detail="Invalid file type. Only images are allowed.")
+                
             raw = await reference_image.read()
             b64 = base64.b64encode(raw).decode("utf-8")
             mime = reference_image.content_type or "image/png"
@@ -72,6 +84,7 @@ async def chat_with_agent(
 
         try:
             past_messages = json.loads(history)
+            past_messages = past_messages[-10:]  # Keep only the last 10 messages
         except Exception:
             past_messages = []
 
@@ -108,4 +121,5 @@ async def chat_with_agent(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Atlas request failed")
+        raise HTTPException(status_code=500, detail="Internal server error")
