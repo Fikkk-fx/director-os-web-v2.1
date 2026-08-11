@@ -14,23 +14,23 @@ limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
-ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
+ATLAS_BASE_URL = "https://api.atlascloud.ai/api/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 DEFAULT_CHAT_MODEL = "openai/gpt-5.6-sol"
 
-# Load workflow and skills context globally to save disk I/O per request
+# Load a trimmed workflow summary to avoid token bloat (only first 8000 chars)
 BASE_DIR = Path(__file__).resolve().parent.parent
 try:
     with open(BASE_DIR / "director_os_master_workflow.txt", "r", encoding="utf-8") as f:
-        MASTER_WORKFLOW = f.read()
+        _full_workflow = f.read()
+    # Use only the first 8000 chars to prevent context overflow on every request
+    MASTER_WORKFLOW = _full_workflow[:8000] + ("\n\n[...workflow truncated for context efficiency...]" if len(_full_workflow) > 8000 else "")
 except Exception:
     MASTER_WORKFLOW = "Master workflow context is unavailable."
 
-try:
-    with open(BASE_DIR / "skills" / "Rangkuman_dan_Kompilasi_Skill.md", "r", encoding="utf-8") as f:
-        SKILLS_CONTEXT = f.read()
-except Exception:
-    SKILLS_CONTEXT = "Skills context is unavailable."
+# Skills context is intentionally omitted from per-request system prompt
+# to avoid injecting 68KB+ on every message. Reference it only if explicitly needed.
+SKILLS_CONTEXT = "Director OS has built-in expertise in film, cinematography, visual storytelling, prompt engineering, and AI-assisted creative production."
 
 def _headers():
     return {
@@ -48,7 +48,7 @@ async def chat_with_agent(
     model: str = Form(DEFAULT_CHAT_MODEL),
     reference_image: Optional[UploadFile] = File(None)
 ):
-    """Chat with GPT-5.6 Sol via Atlas Cloud /v1/chat/completions"""
+    """Chat with a language model via Atlas Cloud /api/v1/chat/completions"""
     if not ATLAS_API_KEY:
         return {"response": "[Mock] ATLAS_API_KEY not set. Please configure it on your hosting platform."}
 
@@ -112,7 +112,14 @@ async def chat_with_agent(
             )
 
         if r.status_code != 200:
-            raise HTTPException(status_code=r.status_code, detail=r.text)
+            # Sanitize: do not leak raw Atlas internal error structure to the client
+            try:
+                err_body = r.json()
+                err_msg = err_body.get("error", {}).get("message") or err_body.get("detail") or "Atlas Chat API error"
+            except Exception:
+                err_msg = "Atlas Chat API returned an error. Please try again."
+            logger.error(f"Atlas chat error: status={r.status_code} body={r.text[:300]}")
+            raise HTTPException(status_code=r.status_code, detail=err_msg)
 
         data = r.json()
         text = data["choices"][0]["message"]["content"]

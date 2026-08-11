@@ -65,7 +65,7 @@ def _get_supported_params(provider: str, type: str) -> list:
 
     if type == "Image":
         if provider == "OpenAI":
-            return ["size", "output_quality", "output_format"] # size is mapped from resolution internally
+            return ["size", "num_outputs", "output_quality", "output_format"] # size is mapped from resolution internally
         if provider == "Google":
             return ["resolution", "thinking_level", "media_resolution", "output_format"]
         if provider == "FLUX":
@@ -101,7 +101,8 @@ async def get_model_details(model_id: str):
 
 
 @router.get("/status/{prediction_id}")
-async def get_generation_status(prediction_id: str):
+@limiter.limit("30/minute")
+async def get_generation_status(request: Request, prediction_id: str):
     """Poll Atlas Cloud for prediction status and return result URL when ready."""
     if not ATLAS_API_KEY:
         # Mock response for local dev
