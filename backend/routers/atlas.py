@@ -335,8 +335,9 @@ async def generate_asset(
         if seed is not None: payload["seed"] = seed
 
         async with httpx.AsyncClient(timeout=120) as client:
+            endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
             r = await client.post(
-                f"{ATLAS_BASE_URL}/predictions",
+                f"{ATLAS_BASE_URL}{endpoint}",
                 headers=_headers(),
                 json=payload
             )
