@@ -419,6 +419,29 @@ export function SettingsModal({
               </div>
             )}
 
+            {hasParam('thinking_level') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Thinking Level</span>
+                <select className={`bg-transparent border ${borderCol} rounded-lg px-2 py-1 text-sm outline-none ${isLight ? 'text-slate-900 bg-white/50' : 'text-white bg-black/20'}`} value={thinkingLevel} onChange={e => setThinkingLevel(e.target.value)}>
+                  <option value="default" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Default</option>
+                  <option value="none" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>None</option>
+                  <option value="auto" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Auto</option>
+                </select>
+              </div>
+            )}
+
+            {hasParam('media_resolution') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Media Resolution</span>
+                <select className={`bg-transparent border ${borderCol} rounded-lg px-2 py-1 text-sm outline-none ${isLight ? 'text-slate-900 bg-white/50' : 'text-white bg-black/20'}`} value={mediaResolution} onChange={e => setMediaResolution(e.target.value)}>
+                  <option value="default" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Default</option>
+                  <option value="low" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Low</option>
+                  <option value="medium" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Medium</option>
+                  <option value="high" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>High</option>
+                </select>
+              </div>
+            )}
+
             {hasParam('seed') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Seed</span>
