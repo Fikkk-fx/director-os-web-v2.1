@@ -650,7 +650,7 @@ function App() {
                         {/* Mode Selector Pill */}
                         <div className={`flex items-center rounded-xl p-1 ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
                           <button onClick={() => setGenerateMode('Text')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Text' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
-                            <Type size={14} className="mr-1.5" /> Text
+                            <Type size={14} className="mr-1.5" /> Brief
                           </button>
                           <button onClick={() => setGenerateMode('Image')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Image' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
                             <Wand2 size={14} className="mr-1.5" /> Image
