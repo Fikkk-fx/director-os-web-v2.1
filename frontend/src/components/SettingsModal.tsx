@@ -29,7 +29,7 @@ duration: string;
   setSteps: (v: string) => void;
   seed: string;
   setSeed: (v: string) => void;
-  hasParam: (param: string) => boolean;
+  
 }
 
 const ProviderIcon = ({ provider, size = 18 }: { provider: string, size?: number }) => {
@@ -59,8 +59,7 @@ quality, setQuality,
   format, setFormat,
   guidance, setGuidance,
   steps, setSteps,
-  seed, setSeed,
-  hasParam
+  seed, setSeed
 }: SettingsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [promptEnhancer, setPromptEnhancer] = useState(false);
@@ -105,6 +104,10 @@ const providerMap: Record<string, string> = {
     }
     return filtered;
   }, [models, mode, searchQuery, selectedProvider]);
+
+  const activeModalModel = models.find(m => m.id === selectedModelId);
+  const hasParam = (p: string) => activeModalModel?.supported_params?.includes(p) ?? false;
+  const hasMoreOptions = hasParam('prompt_enhancer') || hasParam('num_outputs') || hasParam('resolution') || hasParam('output_quality') || hasParam('duration') || hasParam('output_format') || hasParam('seed') || hasParam('guidance_scale') || hasParam('num_inference_steps') || hasParam('negative_prompt');
 
   if (!isOpen) return null;
 
@@ -264,7 +267,7 @@ const providerMap: Record<string, string> = {
               </div>
             )}
 
-            <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>
+            {hasMoreOptions && <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>}
 
             {hasParam('prompt_enhancer') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>

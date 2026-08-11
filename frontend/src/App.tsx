@@ -188,7 +188,7 @@ function App() {
   };
 
   /* ── Prompts & Mode ── */
-  const [generateMode, setGenerateMode] = useState<'Text' | 'Image' | 'Video'>('Text');
+  const [generateMode, setGenerateMode] = useState<'Brief' | 'Image' | 'Video'>('Brief');
   const [prompt, setPrompt]   = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
@@ -308,11 +308,8 @@ function App() {
   };
 
   /* ── Computed ── */
-  const activeModel = generateMode === 'Image'
-    ? models.find(m => m.id === selectedImageModel)
-    : generateMode === 'Video' ? models.find(m => m.id === selectedVideoModel)
-    : models.find(m => m.id === selectedHomeModel);
-  const hasParam = (p: string) => activeModel?.supported_params?.includes(p) ?? false;
+
+
 
   /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
@@ -633,11 +630,11 @@ function App() {
                         value={prompt}
                         onChange={e => setPrompt(e.target.value)}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          if (generateMode === 'Text') handleSendHome();
+                          if (generateMode === 'Brief') handleSendHome();
                           else handleSendMedia(generateMode);
                         })}
                         rows={1}
-                        placeholder={generateMode === 'Text' ? 'Ask anything...' : `Describe the ${generateMode.toLowerCase()} you imagine...`}
+                        placeholder={generateMode === 'Brief' ? 'Ask anything...' : `Describe the ${generateMode.toLowerCase()} you imagine...`}
                         className="prompt-textarea flex-1 bg-transparent px-3 py-2 outline-none resize-none"
                         style={{ color: isLight ? '#0f172a' : '#f8fafc' }}
                       />
@@ -649,7 +646,7 @@ function App() {
                         
                         {/* Mode Selector Pill */}
                         <div className={`flex items-center rounded-xl p-1 ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
-                          <button onClick={() => setGenerateMode('Text')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Text' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
+                          <button onClick={() => setGenerateMode('Brief')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Brief' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
                             <Type size={14} className="mr-1.5" /> Brief
                           </button>
                           <button onClick={() => setGenerateMode('Image')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Image' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
@@ -661,7 +658,7 @@ function App() {
                         </div>
 
                         {/* Model Selector */}
-                        {generateMode === 'Text' ? (
+                        {generateMode === 'Brief' ? (
                           <div className="w-56">
                             <CustomSelect
                               label="Model" isLight={isLight}
@@ -691,7 +688,7 @@ function App() {
                       {/* Send */}
                       <button type="button"
                         onClick={() => {
-                          if (generateMode === 'Text') handleSendHome();
+                          if (generateMode === 'Brief') handleSendHome();
                           else handleSendMedia(generateMode);
                         }}
                         disabled={isGenerating || (!prompt.trim() && !refFile)}
@@ -732,7 +729,7 @@ function App() {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        mode={generateMode === 'Text' ? 'Image' : generateMode}
+        mode={generateMode === 'Brief' ? 'Image' : generateMode}
         models={models}
         selectedModelId={generateMode === 'Image' ? selectedImageModel : selectedVideoModel}
         onSelectModel={(id) => generateMode === 'Image' ? setSelectedImageModel(id) : setSelectedVideoModel(id)}
@@ -755,7 +752,7 @@ function App() {
         setSteps={setStepsImg}
         seed={seedImg}
         setSeed={setSeedImg}
-        hasParam={hasParam}
+        
       />
     </div>
   );
