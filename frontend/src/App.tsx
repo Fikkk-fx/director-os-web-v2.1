@@ -580,22 +580,6 @@ function App() {
 
                     {/* Top Row: Model and Upload */}
                     <div className="mb-2.5 flex items-center gap-2">
-                      {/* Upload (Left) */}
-                      <button type="button"
-                        title="Upload reference file"
-                        onClick={() => {
-                          if (activeTab === 'Home')  fileInputRefHome.current?.click();
-                          if (activeTab === 'Image') fileInputRefImage.current?.click();
-                          if (activeTab === 'Video') fileInputRefVideo.current?.click();
-                        }}
-                        className={`glass-chip flex h-8 w-8 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 ${
-                          isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
-                        }`}>
-                        <Upload size={14} className={
-                          (activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)
-                            ? 'text-emerald-400' : ''
-                        } />
-                      </button>
 
                       {/* Home: model chip (Right) */}
                       {activeTab === 'Home' && (
