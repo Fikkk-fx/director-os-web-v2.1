@@ -215,6 +215,7 @@ function App() {
   const [generateAudio, setGenerateAudio]   = useState(false);
   const [hd, setHd]                         = useState(false);
   const [stylize, setStylize]               = useState(0);
+  const [motion, setMotion]                 = useState("low");
   const [chaos, setChaos]                   = useState(0);
   const [weird, setWeird]                   = useState(0);
   const [sref, setSref]                     = useState('');
@@ -321,6 +322,7 @@ function App() {
       if (has('num_inference_steps') && stepsImg)        fd.append('num_inference_steps', stepsImg);
       if (has('hd')              && hd)                  fd.append('hd', String(hd));
       if (has('stylize')         && stylize !== 0)       fd.append('stylize', String(stylize));
+      if (has('motion')          && motion)              fd.append('motion', motion);
       if (has('chaos')           && chaos !== 0)         fd.append('chaos', String(chaos));
       if (has('weird')           && weird !== 0)         fd.append('weird', String(weird));
       if (has('sref')            && sref)                fd.append('sref', sref);
