@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
-  Film, Image as ImageIcon, Moon, Sun, Video, Settings2, Type, Wand2,
+  Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video, Settings2, Type, Wand2,
   Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X, Download,
 } from 'lucide-react';
 // import { useAuth } from './AuthContext';
@@ -21,9 +21,8 @@ type TabKey = keyof typeof TAB_CFG;
 /* ── Custom Select ─────────────────────────────────────────────── */
 interface SelectOption { value: string; label: string; }
 interface CustomSelectProps {
-  label: string; value: string; onChange: (v: string) => void;
-  options: SelectOption[]; isLight: boolean; accentClass: string;
-  compact?: boolean;
+  label: string; value: string; options: SelectOption[];
+  onChange: (v: string) => void; isLight: boolean; accentClass: string;
 }
 function CustomSelect({ label, value, options, onChange, isLight, accentClass }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
@@ -246,14 +245,14 @@ function App() {
 
   /* ── Handlers ── */
   const handleSendHome = async () => {
-    if (!prompt.trim() && !refFile) return;
+    if (!promptHome.trim() && !refFileHome) return;
     if (!activeSessionId) createSession('Home');
-    const up = prompt.trim(); setPrompt('');
+    const up = promptHome.trim(); setPromptHome('');
     const tid = activeSessionId!;
     updateMsgs(p => [...p, {
       id: Date.now().toString(), role: 'user',
-      content: up || (refFile ? 'Sent a reference file.' : ''),
-      imageUrl: refFile && refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : undefined,
+      content: up || (refFileHome ? 'Sent an image.' : ''),
+      imageUrl: refFileHome ? URL.createObjectURL(refFileHome) : undefined,
       timestamp: new Date().toLocaleTimeString(),
     }]);
     setGeneratingSessions(p => ({ ...p, [tid]: true }));
@@ -261,10 +260,10 @@ function App() {
       const fd = new FormData();
       fd.append('prompt', up); fd.append('model', selectedHomeModel);
       fd.append('history', JSON.stringify(activeSession?.messages.map(m => ({ role: m.role, content: m.content })) ?? []));
-      if (refFile) fd.append('reference_image', refFile);
+      if (refFileHome) fd.append('reference_image', refFileHome);
       const res = await axios.post(`${API_BASE}/api/chat`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: res.data.response, timestamp: new Date().toLocaleTimeString() }]);
-      setRefFile(null);
+      setRefFileHome(null);
     } catch (e: any) {
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.response?.data?.detail || e.message}`, timestamp: new Date().toLocaleTimeString() }]);
     } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
@@ -272,17 +271,18 @@ function App() {
 
   const handleSendMedia = async (type: 'Image' | 'Video') => {
     const isImg = type === 'Image';
+    const prompt = isImg ? promptImage : promptVideo;
+    const refFile = isImg ? refFileImage : refFileVideo;
+    const model   = isImg ? selectedImageModel : selectedVideoModel;
+    if (!prompt.trim() || !model) return;
+    if (!activeSessionId) createSession(type);
     const up = prompt.trim();
-    const model = isImg ? selectedImageModel : selectedVideoModel;
-    if (!up || !model) return;
-    if (!activeSessionId) createSession('Home');
-    setPrompt('');
+    if (isImg) setPromptImage(''); else setPromptVideo('');
     const mdl = models.find(m => m.id === model);
     const tid = activeSessionId!;
     updateMsgs(p => [...p, {
       id: Date.now().toString(), role: 'user', content: up,
-      imageUrl: refFile && refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : undefined,
-      videoUrl: refFile && refFile.type.startsWith('video') ? URL.createObjectURL(refFile) : undefined,
+      imageUrl: refFile ? URL.createObjectURL(refFile) : undefined,
       timestamp: new Date().toLocaleTimeString(),
     }]);
     setGeneratingSessions(p => ({ ...p, [tid]: true }));
@@ -305,7 +305,7 @@ function App() {
         content: `**Task Submitted**\nID: ${res.data.prediction_id}\n*Model: ${mdl?.name}*\n\nYour ${type} is being generated on Atlas Cloud. It will appear in the Assets tab when ready.`,
         timestamp: new Date().toLocaleTimeString(),
       }]);
-      setRefFile(null);
+      if (isImg) setRefFileImage(null); else setRefFileVideo(null);
     } catch (e: any) {
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.message}`, timestamp: new Date().toLocaleTimeString() }]);
     } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
@@ -316,10 +316,9 @@ function App() {
   };
 
   /* ── Computed ── */
-  const activeModel = generateMode === 'Image'
+  const activeModel = activeTab === 'Image'
     ? models.find(m => m.id === selectedImageModel)
-    : generateMode === 'Video' ? models.find(m => m.id === selectedVideoModel)
-    : models.find(m => m.id === selectedHomeModel);
+    : models.find(m => m.id === selectedVideoModel);
   const hasParam = (p: string) => activeModel?.supported_params?.includes(p) ?? false;
 
   const RATIO_OPTIONS: SelectOption[] = ['16:9','9:16','1:1','21:9','4:3','3:4'].map(r => ({ value: r, label: r }));
@@ -327,6 +326,8 @@ function App() {
   /* ── Helpers ── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
     { id: 'Home',   label: 'Home',   icon: Home         },
+    { id: 'Image',  label: 'Image',  icon: ImageIcon    },
+    { id: 'Video',  label: 'Video',  icon: Video        },
     { id: 'Assets', label: 'Assets', icon: FolderKanban },
   ];
 
@@ -604,179 +605,188 @@ function App() {
 
               {/* ── Prompt Bar ── */}
               <div className="absolute inset-x-0 bottom-0 p-4">
-                <div className="mx-auto max-w-4xl">
-                  
-                  {/* Settings Panel (Popover) */}
-                  {showSettings && generateMode !== 'Text' && (
-                    <div className="mb-3 rounded-2xl glass-elevated p-4 animate-in slide-in-from-bottom-2">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                          {generateMode} Settings
-                        </h3>
-                        <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-slate-300">
-                          <X size={16} />
-                        </button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Ratio */}
-                        {hasParam('aspect_ratio') && (
-                          <div>
-                            <SettingLabel isLight={isLight}>Aspect Ratio</SettingLabel>
-                            <select className={inputCls}
-                              value={generateMode === 'Image' ? aspectRatioImg : aspectRatioVid}
-                              onChange={e => { generateMode === 'Image' ? setAspectRatioImg(e.target.value) : setAspectRatioVid(e.target.value); }}>
-                              {RATIO_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                            </select>
-                          </div>
-                        )}
+                <div className="mx-auto max-w-3xl">
+                  <div className={`glass-elevated rounded-[24px] p-3 transition-all duration-300 hover:-translate-y-0.5`}>
 
-                        {/* Duration */}
-                        {generateMode === 'Video' && (
-                          <div>
-                            <SettingLabel isLight={isLight}>Duration</SettingLabel>
-                            <select className={inputCls} value={durationVid} onChange={e => setDurationVid(e.target.value)}>
-                              {['5s','10s','15s','30s'].map(d => <option key={d} value={d}>{d.replace('s',' sec')}</option>)}
-                            </select>
-                          </div>
-                        )}
+                    {/* Top Row: Model and Upload */}
+                    <div className="mb-2.5 flex items-center gap-2">
 
-                        {generateMode === 'Image' && hasParam('num_outputs') && <div><SettingLabel isLight={isLight}>Outputs</SettingLabel><input type="number" min={1} max={4} className={inputCls} value={numOutputsImg} onChange={e => setNumOutputsImg(parseInt(e.target.value)||1)} /></div>}
-                        {generateMode === 'Image' && hasParam('output_format') && <div><SettingLabel isLight={isLight}>Format</SettingLabel><select className={inputCls} value={formatImg} onChange={e => setFormatImg(e.target.value)}><option value="webp">WebP</option><option value="png">PNG</option><option value="jpg">JPG</option></select></div>}
-                        {generateMode === 'Image' && hasParam('output_quality') && <div><SettingLabel isLight={isLight}>Quality</SettingLabel><input type="number" min={1} max={100} className={inputCls} value={qualityImg} onChange={e => setQualityImg(parseInt(e.target.value)||80)} /></div>}
-                        {generateMode === 'Image' && hasParam('seed') && <div><SettingLabel isLight={isLight}>Seed</SettingLabel><input type="number" className={inputCls} placeholder="Random" value={seedImg} onChange={e => setSeedImg(e.target.value)} /></div>}
-                        {generateMode === 'Image' && hasParam('guidance_scale') && <div><SettingLabel isLight={isLight}>CFG Scale</SettingLabel><input type="number" step={0.1} className={inputCls} placeholder="Default" value={guidanceImg} onChange={e => setGuidanceImg(e.target.value)} /></div>}
-                        {generateMode === 'Image' && hasParam('num_inference_steps') && <div><SettingLabel isLight={isLight}>Steps</SettingLabel><input type="number" className={inputCls} placeholder="Default" value={stepsImg} onChange={e => setStepsImg(e.target.value)} /></div>}
-                      </div>
-
-                      {generateMode === 'Image' && hasParam('negative_prompt') && (
-                        <div className="mt-4">
-                          <SettingLabel isLight={isLight}>Negative Prompt</SettingLabel>
-                          <textarea className={`${inputCls} min-h-[56px]`} value={negPromptImg}
-                            onChange={e => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted…" />
+                      {/* Home: model chip (Right) */}
+                      {activeTab === 'Home' && (
+                        <div className="glass-chip flex items-center rounded-full">
+                          <CustomSelect
+                            label="Model" isLight={isLight}
+                            value={selectedHomeModel} onChange={setSelectedHomeModel}
+                            options={HOME_MODELS} accentClass={cfg.accent}
+                          />
                         </div>
                       )}
                     </div>
-                  )}
 
-                  <div className={`glass-elevated rounded-[24px] p-2 transition-all duration-300 hover:-translate-y-0.5`}>
-                    
-                    {/* Image Preview */}
-                    {refFile && (
-                      <div className="relative self-start mb-2 ml-4 mt-2 group">
-                        <img 
-                          src={refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : ''} 
-                          alt="Reference" 
-                          className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
-                        />
-                        {refFile.type.startsWith('video') && <span className="absolute inset-0 flex items-center justify-center text-white bg-black/40 rounded-[12px]"><Film size={20}/></span>}
-                        <button 
-                          type="button"
-                          onClick={() => setRefFile(null)}
-                          className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
-                        >
-                          <X size={12} strokeWidth={3} />
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex flex-col gap-2">
+                      {/* Image Preview */}
+                      {((activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)) && (
+                        <div className="relative self-start mb-1 ml-12 group">
+                          <img 
+                            src={URL.createObjectURL((activeTab === 'Home' ? refFileHome : activeTab === 'Image' ? refFileImage : refFileVideo)!)} 
+                            alt="Reference" 
+                            className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (activeTab === 'Home') setRefFileHome(null);
+                              if (activeTab === 'Image') setRefFileImage(null);
+                              if (activeTab === 'Video') setRefFileVideo(null);
+                            }}
+                            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
+                          >
+                            <X size={12} strokeWidth={3} />
+                          </button>
+                        </div>
+                      )}
 
-                    <div className="flex items-center px-2 pt-2">
-                      {/* Upload Button */}
+                      <div className="flex items-end gap-2.5">
+                      {/* Upload */}
                       <button type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition duration-200 ${
-                          isLight ? 'text-slate-500 hover:bg-black/5 hover:text-slate-900' : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                        onClick={() => {
+                          if (activeTab === 'Home')  fileInputRefHome.current?.click();
+                          if (activeTab === 'Image') fileInputRefImage.current?.click();
+                          if (activeTab === 'Video') fileInputRefVideo.current?.click();
+                        }}
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl border transition duration-200 hover:-translate-y-0.5 ${
+                          isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900' : 'border-white/10 bg-white/6 text-slate-400 hover:bg-white/10 hover:text-white'
                         }`}>
-                        <Plus size={22} className={refFile ? 'text-emerald-400' : ''} />
+                        <Upload size={16} className={
+                          (activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)
+                            ? 'text-emerald-400' : ''
+                        } />
                       </button>
-                      <input type="file" accept="image/*,video/*" ref={fileInputRef} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFile(e.target.files[0]); }} />
+                      <input type="file" accept="image/*" ref={fileInputRefHome}  className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileHome(e.target.files[0]); }} />
+                      <input type="file" accept="image/*" ref={fileInputRefImage} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileImage(e.target.files[0]); }} />
+                      <input type="file" accept="image/*" ref={fileInputRefVideo} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileVideo(e.target.files[0]); }} />
 
-                      {/* Textarea */}
+                      {/* ── Textarea — FIXED color ── */}
                       <textarea
-                        value={prompt}
-                        onChange={e => setPrompt(e.target.value)}
+                        value={activeTab === 'Home' ? promptHome : activeTab === 'Image' ? promptImage : promptVideo}
+                        onChange={e => {
+                          if (activeTab === 'Home')  setPromptHome(e.target.value);
+                          if (activeTab === 'Image') setPromptImage(e.target.value);
+                          if (activeTab === 'Video') setPromptVideo(e.target.value);
+                        }}
                         onKeyDown={e => handleKeyDown(e, () => {
-                          if (generateMode === 'Text') handleSendHome();
-                          else handleSendMedia(generateMode);
+                          if (activeTab === 'Home')  handleSendHome();
+                          if (activeTab === 'Image') handleSendMedia('Image');
+                          if (activeTab === 'Video') handleSendMedia('Video');
                         })}
                         rows={1}
-                        placeholder={generateMode === 'Text' ? 'Ask anything...' : `Describe the ${generateMode.toLowerCase()} you imagine...`}
-                        className="prompt-textarea flex-1 bg-transparent px-3 py-2 outline-none resize-none"
-                        style={{ color: isLight ? '#0f172a' : '#f8fafc' }}
+                        placeholder={`Message ${activeTab === 'Home' ? modelLabel(selectedHomeModel) : `Agent ${activeTab}`}…`}
+                        className="prompt-textarea flex-1"
+                        style={{
+                          color: isLight ? '#0f172a' : '#f8fafc',
+                          background: isLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)',
+                          border: isLight ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.10)',
+                        }}
                       />
-                    </div>
-
-                    {/* Bottom Controls Row */}
-                    <div className="mt-2 flex items-center justify-between px-2 pb-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        
-                        {/* Mode Selector Pill */}
-                        <div className={`flex items-center rounded-xl p-1 ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
-                          <button onClick={() => setGenerateMode('Text')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Text' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
-                            <Type size={14} className="mr-1.5" /> Text
-                          </button>
-                          <button onClick={() => setGenerateMode('Image')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Image' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
-                            <Wand2 size={14} className="mr-1.5" /> Image
-                          </button>
-                          <button onClick={() => setGenerateMode('Video')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Video' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
-                            <Film size={14} className="mr-1.5" /> Video
-                          </button>
-                        </div>
-
-                        {/* Model Selector */}
-                        <div className="w-56">
-                          <CustomSelect
-                            label="Model" isLight={isLight}
-                            value={generateMode === 'Text' ? selectedHomeModel : generateMode === 'Image' ? selectedImageModel : selectedVideoModel}
-                            onChange={v => {
-                              if (generateMode === 'Text') setSelectedHomeModel(v);
-                              else if (generateMode === 'Image') setSelectedImageModel(v);
-                              else setSelectedVideoModel(v);
-                            }}
-                            options={generateMode === 'Text' ? HOME_MODELS : models.filter(m => m.type === generateMode)}
-                            accentClass={cfg.accent}
-                            compact={true}
-                          />
-                        </div>
-
-                        {/* Add References Button */}
-                        <button type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`hidden sm:flex h-9 px-3 items-center justify-center rounded-xl border text-xs font-medium transition duration-200 ${
-                            isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                          }`}>
-                          <ImageIcon size={13} className="mr-2 opacity-70" /> Add references
-                        </button>
-
-                        {/* Settings Toggle */}
-                        {generateMode !== 'Text' && (
-                          <button type="button"
-                            onClick={() => setShowSettings(!showSettings)}
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl border transition duration-200 ${
-                              showSettings ? (isLight ? 'bg-slate-200 border-slate-300 text-slate-800' : 'bg-white/20 border-white/20 text-white') : (isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10')
-                            }`}>
-                            <Settings2 size={15} />
-                          </button>
-                        )}
-                      </div>
 
                       {/* Send */}
                       <button type="button"
                         onClick={() => {
-                          if (generateMode === 'Text') handleSendHome();
-                          else handleSendMedia(generateMode);
+                          if (activeTab === 'Home')  handleSendHome();
+                          if (activeTab === 'Image') handleSendMedia('Image');
+                          if (activeTab === 'Video') handleSendMedia('Video');
                         }}
-                        disabled={isGenerating || (!prompt.trim() && !refFile)}
-                        className={`flex h-10 px-6 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r ${cfg.grad} text-white text-sm font-bold shadow-lg ${cfg.shadow} transition duration-200 hover:-translate-y-0.5 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40`}>
-                        Create
+                        disabled={isGenerating || (
+                          activeTab === 'Home'  ? !promptHome.trim()  && !refFileHome :
+                          activeTab === 'Image' ? !promptImage.trim() : !promptVideo.trim()
+                        )}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r ${cfg.grad} text-white shadow-lg ${cfg.shadow} transition duration-200 hover:-translate-y-0.5 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40`}>
+                        <Send size={16} />
                       </button>
                     </div>
-
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* ══ SETTINGS PANEL ══ */}
+            {(activeTab === 'Image' || activeTab === 'Video') && (
+              <div className="glass-settings flex w-[284px] shrink-0 flex-col overflow-y-auto p-5">
+                <div className="mb-5 flex items-center gap-2">
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br ${cfg.grad} shadow-md ${cfg.shadow}`}>
+                    {activeTab === 'Image' ? <ImageIcon size={13} className="text-white" /> : <Video size={13} className="text-white" />}
+                  </div>
+                  <h3 className={`text-[10px] font-bold uppercase tracking-[0.22em] ${isLight ? cfg.accentL : cfg.accent}`}>
+                    {activeTab} Settings
+                  </h3>
+                </div>
+
+                {/* Model */}
+                <div className="mb-4">
+                  <SettingLabel isLight={isLight}>Active Model</SettingLabel>
+                  <select className={inputCls}
+                    value={activeTab === 'Image' ? selectedImageModel : selectedVideoModel}
+                    onChange={e => { activeTab === 'Image' ? setSelectedImageModel(e.target.value) : setSelectedVideoModel(e.target.value); }}>
+                    {models.filter(m => m.type === activeTab).map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Ratio */}
+                {hasParam('aspect_ratio') && (
+                  <div className="mb-4">
+                    <SettingLabel isLight={isLight}>Aspect Ratio</SettingLabel>
+                    <select className={inputCls}
+                      value={activeTab === 'Image' ? aspectRatioImg : aspectRatioVid}
+                      onChange={e => { activeTab === 'Image' ? setAspectRatioImg(e.target.value) : setAspectRatioVid(e.target.value); }}>
+                      {RATIO_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* Duration */}
+                {activeTab === 'Video' && (
+                  <div className="mb-4">
+                    <SettingLabel isLight={isLight}>Duration</SettingLabel>
+                    <select className={inputCls} value={durationVid} onChange={e => setDurationVid(e.target.value)}>
+                      {['5s','10s','15s','30s'].map(d => <option key={d} value={d}>{d.replace('s',' sec')}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {/* Advanced Image */}
+                {activeTab === 'Image' && (
+                  <div className={`mt-1 space-y-3.5 border-t pt-4 ${isLight ? 'border-black/6' : 'border-white/8'}`}>
+                    <p className={`text-[9px] font-bold uppercase tracking-[0.22em] ${isLight ? 'text-slate-500' : 'text-slate-600'}`}>Advanced</p>
+
+                    {hasParam('negative_prompt') && (
+                      <div>
+                        <SettingLabel isLight={isLight}>Negative Prompt</SettingLabel>
+                        <textarea className={`${inputCls} min-h-[56px]`} value={negPromptImg}
+                          onChange={e => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted…" />
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {hasParam('num_outputs')    && <div><SettingLabel isLight={isLight}>Outputs</SettingLabel><input type="number" min={1} max={4} className={inputCls} value={numOutputsImg} onChange={e => setNumOutputsImg(parseInt(e.target.value)||1)} /></div>}
+                      {hasParam('output_format')  && <div><SettingLabel isLight={isLight}>Format</SettingLabel><select className={inputCls} value={formatImg} onChange={e => setFormatImg(e.target.value)}><option value="webp">WebP</option><option value="png">PNG</option><option value="jpg">JPG</option></select></div>}
+                      {hasParam('output_quality') && <div><SettingLabel isLight={isLight}>Quality</SettingLabel><input type="number" min={1} max={100} className={inputCls} value={qualityImg} onChange={e => setQualityImg(parseInt(e.target.value)||80)} /></div>}
+                      {hasParam('seed')           && <div><SettingLabel isLight={isLight}>Seed</SettingLabel><input type="number" className={inputCls} placeholder="Random" value={seedImg} onChange={e => setSeedImg(e.target.value)} /></div>}
+                      {hasParam('guidance_scale') && <div><SettingLabel isLight={isLight}>CFG Scale</SettingLabel><input type="number" step={0.1} className={inputCls} placeholder="Default" value={guidanceImg} onChange={e => setGuidanceImg(e.target.value)} /></div>}
+                      {hasParam('num_inference_steps') && <div><SettingLabel isLight={isLight}>Steps</SettingLabel><input type="number" className={inputCls} placeholder="Default" value={stepsImg} onChange={e => setStepsImg(e.target.value)} /></div>}
+                    </div>
+                  </div>
+                )}
+
+                <div className={`mt-auto pt-5 text-[11px] leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-600'}`}>
+                  <strong className={`${isLight ? cfg.accentL : cfg.accent}`}>Tip:</strong> Click Upload to attach a reference image before generating.
+                </div>
+              </div>
+            )}
           </div>
+
         ) : (
           /* ══ ASSETS ══ */
           <div className="flex-1 overflow-y-auto p-8">
