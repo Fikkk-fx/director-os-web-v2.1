@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
   Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video,
-  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus,
+  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X,
 } from 'lucide-react';
 // import { useAuth } from './AuthContext';
 // import LoginPage from './LoginPage';
@@ -609,7 +609,45 @@ function App() {
                       )}
                     </div>
 
-                    <div className="flex items-end gap-2.5">
+                    <div className="flex flex-col gap-2">
+                      {/* Image Preview */}
+                      {((activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)) && (
+                        <div className="relative self-start mb-1 ml-12 group">
+                          <img 
+                            src={URL.createObjectURL((activeTab === 'Home' ? refFileHome : activeTab === 'Image' ? refFileImage : refFileVideo)!)} 
+                            alt="Reference" 
+                            className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              if (activeTab === 'Home') setRefFileHome(null);
+                              if (activeTab === 'Image') setRefFileImage(null);
+                              if (activeTab === 'Video') setRefFileVideo(null);
+                            }}
+                            className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
+                          >
+                            <X size={12} strokeWidth={3} />
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex items-end gap-2.5">
+                      {/* Upload */}
+                      <button type="button"
+                        onClick={() => {
+                          if (activeTab === 'Home')  fileInputRefHome.current?.click();
+                          if (activeTab === 'Image') fileInputRefImage.current?.click();
+                          if (activeTab === 'Video') fileInputRefVideo.current?.click();
+                        }}
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl border transition duration-200 hover:-translate-y-0.5 ${
+                          isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900' : 'border-white/10 bg-white/6 text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}>
+                        <Upload size={16} className={
+                          (activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)
+                            ? 'text-emerald-400' : ''
+                        } />
+                      </button>
                       <input type="file" accept="image/*" ref={fileInputRefHome}  className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileHome(e.target.files[0]); }} />
                       <input type="file" accept="image/*" ref={fileInputRefImage} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileImage(e.target.files[0]); }} />
                       <input type="file" accept="image/*" ref={fileInputRefVideo} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileVideo(e.target.files[0]); }} />
@@ -651,6 +689,7 @@ function App() {
                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r ${cfg.grad} text-white shadow-lg ${cfg.shadow} transition duration-200 hover:-translate-y-0.5 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40`}>
                         <Send size={16} />
                       </button>
+                    </div>
                     </div>
                   </div>
                 </div>
