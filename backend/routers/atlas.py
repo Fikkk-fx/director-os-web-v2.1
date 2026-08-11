@@ -17,61 +17,83 @@ ATLAS_BASE_URL = "https://api.atlascloud.ai/api/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# EXACT CURATED MODEL CATALOGUE  — based on actual Atlas capabilities
+# EXACT CURATED MODEL CATALOGUE — verified against Atlas Cloud API (?tab=api)
+# Providers use Atlas canonical names: OPENAI, GOOGLE, BLACK-FOREST-LABS,
+# QWEN (Wan/Alibaba), MIDJOURNEY (Youchuan), BYTEDANCE, MINIMAX, KUAISHOU
 # ─────────────────────────────────────────────────────────────────────────────
 _CATALOGUE = [
-    # ── Image: OpenAI GPT ────────────────────────────────────────────────────
-    {"id": "openai/gpt-image-2/text-to-image",        "provider": "OpenAI", "name": "GPT Image 2 T2I",           "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "openai/gpt-image-2/edit",                 "provider": "OpenAI", "name": "GPT Image 2 Edit",          "type": "Image", "mode": "edit", "supports_image": True},
-    # ── Image: Google Nano Banana ────────────────────────────────────────────
-    {"id": "google/nano-banana-2/text-to-image",      "provider": "Google", "name": "Nano Banana 2 T2I",         "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "google/nano-banana-2/edit",               "provider": "Google", "name": "Nano Banana 2 Edit",        "type": "Image", "mode": "edit", "supports_image": True},
-    # ── Image: FLUX ──────────────────────────────────────────────────────────
-    {"id": "black-forest-labs/flux-1-pro",            "provider": "FLUX",   "name": "FLUX 1 Pro",                "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "black-forest-labs/flux-1-schnell",        "provider": "FLUX",   "name": "FLUX 1 Schnell",            "type": "Image", "mode": "text-to-image", "supports_image": False},
-    # ── Image: Alibaba Wan ───────────────────────────────────────────────────
-    {"id": "alibaba/wan-2.7/text-to-image",           "provider": "Wan",    "name": "Wan 2.7 T2I",               "type": "Image", "mode": "text-to-image", "supports_image": False},
-    {"id": "alibaba/wan-2.7/image-edit",              "provider": "Wan",    "name": "Wan 2.7 Edit",              "type": "Image", "mode": "edit", "supports_image": True},
-    
-    # ── Video: ByteDance Seedance ────────────────────────────────────────────
-    {"id": "bytedance/seedance-2.5/text-to-video",    "provider": "ByteDance", "name": "Seedance 2.5 T2V",       "type": "Video", "mode": "text-to-video", "supports_image": False},
-    {"id": "bytedance/seedance-2.5/image-to-video",   "provider": "ByteDance", "name": "Seedance 2.5 I2V",       "type": "Video", "mode": "image-to-video", "supports_image": True},
-    {"id": "bytedance/seedance-2.5/reference-to-video","provider": "ByteDance", "name": "Seedance 2.5 Ref2V",    "type": "Video", "mode": "reference-to-video", "supports_image": True},
-    # ── Video: MiniMax / Hailuo ──────────────────────────────────────────────
-    {"id": "minimax/h3/text-to-video",                "provider": "MiniMax", "name": "MiniMax H3 T2V",           "type": "Video", "mode": "text-to-video", "supports_image": False},
-    {"id": "minimax/h3/image-to-video",               "provider": "MiniMax", "name": "MiniMax H3 I2V",           "type": "Video", "mode": "image-to-video", "supports_image": True},
-    {"id": "minimax/h3/reference-to-video",           "provider": "MiniMax", "name": "MiniMax H3 Ref2V",         "type": "Video", "mode": "reference-to-video", "supports_image": True},
-    # ── Video: Kuaishou Kling ────────────────────────────────────────────────
-    {"id": "kwaivgi/kling-v3.0-turbo/text-to-video",  "provider": "Kling",   "name": "Kling V3.0 Turbo T2V",     "type": "Video", "mode": "text-to-video", "supports_image": False},
-    {"id": "kwaivgi/kling-v3.0-turbo/image-to-video", "provider": "Kling",   "name": "Kling V3.0 Turbo I2V",     "type": "Video", "mode": "image-to-video", "supports_image": True},
-    # ── Video: Alibaba Wan ───────────────────────────────────────────────────
-    {"id": "alibaba/wan-2.7/text-to-video",           "provider": "Wan",     "name": "Wan 2.7 T2V",              "type": "Video", "mode": "text-to-video", "supports_image": False},
-    {"id": "alibaba/wan-2.7/image-to-video",          "provider": "Wan",     "name": "Wan 2.7 I2V",              "type": "Video", "mode": "image-to-video", "supports_image": True},
-    {"id": "alibaba/wan-2.7/reference-to-video",      "provider": "Wan",     "name": "Wan 2.7 Ref2V",            "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    # ── Image: OpenAI GPT Image 2 ───────────────────────────────────────────
+    {"id": "openai/gpt-image-2/text-to-image",          "provider": "OpenAI",       "name": "GPT Image 2",              "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "openai/gpt-image-2/edit",                   "provider": "OpenAI",       "name": "GPT Image 2 Edit",         "type": "Image", "mode": "edit",             "supports_image": True},
+    # ── Image: Google Nano Banana 2 ─────────────────────────────────────────
+    {"id": "google/nano-banana-2/text-to-image",        "provider": "Google",       "name": "Nano Banana 2",            "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "google/nano-banana-2/edit",                 "provider": "Google",       "name": "Nano Banana 2 Edit",       "type": "Image", "mode": "edit",             "supports_image": True},
+    # ── Image: Black Forest Labs FLUX ────────────────────────────────────────
+    {"id": "black-forest-labs/flux-2-pro/text-to-image","provider": "FLUX",         "name": "FLUX.2 Pro",               "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "black-forest-labs/flux-2-flex/text-to-image","provider": "FLUX",        "name": "FLUX.2 Flex",              "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "black-forest-labs/flux-dev",                "provider": "FLUX",         "name": "FLUX Dev",                 "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "black-forest-labs/flux-schnell",            "provider": "FLUX",         "name": "FLUX Schnell",             "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    # ── Image: Alibaba Wan 2.7 ──────────────────────────────────────────────
+    {"id": "alibaba/wan-2.7/text-to-image",             "provider": "Wan",          "name": "Wan 2.7",                  "type": "Image", "mode": "text-to-image",      "supports_image": False},
+    {"id": "alibaba/wan-2.7/image-edit",                "provider": "Wan",          "name": "Wan 2.7 Edit",             "type": "Image", "mode": "edit",             "supports_image": True},
+    # ── Image: Midjourney (Youchuan v8.2) ────────────────────────────────────
+    {"id": "youchuan/v8.2/text-to-image",               "provider": "Midjourney",   "name": "Midjourney V8.2",          "type": "Image", "mode": "text-to-image",      "supports_image": False},
+
+    # ── Video: ByteDance Seedance 2.5 ────────────────────────────────────────
+    {"id": "bytedance/seedance-2.5/text-to-video",      "provider": "ByteDance",    "name": "Seedance 2.5 T2V",         "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "bytedance/seedance-2.5/image-to-video",     "provider": "ByteDance",    "name": "Seedance 2.5 I2V",         "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    {"id": "bytedance/seedance-2.5/reference-to-video", "provider": "ByteDance",    "name": "Seedance 2.5 Ref2V",       "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    # ── Video: ByteDance Seedance 2.0 ────────────────────────────────────────
+    {"id": "bytedance/seedance-2.0/text-to-video",      "provider": "ByteDance",    "name": "Seedance 2.0 T2V",         "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "bytedance/seedance-2.0/image-to-video",     "provider": "ByteDance",    "name": "Seedance 2.0 I2V",         "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    # ── Video: MiniMax H3 ────────────────────────────────────────────────────
+    {"id": "minimax/h3/text-to-video",                  "provider": "MiniMax",      "name": "MiniMax H3 T2V",           "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "minimax/h3/image-to-video",                 "provider": "MiniMax",      "name": "MiniMax H3 I2V",           "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    {"id": "minimax/h3/reference-to-video",             "provider": "MiniMax",      "name": "MiniMax H3 Ref2V",         "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    # ── Video: Kuaishou Kling V3.0 ───────────────────────────────────────────
+    {"id": "kwaivgi/kling-v3.0-turbo/text-to-video",   "provider": "Kling",        "name": "Kling V3.0 Turbo T2V",    "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "kwaivgi/kling-v3.0-turbo/image-to-video",  "provider": "Kling",        "name": "Kling V3.0 Turbo I2V",    "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-pro/text-to-video",     "provider": "Kling",        "name": "Kling V3.0 Pro T2V",      "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "kwaivgi/kling-v3.0-pro/image-to-video",    "provider": "Kling",        "name": "Kling V3.0 Pro I2V",      "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    # ── Video: Alibaba Wan 2.7 ───────────────────────────────────────────────
+    {"id": "alibaba/wan-2.7/text-to-video",             "provider": "Wan",          "name": "Wan 2.7 T2V",              "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "alibaba/wan-2.7/image-to-video",            "provider": "Wan",          "name": "Wan 2.7 I2V",              "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    {"id": "alibaba/wan-2.7/reference-to-video",        "provider": "Wan",          "name": "Wan 2.7 Ref2V",            "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    # ── Video: Google Veo 3.1 ────────────────────────────────────────────────
+    {"id": "google/veo3.1/text-to-video",               "provider": "Google",       "name": "Veo 3.1 T2V",              "type": "Video", "mode": "text-to-video",      "supports_image": False},
+    {"id": "google/veo3.1/image-to-video",              "provider": "Google",       "name": "Veo 3.1 I2V",              "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    # ── Video: Midjourney (Youchuan v8.2 I2V) ───────────────────────────────
+    {"id": "youchuan/v8.2/image-to-video",              "provider": "Midjourney",   "name": "Midjourney V8.2 I2V",     "type": "Video", "mode": "image-to-video",     "supports_image": True},
 ]
 
-# Static schema map based on Atlas official API structure
+# Static supported-params schema — verified against Atlas ?tab=api reference
 def _get_supported_params(provider: str, type: str) -> list:
     if type == "Video":
         if provider == "ByteDance":
-            return ["aspect_ratio", "duration", "resolution", "output_format", "generate_audio", "watermark", "return_last_frame"]
+            return ["aspect_ratio", "duration", "resolution", "generate_audio", "watermark"]
         if provider == "MiniMax":
-            return ["aspect_ratio", "duration", "resolution"]
+            return ["aspect_ratio", "duration", "resolution", "generate_audio"]
         if provider == "Kling":
-            return ["aspect_ratio", "duration", "generate_audio", "negative_prompt"]
+            return ["aspect_ratio", "duration", "resolution", "negative_prompt", "cfg_scale"]
         if provider == "Wan":
-            return ["aspect_ratio", "duration", "resolution", "seed"]
+            return ["aspect_ratio", "duration", "resolution", "negative_prompt", "generate_audio"]
+        if provider == "Google":
+            return ["aspect_ratio", "duration", "resolution"]
+        if provider == "Midjourney":
+            return ["aspect_ratio", "duration", "resolution"]
         return ["aspect_ratio", "duration"]
 
     if type == "Image":
         if provider == "OpenAI":
-            return ["size", "num_outputs", "output_quality", "output_format"] # size is mapped from resolution internally
+            return ["size", "num_outputs", "output_quality", "output_format"]
         if provider == "Google":
-            return ["resolution", "thinking_level", "media_resolution", "output_format"]
+            return ["aspect_ratio", "resolution", "thinking_level", "output_format"]
         if provider == "FLUX":
-            return ["aspect_ratio", "output_format", "seed", "output_quality"]
+            return ["size", "output_format", "seed", "safety_tolerance"]
         if provider == "Wan":
             return ["aspect_ratio", "negative_prompt", "seed", "guidance_scale"]
+        if provider == "Midjourney":
+            return ["aspect_ratio", "hd", "stylize", "chaos", "weird", "seed", "sref"]
         return ["aspect_ratio"]
 
 
@@ -249,10 +271,7 @@ async def generate_asset(
             }
 
             if "aspect_ratio" in supported:
-                if model_info["provider"] in ["MiniMax", "ByteDance", "Kling", "Wan"]:
-                    payload["ratio"] = aspect_ratio
-                else:
-                    payload["aspect_ratio"] = aspect_ratio
+                payload["aspect_ratio"] = aspect_ratio
 
             if type == "Video" and "duration" in supported:
                 try:
@@ -287,6 +306,14 @@ async def generate_asset(
                 hd_val = _bool(hd)
                 if hd_val is not None:
                     payload["hd"] = hd_val
+
+            # cfg_scale for Kling video models
+            if "cfg_scale" in supported and guidance_scale is not None:
+                payload["cfg_scale"] = guidance_scale
+
+            # quality param for Midjourney
+            if "quality" in supported and output_quality is not None:
+                payload["quality"] = output_quality
 
             if "watermark" in supported:
                 wm_val = _bool(watermark)
