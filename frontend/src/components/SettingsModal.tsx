@@ -46,7 +46,7 @@ const ProviderIcon = ({ provider, size = 18 }: { provider: string, size?: number
   if (provider === 'ByteDance') return <BarChart2 size={size} />;
   if (provider === 'Stability AI') return <span className="font-extrabold text-sm tracking-tighter">S.</span>;
   if (provider === 'ImagineArt') return <Zap size={size} />;
-  return <Star size={size} />;
+  return <span className="font-extrabold text-sm uppercase tracking-tighter" style={{ fontSize: size ? size * 0.7 : 14 }}>{provider.charAt(0)}</span>;
 };
 
 export function SettingsModal({
@@ -68,19 +68,32 @@ quality, setQuality,
   const [selectedProvider, setSelectedProvider] = useState<string>('All');
   const [isProviderOpen, setIsProviderOpen] = useState(false);
 
-  const getProvider = (_id: string, name?: string) => {
-    if (!name) return 'Other';
-    const n = name.toLowerCase();
-    if (n.includes('gpt') || n.includes('openai')) return 'OpenAI';
-    if (n.includes('gemini') || n.includes('nano')) return 'Google';
-    if (n.includes('seedream') || n.includes('seedance') || n.includes('kling') || n.includes('bytedance')) return 'ByteDance';
-    if (n.includes('flux') || n.includes('stable') || n.includes('sd')) return 'Stability AI';
-    if (n.includes('imagineart')) return 'ImagineArt';
-    return 'Other';
+const providerMap: Record<string, string> = {
+    openai: 'OpenAI',
+    google: 'Google',
+    bytedance: 'ByteDance',
+    minimax: 'MiniMax',
+    youchuan: 'Midjourney',
+    atlascloud: 'AtlasCloud',
+    alibaba: 'Alibaba',
+    kwaivgi: 'Kuaishou',
+    xai: 'xAI',
+    vidu: 'Vidu',
+    pixverse: 'Pixverse',
+    midjourney: 'Midjourney',
+    stabilityai: 'Stability AI',
+    imagineart: 'ImagineArt'
   };
 
-  const hardcodedProviders = ['All', 'OpenAI', 'Google', 'ByteDance', 'Stability AI', 'ImagineArt'];
-  const uniqueProviders = hardcodedProviders;
+  const getProvider = (id: string) => {
+    const rawProvider = id.split('/')[0].toLowerCase();
+    return providerMap[rawProvider] || (rawProvider.charAt(0).toUpperCase() + rawProvider.slice(1));
+  };
+
+  const uniqueProviders = useMemo(() => {
+    const provs = new Set(models.map(m => getProvider(m.id)));
+    return ['All', ...Array.from(provs).sort()];
+  }, [models]);
 
   const filteredModels = useMemo(() => {
     let filtered = models.filter(m => m.type === mode);
@@ -88,7 +101,7 @@ quality, setQuality,
       filtered = filtered.filter(m => (m.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (m.id || '').toLowerCase().includes(searchQuery.toLowerCase()));
     }
     if (selectedProvider !== 'All') {
-      filtered = filtered.filter(m => getProvider(m.id, m.name) === selectedProvider);
+      filtered = filtered.filter(m => getProvider(m.id) === selectedProvider);
     }
     return filtered;
   }, [models, mode, searchQuery, selectedProvider]);
@@ -114,10 +127,10 @@ quality, setQuality,
         </div>
 
         {/* Content */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-auto md:overflow-hidden">
           
           {/* LEFT PANE: Models */}
-          <div className={`w-1/2 flex flex-col border-r ${borderCol} ${bgPanel}`}>
+          <div className={`w-full md:w-1/2 shrink-0 flex flex-col border-b md:border-b-0 md:border-r ${borderCol} ${bgPanel} h-[300px] md:h-auto`}>
             
             {/* Filters Row */}
             <div className="p-5 flex items-center gap-3">
@@ -177,7 +190,7 @@ quality, setQuality,
               <div className="flex flex-col gap-2">
                 {filteredModels.map((m, idx) => {
                   const isSelected = selectedModelId === m.id;
-                  const provider = getProvider(m.id, m.name);
+                  const provider = getProvider(m.id);
                   const isNew = idx % 5 === 0; // Fake "new" badge for aesthetics
                   
                   return (
@@ -215,7 +228,7 @@ quality, setQuality,
           </div>
 
           {/* RIGHT PANE: Settings */}
-          <div className="w-1/2 flex flex-col p-8 overflow-y-auto">
+          <div className="w-full md:w-1/2 flex flex-col p-5 md:p-8 overflow-y-auto shrink-0 md:shrink">
             
             {hasParam('aspect_ratio') && (
               <div className="mb-10">
@@ -253,8 +266,9 @@ quality, setQuality,
 
             <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>
 
-            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
+            {hasParam('prompt_enhancer') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
               <button 
                 onClick={() => setPromptEnhancer(!promptEnhancer)}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
@@ -262,6 +276,7 @@ quality, setQuality,
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
               </button>
             </div>
+            )}
 
             {hasParam('num_outputs') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
@@ -284,8 +299,9 @@ quality, setQuality,
               </div>
             )}
 
-            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
+            {hasParam('resolution') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
               <div className="flex gap-4">
                 {['1K', '2K', '4K'].map(res => (
                   <label key={res} className="flex items-center gap-2 cursor-pointer">
@@ -298,6 +314,7 @@ quality, setQuality,
                 ))}
               </div>
             </div>
+            )}
 
             {hasParam('output_quality') && (
               <div className="flex items-center justify-between border-b ${borderCol} pb-5 mb-5">
@@ -316,7 +333,7 @@ quality, setQuality,
               </div>
             )}
 
-            {mode === 'Video' && (
+            {hasParam('duration') && (
               <div className={`flex items-center justify-between border-t mt-5 pt-5 ${borderCol}`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Duration</span>
                 <div className="flex gap-4">
