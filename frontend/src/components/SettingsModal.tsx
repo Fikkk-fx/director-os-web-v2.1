@@ -29,7 +29,10 @@ interface SettingsModalProps {
   setSteps: (v: string) => void;
   seed: string;
   setSeed: (v: string) => void;
-  hasParam: (param: string) => boolean;
+  resolution: string;
+  setResolution: (v: string) => void;
+  generateAudio: boolean;
+  setGenerateAudio: (v: boolean) => void;
 }
 
 export function SettingsModal({
@@ -43,16 +46,17 @@ export function SettingsModal({
   guidance, setGuidance,
   steps, setSteps,
   seed, setSeed,
-  hasParam
+  resolution, setResolution,
+  generateAudio, setGenerateAudio
 }: SettingsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [promptEnhancer, setPromptEnhancer] = useState(false);
-  
+  const activeModalModel = models.find(m => m.id === selectedModelId);
+  const hasParam = (p: string) => activeModalModel?.supported_params?.includes(p) ?? false;
   const [showProviderMenu, setShowProviderMenu] = useState(false);
   const [providerFilter, setProviderFilter] = useState('');
-  
   const [showResMenu, setShowResMenu] = useState(false);
   const [resFilter, setResFilter] = useState('');
+  const [promptEnhancer, setPromptEnhancer] = useState(false);
 
   // Helpers to get Provider from ID
   const getProvider = (id: string) => {
@@ -282,8 +286,35 @@ export function SettingsModal({
               </div>
             )}
 
-            {/* NOTE: We removed the duplicate Resolution Preset UI from the right pane because Resolutions are now a filter on the left pane */}
-            
+            {hasParam('resolution') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
+                <div className="flex gap-4">
+                  {['480p', '720p', '1080p', '1K', '2K', '4K'].map(res => (
+                    <label key={res} className="flex items-center gap-2 cursor-pointer">
+                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolution === res ? 'border-violet-500' : borderCol}`}>
+                        {resolution === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                      </div>
+                      <input type="radio" className="hidden" checked={resolution === res} onChange={() => setResolution(res)} />
+                      <span className="text-sm font-medium">{res}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {hasParam('generate_audio') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Generate Audio</span>
+                <button
+                  onClick={() => setGenerateAudio(!generateAudio)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${generateAudio ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${generateAudio ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+
             {hasParam('output_quality') && (
               <div className="flex items-center justify-between border-b ${borderCol} pb-5 mb-5">
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Quality</span>

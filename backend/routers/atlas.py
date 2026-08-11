@@ -209,38 +209,47 @@ def _headers():
 
 def _get_supported_params(mtype, mid):
     mid_low = mid.lower()
-    
-    # Base parameters for all image models
-    if mtype != "Image":
-        return ["aspect_ratio"]
-        
     params = ["aspect_ratio"]
-    
-    # OpenAI GPT Image
+
+    if mtype == "Video":
+        params.append("duration")
+        if "google" in mid_low or "veo" in mid_low or "gemini" in mid_low:
+            params.extend(["resolution", "generate_audio", "negative_prompt", "seed"])
+        elif "kwaivgi" in mid_low or "kling" in mid_low:
+            params.extend(["guidance_scale", "generate_audio", "negative_prompt"])
+        elif "minimax" in mid_low or "hailuo" in mid_low:
+            params.extend(["resolution"])
+        elif "bytedance" in mid_low or "seedance" in mid_low:
+            params.extend(["resolution", "output_format", "generate_audio"])
+        elif "alibaba" in mid_low or "wan" in mid_low or "happyhorse" in mid_low or "qwen" in mid_low:
+            params.extend(["resolution", "seed"])
+        elif "xai" in mid_low or "grok" in mid_low:
+            params.extend(["resolution"])
+        elif "youchuan" in mid_low:
+            params.extend(["resolution"])
+        return params
+
+    # Below is for Image models
     if "gpt-image" in mid_low or "dall-e" in mid_low:
         params.extend(["num_outputs", "output_format", "output_quality"])
         return params
         
-    # ByteDance Seedream
     if "seedream" in mid_low:
         params.extend(["output_format"])
         return params
         
-    # Google Nano Banana & Imagen
     if "nano-banana" in mid_low or "imagen" in mid_low or "veo" in mid_low or "gemini" in mid_low:
         params.extend(["seed", "output_format", "output_quality"])
         return params
         
-    # Black Forest Labs Flux
     if "flux" in mid_low:
         params.extend(["seed", "num_outputs", "output_format", "guidance_scale", "num_inference_steps"])
         return params
         
-    # Midjourney / Youchuan
     if "youchuan" in mid_low:
+        params.extend(["resolution"])
         return params
         
-    # Alibaba / Qwen / Wan
     if "wan" in mid_low or "qwen" in mid_low or "happyhorse" in mid_low:
         params.extend(["negative_prompt", "seed", "num_outputs"])
         if "wan" not in mid_low:
@@ -334,6 +343,8 @@ async def generate_asset(
     guidance_scale: Optional[float] = Form(None),
     num_inference_steps: Optional[int] = Form(None),
     seed: Optional[int] = Form(None),
+    resolution: Optional[str] = Form(None),
+    generate_audio: Optional[bool] = Form(None),
     reference_file: Optional[UploadFile] = File(None)
 ):
     """Submit generation task to Atlas Cloud REST API."""
@@ -355,8 +366,20 @@ async def generate_asset(
             "prompt": prompt,
             "aspect_ratio": aspect_ratio,
         }
+        
+        mid_low = model_keyword.lower()
+
+        # Handle specific parameter name mappings
+        if "minimax" in mid_low or "seedance" in mid_low:
+            payload["ratio"] = payload.pop("aspect_ratio")
+
         if type == "Video":
-            payload["duration"] = duration
+            # Strip 's' and convert to int for video models
+            try:
+                dur_int = int(duration.replace('s', ''))
+                payload["duration"] = dur_int
+            except ValueError:
+                payload["duration"] = duration
 
         async with httpx.AsyncClient(timeout=120) as client:
             if reference_file:
@@ -386,6 +409,12 @@ async def generate_asset(
             if guidance_scale: payload["guidance_scale"] = guidance_scale
             if num_inference_steps: payload["num_inference_steps"] = num_inference_steps
             if seed is not None: payload["seed"] = seed
+            if resolution: payload["resolution"] = resolution
+            if generate_audio is not None: 
+                payload["generate_audio"] = generate_audio
+                # Kling expects 'sound'
+                if "kling" in mid_low or "kwaivgi" in mid_low:
+                    payload["sound"] = generate_audio
 
             endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
             r = await client.post(

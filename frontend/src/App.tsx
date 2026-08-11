@@ -213,6 +213,8 @@ function App() {
   const [guidanceImg, setGuidanceImg]       = useState('');
   const [stepsImg, setStepsImg]             = useState('');
   const [seedImg, setSeedImg]               = useState('');
+  const [resolution, setResolution]         = useState('1K');
+  const [generateAudio, setGenerateAudio]   = useState(false);
 
   /* ── Files ── */
   const [refFile, setRefFile]   = useState<File | null>(null);
@@ -282,15 +284,22 @@ function App() {
       const fd = new FormData();
       fd.append('type', type); fd.append('prompt', up); fd.append('model_keyword', model);
       fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
+      
+      // Shared params
+      if (negPromptImg.trim())  fd.append('negative_prompt',     negPromptImg.trim());
+      if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
+      if (seedImg)              fd.append('seed',                seedImg);
+      if (resolution)           fd.append('resolution',          resolution);
+
       if (isImg) {
-        if (negPromptImg.trim())  fd.append('negative_prompt',     negPromptImg.trim());
         if (numOutputsImg > 1)    fd.append('num_outputs',         numOutputsImg.toString());
         if (formatImg !== 'webp') fd.append('output_format',       formatImg);
         if (qualityImg !== 80)    fd.append('output_quality',      qualityImg.toString());
-        if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
         if (stepsImg)             fd.append('num_inference_steps', stepsImg);
-        if (seedImg)              fd.append('seed',                seedImg);
-      } else { fd.append('duration', durationVid); }
+      } else { 
+        fd.append('duration', durationVid); 
+        if (generateAudio) fd.append('generate_audio', 'true');
+      }
       if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai',
@@ -752,7 +761,10 @@ function App() {
         setSteps={setStepsImg}
         seed={seedImg}
         setSeed={setSeedImg}
-        
+        resolution={resolution}
+        setResolution={setResolution}
+        generateAudio={generateAudio}
+        setGenerateAudio={setGenerateAudio}
       />
     </div>
   );
