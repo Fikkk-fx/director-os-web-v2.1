@@ -105,8 +105,25 @@ export function SettingsModal({
     const s = (name + ' ' + id).toLowerCase();
     if (s.includes('seedream') || s.includes('seedance') || s.includes('douyin') || s.includes('bytedance')) return '/logos/bytedance.png';
     if (s.includes('gemini') || s.includes('google')) return '/logos/google.png';
-    if (s.includes('kling')) return '/logos/kling.jpeg';
+    if (s.includes('kling') || s.includes('kwaivgi')) return '/logos/kling.jpeg';
     if (s.includes('wan') || s.includes('qwen') || s.includes('alibaba')) return '/logos/wan.png';
+
+    if (s.includes('openai') || s.includes('gpt') || s.includes('dall')) return '/logos/openai.png';
+    if (s.includes('deepseek')) return '/logos/deepseek.svg';
+    if (s.includes('moonshot') || s.includes('kimi')) return '/logos/moonshot.svg';
+
+    if (s.includes('ideogram')) return '/logos/ideogram.png';
+    if (s.includes('microsoft')) return '/logos/microsoft.jpeg';
+    if (s.includes('minimax')) return '/logos/minimax.jpeg';
+    if (s.includes('pixverse')) return '/logos/pixverse.png';
+    if (s.includes('reve')) return '/logos/reve.png';
+    if (s.includes('vidu')) return '/logos/vidu.jpeg';
+    if (s.includes('xai') || s.includes('grok')) return '/logos/grok.jpg';
+    if (s.includes('youchuan')) return '/logos/midjourney.png';
+    if (s.includes('z-image')) return '/logos/zimage.webp';
+    if (s.includes('black-forest') || s.includes('flux') || s.includes('bfl')) return '/logos/blackforest.jpg';
+    if (s.includes('atlascloud')) return '/logos/atlascloud.png';
+
     return null;
   };
 
@@ -141,7 +158,7 @@ export function SettingsModal({
                 />
               </div>
               <div className="relative">
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setShowProviderMenu(!showProviderMenu); setShowResMenu(false); }}
                   className={`flex items-center gap-1 rounded-xl border ${borderCol} px-4 py-2 text-sm font-medium ${providerFilter ? 'border-violet-500/50 text-violet-500' : isLight ? 'bg-black/5 hover:bg-black/10 text-slate-700' : 'bg-white/5 hover:bg-white/10 text-slate-200'}`}>
                   {providerFilter || 'Providers'} <ChevronDown size={14} className="opacity-50" />
@@ -156,7 +173,7 @@ export function SettingsModal({
                 )}
               </div>
               <div className="relative">
-                <button 
+                <button
                   onClick={(e) => { e.stopPropagation(); setShowResMenu(!showResMenu); setShowProviderMenu(false); }}
                   className={`flex items-center gap-1 rounded-xl border ${borderCol} px-4 py-2 text-sm font-medium ${resFilter ? 'border-violet-500/50 text-violet-500' : isLight ? 'bg-black/5 hover:bg-black/10 text-slate-700' : 'bg-white/5 hover:bg-white/10 text-slate-200'}`}>
                   {resFilter || (mode === 'Image' ? 'Ratio' : 'Resolution')} <ChevronDown size={14} className="opacity-50" />

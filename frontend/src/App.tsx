@@ -20,7 +20,7 @@ const TAB_CFG = {
 type TabKey = keyof typeof TAB_CFG;
 
 /* ── Custom Select ─────────────────────────────────────────────── */
-interface SelectOption { value: string; label: string; }
+interface SelectOption { value: string; label: string; logo?: string; }
 interface CustomSelectProps {
   label: string; value: string; onChange: (v: string) => void;
   options: SelectOption[]; isLight: boolean; accentClass: string;
@@ -29,7 +29,9 @@ interface CustomSelectProps {
 function CustomSelect({ label, value, options, onChange, isLight, accentClass }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find(o => o.value === value)?.label ?? value;
+  const selectedOpt = options.find(o => o.value === value);
+  const selected = selectedOpt?.label ?? value;
+  const selectedLogo = selectedOpt?.logo;
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ function CustomSelect({ label, value, options, onChange, isLight, accentClass }:
           ${isLight ? 'text-slate-700 hover:bg-black/5' : 'text-slate-200 hover:bg-white/10'}`}
       >
         <span className={`text-[9px] font-bold uppercase tracking-[0.2em] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
+        {selectedLogo && <img src={selectedLogo} alt="" className="w-3.5 h-3.5 object-contain opacity-80" />}
         <span className={accentClass}>{selected}</span>
         <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''} opacity-50`} />
       </button>
@@ -60,12 +63,13 @@ function CustomSelect({ label, value, options, onChange, isLight, accentClass }:
         {options.map(opt => (
           <button key={opt.value} type="button" role="option" aria-selected={opt.value === value}
             onClick={() => { onChange(opt.value); close(); }}
-            className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-100
+            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-all duration-100
               ${opt.value === value
                 ? isLight ? 'bg-blue-50 text-blue-700 font-semibold' : `${accentClass} bg-white/10 font-semibold`
                 : isLight ? 'text-slate-600 hover:bg-black/5' : 'text-slate-300 hover:bg-white/8'}`}
           >
-            <span>{opt.label}</span>
+            {opt.logo && <img src={opt.logo} alt="" className="w-4 h-4 object-contain opacity-80" />}
+            <span className="flex-1 text-left">{opt.label}</span>
             {opt.value === value && <Check size={11} className="shrink-0 opacity-70" />}
           </button>
         ))}
@@ -86,9 +90,9 @@ interface ChatSession {
 }
 
 const HOME_MODELS: SelectOption[] = [
-  { value: 'openai/gpt-5.6-sol',         label: 'GPT-5.6 Sol'     },
-  { value: 'moonshotai/kimi-k3',          label: 'Kimi K3'         },
-  { value: 'deepseek-ai/deepseek-v4-pro', label: 'Deepseek V4 Pro' },
+  { value: 'openai/gpt-5.6-sol',         label: 'GPT-5.6 Sol',     logo: '/logos/openai.svg'   },
+  { value: 'moonshotai/kimi-k3',          label: 'Kimi K3',         logo: '/logos/moonshot.svg' },
+  { value: 'deepseek-ai/deepseek-v4-pro', label: 'Deepseek V4 Pro', logo: '/logos/deepseek.svg' },
 ];
 const modelLabel = (id: string) => HOME_MODELS.find(m => m.value === id)?.label ?? 'GPT-5.6 Sol';
 
