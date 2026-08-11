@@ -36,6 +36,8 @@ interface SettingsModalProps {
   hd: boolean;
   setHd: (v: boolean) => void;
   stylize: number;
+  motion: string;
+  setMotion: (v: string) => void;
   setStylize: (v: number) => void;
   chaos: number;
   setChaos: (v: number) => void;
@@ -67,7 +69,7 @@ export function SettingsModal({
   resolution, setResolution,
   generateAudio, setGenerateAudio,
   hd, setHd,
-  stylize, setStylize,
+  stylize, setStylize, motion, setMotion,
   chaos, setChaos,
   weird, setWeird,
   sref, setSref,
@@ -458,6 +460,16 @@ export function SettingsModal({
               </div>
             )}
             
+                        {hasParam('motion') && (
+              <div className="flex items-center justify-between mt-4">
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Motion</span>
+                <select className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none ${isLight ? 'text-slate-900' : 'text-white'}`} value={motion} onChange={e => setMotion(e.target.value)}>
+                  <option value="low" className="text-black">Low</option>
+                  <option value="high" className="text-black">High</option>
+                </select>
+              </div>
+            )}
+
             {hasParam('stylize') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Stylize</span>

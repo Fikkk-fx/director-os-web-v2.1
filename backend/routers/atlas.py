@@ -17,83 +17,219 @@ ATLAS_BASE_URL = "https://api.atlascloud.ai/api/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# EXACT CURATED MODEL CATALOGUE — verified against Atlas Cloud API (?tab=api)
-# Providers use Atlas canonical names: OPENAI, GOOGLE, BLACK-FOREST-LABS,
-# QWEN (Wan/Alibaba), MIDJOURNEY (Youchuan), BYTEDANCE, MINIMAX, KUAISHOU
+# EXACT CURATED MODEL CATALOGUE  — based on actual Atlas capabilities
 # ─────────────────────────────────────────────────────────────────────────────
 _CATALOGUE = [
-    # ── Image: OpenAI GPT Image 2 ───────────────────────────────────────────
-    {"id": "openai/gpt-image-2/text-to-image",          "provider": "OpenAI",       "name": "GPT Image 2",              "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "openai/gpt-image-2/edit",                   "provider": "OpenAI",       "name": "GPT Image 2 Edit",         "type": "Image", "mode": "edit",             "supports_image": True},
-    # ── Image: Google Nano Banana 2 ─────────────────────────────────────────
-    {"id": "google/nano-banana-2/text-to-image",        "provider": "Google",       "name": "Nano Banana 2",            "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "google/nano-banana-2/edit",                 "provider": "Google",       "name": "Nano Banana 2 Edit",       "type": "Image", "mode": "edit",             "supports_image": True},
-    # ── Image: Black Forest Labs FLUX ────────────────────────────────────────
-    {"id": "black-forest-labs/flux-2-pro/text-to-image","provider": "FLUX",         "name": "FLUX.2 Pro",               "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "black-forest-labs/flux-2-flex/text-to-image","provider": "FLUX",        "name": "FLUX.2 Flex",              "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "black-forest-labs/flux-dev",                "provider": "FLUX",         "name": "FLUX Dev",                 "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "black-forest-labs/flux-schnell",            "provider": "FLUX",         "name": "FLUX Schnell",             "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    # ── Image: Alibaba Wan 2.7 ──────────────────────────────────────────────
-    {"id": "alibaba/wan-2.7/text-to-image",             "provider": "Wan",          "name": "Wan 2.7",                  "type": "Image", "mode": "text-to-image",      "supports_image": False},
-    {"id": "alibaba/wan-2.7/image-edit",                "provider": "Wan",          "name": "Wan 2.7 Edit",             "type": "Image", "mode": "edit",             "supports_image": True},
-    # ── Image: Midjourney (Youchuan v8.2) ────────────────────────────────────
-    {"id": "youchuan/v8.2/text-to-image",               "provider": "Midjourney",   "name": "Midjourney V8.2",          "type": "Image", "mode": "text-to-image",      "supports_image": False},
-
-    # ── Video: ByteDance Seedance 2.5 ────────────────────────────────────────
-    {"id": "bytedance/seedance-2.5/text-to-video",      "provider": "ByteDance",    "name": "Seedance 2.5 T2V",         "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "bytedance/seedance-2.5/image-to-video",     "provider": "ByteDance",    "name": "Seedance 2.5 I2V",         "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    {"id": "bytedance/seedance-2.5/reference-to-video", "provider": "ByteDance",    "name": "Seedance 2.5 Ref2V",       "type": "Video", "mode": "reference-to-video", "supports_image": True},
-    # ── Video: ByteDance Seedance 2.0 ────────────────────────────────────────
-    {"id": "bytedance/seedance-2.0/text-to-video",      "provider": "ByteDance",    "name": "Seedance 2.0 T2V",         "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "bytedance/seedance-2.0/image-to-video",     "provider": "ByteDance",    "name": "Seedance 2.0 I2V",         "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    # ── Video: MiniMax H3 ────────────────────────────────────────────────────
-    {"id": "minimax/h3/text-to-video",                  "provider": "MiniMax",      "name": "MiniMax H3 T2V",           "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "minimax/h3/image-to-video",                 "provider": "MiniMax",      "name": "MiniMax H3 I2V",           "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    {"id": "minimax/h3/reference-to-video",             "provider": "MiniMax",      "name": "MiniMax H3 Ref2V",         "type": "Video", "mode": "reference-to-video", "supports_image": True},
-    # ── Video: Kuaishou Kling V3.0 ───────────────────────────────────────────
-    {"id": "kwaivgi/kling-v3.0-turbo/text-to-video",   "provider": "Kling",        "name": "Kling V3.0 Turbo T2V",    "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "kwaivgi/kling-v3.0-turbo/image-to-video",  "provider": "Kling",        "name": "Kling V3.0 Turbo I2V",    "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    {"id": "kwaivgi/kling-v3.0-pro/text-to-video",     "provider": "Kling",        "name": "Kling V3.0 Pro T2V",      "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "kwaivgi/kling-v3.0-pro/image-to-video",    "provider": "Kling",        "name": "Kling V3.0 Pro I2V",      "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    # ── Video: Alibaba Wan 2.7 ───────────────────────────────────────────────
-    {"id": "alibaba/wan-2.7/text-to-video",             "provider": "Wan",          "name": "Wan 2.7 T2V",              "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "alibaba/wan-2.7/image-to-video",            "provider": "Wan",          "name": "Wan 2.7 I2V",              "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    {"id": "alibaba/wan-2.7/reference-to-video",        "provider": "Wan",          "name": "Wan 2.7 Ref2V",            "type": "Video", "mode": "reference-to-video", "supports_image": True},
-    # ── Video: Google Veo 3.1 ────────────────────────────────────────────────
-    {"id": "google/veo3.1/text-to-video",               "provider": "Google",       "name": "Veo 3.1 T2V",              "type": "Video", "mode": "text-to-video",      "supports_image": False},
-    {"id": "google/veo3.1/image-to-video",              "provider": "Google",       "name": "Veo 3.1 I2V",              "type": "Video", "mode": "image-to-video",     "supports_image": True},
-    # ── Video: Midjourney (Youchuan v8.2 I2V) ───────────────────────────────
-    {"id": "youchuan/v8.2/image-to-video",              "provider": "Midjourney",   "name": "Midjourney V8.2 I2V",     "type": "Video", "mode": "image-to-video",     "supports_image": True},
+    {"id": "bytedance/seedream-v5.0-pro/layer-decomposition", "provider": "ByteDance", "name": "Seedream v5.0 Pro Layer Decomposition", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "qwen-image-3.0/text-to-image", "provider": "Wan", "name": "Qwen Image 3.0 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "qwen-image-3.0/edit", "provider": "Wan", "name": "Qwen Image 3.0 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "youchuan/v8.2/remove-background", "provider": "Midjourney", "name": "Youchuan V8.2 Remove Background", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.2/style-transfer", "provider": "Midjourney", "name": "Youchuan V8.2 Style Transfer", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.2/blend", "provider": "Midjourney", "name": "Youchuan V8.2 Blend", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.2/image-to-image", "provider": "Midjourney", "name": "Youchuan V8.2 Image-to-Image", "type": "Image", "mode": "image-to-image", "supports_image": True},
+    {"id": "youchuan/v8.2/text-to-image", "provider": "Midjourney", "name": "Youchuan V8.2 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "bytedance/seedream-v5.0-pro/edit", "provider": "ByteDance", "name": "Seedream v5.0 Pro Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v5.0-pro/text-to-image", "provider": "ByteDance", "name": "Seedream v5.0 Pro Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-2-lite/edit-developer", "provider": "Google", "name": "Nano Banana 2 Lite Edit Developer", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-2-lite/text-to-image-developer", "provider": "Google", "name": "Nano Banana 2 Lite Text-to-Image Developer", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-2-lite/edit", "provider": "Google", "name": "Nano Banana 2 Lite Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-2-lite/text-to-image", "provider": "Google", "name": "Nano Banana 2 Lite Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "youchuan/v8.1/remove-background", "provider": "Midjourney", "name": "Youchuan V8.1 Remove Background", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.1/style-transfer", "provider": "Midjourney", "name": "Youchuan V8.1 Style Transfer", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.1/blend", "provider": "Midjourney", "name": "Youchuan V8.1 Blend", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "youchuan/v8.1/image-to-image", "provider": "Midjourney", "name": "Youchuan V8.1 Image-to-Image", "type": "Image", "mode": "image-to-image", "supports_image": True},
+    {"id": "bytedance/seed3d-v2.0/image-to-3d", "provider": "ByteDance", "name": "Seed3D 2.0 Image-to-3D", "type": "Image", "mode": "image-to-image", "supports_image": True},
+    {"id": "youchuan/v8.1/text-to-image", "provider": "Midjourney", "name": "Youchuan V8.1 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-2/reference-to-image", "provider": "Google", "name": "Nano Banana 2 Reference to Image", "type": "Image", "mode": "reference-to-image", "supports_image": True},
+    {"id": "google/nano-banana-2/reference-to-image-developer", "provider": "Google", "name": "Nano Banana 2 Reference to Image Developer", "type": "Image", "mode": "reference-to-image", "supports_image": True},
+    {"id": "openai/gpt-image-2/text-to-image", "provider": "Openai", "name": "Openai GPT Image 2 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-2/edit", "provider": "Openai", "name": "Openai GPT Image 2 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/wan-2.7/text-to-image", "provider": "Wan", "name": "Wan-2.7 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "alibaba/wan-2.7/image-edit", "provider": "Wan", "name": "Wan-2.7 Image-to-image", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/wan-2.7-pro/text-to-image", "provider": "Wan", "name": "Wan-2.7 Pro Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "alibaba/wan-2.7-pro/image-edit", "provider": "Wan", "name": "Wan-2.7 Pro Image-to-image", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-2/text-to-image-developer", "provider": "Google", "name": "Nano Banana 2 Text-to-Image Developer", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-2/text-to-image", "provider": "Google", "name": "Nano Banana 2 Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-2/edit-developer", "provider": "Google", "name": "Nano Banana 2 Edit Developer", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-2/edit", "provider": "Google", "name": "Nano Banana 2 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "qwen/qwen-image-2.0/text-to-image", "provider": "Wan", "name": "Qwen Image 2.0 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "qwen/qwen-image-2.0/edit", "provider": "Wan", "name": "Qwen Image 2.0 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "qwen/qwen-image-2.0-pro/edit", "provider": "Wan", "name": "Qwen Image 2.0 Pro Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "qwen/qwen-image-2.0-pro/text-to-image", "provider": "Wan", "name": "Qwen Image 2.0 Pro Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "bytedance/seedream-v5.0-lite/edit-sequential", "provider": "ByteDance", "name": "Seedream v5.0 Lite Edit Sequential", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v5.0-lite/sequential", "provider": "ByteDance", "name": "Seedream v5.0 Lite Sequential", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "bytedance/seedream-v5.0-lite/edit", "provider": "ByteDance", "name": "Seedream v5.0 Lite Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v5.0-lite", "provider": "ByteDance", "name": "Seedream v5.0 Lite", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "openai/gpt-image-1.5/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1.5 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1.5/edit", "provider": "Openai", "name": "Openai GPT Image-1.5 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/qwen-image/edit-plus-20251215", "provider": "Wan", "name": "Qwen-Image Edit Plus 20251215", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/wan-2.6/image-edit", "provider": "Wan", "name": "Wan-2.6 Image-to-image", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-1/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1/edit", "provider": "Openai", "name": "Openai GPT Image-1 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-1-mini/text-to-image", "provider": "Openai", "name": "Openai GPT Image-1 Mini Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "openai/gpt-image-1-mini/edit", "provider": "Openai", "name": "Openai GPT Image-1 Mini Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v4.5", "provider": "ByteDance", "name": "Seedream v4.5", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "bytedance/seedream-v4.5/edit", "provider": "ByteDance", "name": "Seedream v4.5 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v4.5/sequential", "provider": "ByteDance", "name": "Seedream v4.5 Sequential", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "bytedance/seedream-v4.5/edit-sequential", "provider": "ByteDance", "name": "Seedream v4.5 Edit Sequential", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "atlascloud/qwen-image/edit", "provider": "Wan", "name": "Qwen Image Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-pro/text-to-image-ultra", "provider": "Google", "name": "Nano Banana Pro Text-to-image Ultra", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-pro/edit-ultra", "provider": "Google", "name": "Nano Banana Pro Edit Ultra", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana-pro/text-to-image", "provider": "Google", "name": "Nano Banana Pro Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "alibaba/qwen-image/text-to-image-max", "provider": "Wan", "name": "Qwen-Image Text-to-image Max", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "alibaba/qwen-image/text-to-image-plus", "provider": "Wan", "name": "Qwen-Image Text-to-image Plus", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-pro/edit", "provider": "Google", "name": "Nano Banana Pro Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-2-developer/edit", "provider": "Openai", "name": "GPT Image 2 Developer Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/wan-2.5/image-edit", "provider": "Wan", "name": "Wan-2.5 Image Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "openai/gpt-image-2-developer/text-to-image", "provider": "Openai", "name": "GPT Image 2 Developer Text-to-Image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "alibaba/wan-2.5/text-to-image", "provider": "Wan", "name": "Wan-2.5 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "bytedance/seedream-v4", "provider": "ByteDance", "name": "Seedream v4", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "bytedance/seedream-v4/sequential", "provider": "ByteDance", "name": "Seedream v4 Sequential", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "google/nano-banana-pro/text-to-image-developer", "provider": "Google", "name": "Nano Banana Pro Text-to-image Developer", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana/text-to-image-developer", "provider": "Google", "name": "Nano Banana Text-to-image Developer", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "bytedance/seedream-v4/edit", "provider": "ByteDance", "name": "Seedream v4 Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/qwen-image/edit", "provider": "Wan", "name": "Qwen-Image Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/qwen-image/edit-plus", "provider": "Wan", "name": "Qwen-Image Edit Plus", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "alibaba/wan-2.6/text-to-image", "provider": "Wan", "name": "Wan-2.6 Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana-pro/edit-developer", "provider": "Google", "name": "Nano Banana Pro Edit Developer", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana/edit-developer", "provider": "Google", "name": "Nano Banana Edit Developer", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedream-v4/edit-sequential", "provider": "ByteDance", "name": "Seedream v4 Edit Sequential", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/nano-banana/text-to-image", "provider": "Google", "name": "Nano Banana Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/nano-banana/edit", "provider": "Google", "name": "Nano Banana Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "google/imagen3", "provider": "Google", "name": "Imagen3", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "google/imagen3-fast", "provider": "Google", "name": "Image3 Fast", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "atlascloud/qwen-image/text-to-image", "provider": "Wan", "name": "Qwen Image Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "google/imagen4-fast", "provider": "Google", "name": "Imagen4 Fast", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "black-forest-labs/flux-dev", "provider": "FLUX", "name": "Flux Dev", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "black-forest-labs/flux-kontext-dev", "provider": "FLUX", "name": "Flux Kontext Dev", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "google/imagen4-ultra", "provider": "Google", "name": "Imagen4 Ultra", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "google/imagen4", "provider": "Google", "name": "Imagen4", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "black-forest-labs/flux-kontext-dev-lora", "provider": "FLUX", "name": "Flux Kontext Dev Lora", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "black-forest-labs/flux-schnell", "provider": "FLUX", "name": "Flux Schnell", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "google/nano-banana-2-lite/reference-to-image", "provider": "Google", "name": "Nano Banana 2 Lite Reference-to-image", "type": "Image", "mode": "reference-to-image", "supports_image": True},
+    {"id": "black-forest-labs/flux-2-flex/edit", "provider": "FLUX", "name": "FLUX.2 Flex Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "black-forest-labs/flux-2-flex/text-to-image", "provider": "FLUX", "name": "FLUX.2 Flex Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "black-forest-labs/flux-2-pro/edit", "provider": "FLUX", "name": "FLUX.2 Pro Edit", "type": "Image", "mode": "edit", "supports_image": True},
+    {"id": "black-forest-labs/flux-2-pro/text-to-image", "provider": "FLUX", "name": "FLUX.2 Pro Text-to-image", "type": "Image", "mode": "text-to-image", "supports_image": False},
+    {"id": "black-forest-labs/flux-dev-lora", "provider": "FLUX", "name": "Flux Dev Lora", "type": "Image", "mode": "other", "supports_image": True},
+    {"id": "bytedance/seedance-2.5/reference-to-video", "provider": "ByteDance", "name": "Seedance 2.5 Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.5/image-to-video", "provider": "ByteDance", "name": "Seedance 2.5 Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.5/text-to-video", "provider": "ByteDance", "name": "Seedance 2.5 Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "minimax/h3/text-to-video", "provider": "MiniMax", "name": "MiniMax H3 Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "minimax/h3/image-to-video", "provider": "MiniMax", "name": "MiniMax H3 Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "minimax/h3/reference-to-video", "provider": "MiniMax", "name": "MiniMax H3 Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "youchuan/v8.2/image-to-video", "provider": "Midjourney", "name": "Youchuan V8.2 Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0-mini/reference-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Mini Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0-mini/image-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Mini Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0-mini/text-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Mini Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/happyhorse-1.1/text-to-video", "provider": "Wan", "name": "HappyHorse-1.1 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/happyhorse-1.1/image-to-video", "provider": "Wan", "name": "HappyHorse-1.1 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/happyhorse-1.1/reference-to-video", "provider": "Wan", "name": "HappyHorse-1.1 Reference-to-video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "google/gemini-omni-flash/reference-to-video", "provider": "Google", "name": "Gemini Omni Flash Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "google/gemini-omni-flash/image-to-video", "provider": "Google", "name": "Gemini Omni Flash Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/gemini-omni-flash/video-edit", "provider": "Google", "name": "Gemini Omni Flash Video Edit", "type": "Video", "mode": "edit", "supports_image": True},
+    {"id": "google/gemini-omni-flash/text-to-video", "provider": "Google", "name": "Gemini Omni Flash Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "google/gemini-omni-flash/reference-to-video-developer", "provider": "Google", "name": "Gemini Omni Flash Reference-to-Video Developer", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "bytedance/avatar-omni-human-v1.5", "provider": "ByteDance", "name": "Avatar Omni Human 1.5", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-turbo/image-to-video", "provider": "Kling", "name": "Kling V3.0 Turbo Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-turbo/text-to-video", "provider": "Kling", "name": "Kling V3.0 Turbo Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-video-o3-4k/image-to-video", "provider": "Kling", "name": "Kling Video O3 4K Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-4k/text-to-video", "provider": "Kling", "name": "Kling Video O3 4K Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "youchuan/v8.1/image-to-video", "provider": "Midjourney", "name": "Youchuan V8.1 Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/gemini-omni-flash/image-to-video-developer", "provider": "Google", "name": "Gemini Omni Flash Image-to-Video Developer", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/gemini-omni-flash/text-to-video-developer", "provider": "Google", "name": "Gemini Omni Flash Text-to-Video Developer", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/happyhorse-1.0/text-to-video", "provider": "Wan", "name": "HappyHorse-1.0 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/happyhorse-1.0/image-to-video", "provider": "Wan", "name": "HappyHorse-1.0 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/happyhorse-1.0/reference-to-video", "provider": "Wan", "name": "HappyHorse-1.0 Reference-to-video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "alibaba/happyhorse-1.0/video-edit", "provider": "Wan", "name": "HappyHorse-1.0 Video-edit", "type": "Video", "mode": "edit", "supports_image": True},
+    {"id": "bytedance/seedance-2.0/text-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "bytedance/seedance-2.0/image-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0/reference-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0-fast/text-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Fast Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "bytedance/seedance-2.0-fast/image-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Fast Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-2.0-fast/reference-to-video", "provider": "ByteDance", "name": "Seedance 2.0 Fast Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.7/text-to-video", "provider": "Wan", "name": "Wan-2.7 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/wan-2.7/image-to-video", "provider": "Wan", "name": "Wan-2.7 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.7/reference-to-video", "provider": "Wan", "name": "Wan-2.7 Reference-to-video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.7/video-edit", "provider": "Wan", "name": "Wan-2.7 Video-edit", "type": "Video", "mode": "edit", "supports_image": True},
+    {"id": "google/veo3.1-lite/text-to-video", "provider": "Google", "name": "Veo 3.1 Lite Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "google/veo3.1-lite/start-end-frame-to-video", "provider": "Google", "name": "Veo 3.1 Lite Start-End Frame to Video", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "google/veo3.1-lite/image-to-video", "provider": "Google", "name": "Veo 3.1 Lite Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/veo3.1-fast/image-to-video", "provider": "Google", "name": "Veo3.1 Fast Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/veo3.1-fast/text-to-video", "provider": "Google", "name": "Veo3.1 Fast Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "google/veo3.1/image-to-video", "provider": "Google", "name": "Veo3.1 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "google/veo3.1/reference-to-video", "provider": "Google", "name": "Veo3.1 Reference-to-video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "google/veo3.1/text-to-video", "provider": "Google", "name": "Veo3.1 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "alibaba/wan-2.2-spicy/image-to-video-lora", "provider": "Wan", "name": "Wan-2.2-spicy Image-to-video Lora", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.2-spicy/image-to-video", "provider": "Wan", "name": "Wan-2.2-spicy Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-4k/image-to-video", "provider": "Kling", "name": "Kling v3.0 4K Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-std/image-to-video", "provider": "Kling", "name": "Kling v3.0 Std Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-pro/image-to-video", "provider": "Kling", "name": "Kling v3.0 Pro Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-pro/text-to-video", "provider": "Kling", "name": "Kling v3.0 Pro Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-v3.0-4k/text-to-video", "provider": "Kling", "name": "Kling v3.0 4K Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-v3.0-std/text-to-video", "provider": "Kling", "name": "Kling v3.0 Std Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-v2.6-pro/avatar", "provider": "Kling", "name": "Kling v2.6 Pro Avatar", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v2.6-std/avatar", "provider": "Kling", "name": "Kling v2.6 Std Avatar", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v2.6-pro/motion-control", "provider": "Kling", "name": "Kling v2.6 Pro Motion Control", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-pro/motion-control", "provider": "Kling", "name": "Kling v3.0 Pro Motion Control", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v2.6-std/motion-control", "provider": "Kling", "name": "Kling v2.6 Std Motion Control", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "kwaivgi/kling-v3.0-std/motion-control", "provider": "Kling", "name": "Kling v3.0 Std Motion Control", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "alibaba/wan-2.6/image-to-video-flash", "provider": "Wan", "name": "Wan-2.6 Image-to-video Flash", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-v1.5-pro/image-to-video", "provider": "ByteDance", "name": "Seedance v1.5 Pro Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "bytedance/seedance-v1.5-pro/text-to-video", "provider": "ByteDance", "name": "Seedance v1.5 Pro Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "bytedance/seedance-v1.5-pro/image-to-video-fast", "provider": "ByteDance", "name": "Seedance v1.5 Pro Image-to-Video Fast", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.6/image-to-video", "provider": "Wan", "name": "Wan-2.6 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.6/video-to-video", "provider": "Wan", "name": "Wan-2.6 Video-to-video", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "alibaba/wan-2.6/text-to-video", "provider": "Wan", "name": "Wan-2.6 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-video-o3-pro/video-edit", "provider": "Kling", "name": "Kling Video O3 Pro Video-Edit", "type": "Video", "mode": "edit", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-pro/reference-to-video", "provider": "Kling", "name": "Kling Video O3 Pro Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-pro/image-to-video", "provider": "Kling", "name": "Kling Video O3 Pro Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-pro/text-to-video", "provider": "Kling", "name": "Kling Video O3 Pro Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "bytedance/seedance-v1.5-pro/text-to-video-fast", "provider": "ByteDance", "name": "Seedance v1.5 Pro Text-to-Video Fast", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-v2.6-pro/text-to-video", "provider": "Kling", "name": "Kling v2.6 Pro Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-v2.6-pro/image-to-video", "provider": "Kling", "name": "Kling v2.6 Pro Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-std/video-edit", "provider": "Kling", "name": "Kling Video O3 Std Video-Edit", "type": "Video", "mode": "edit", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-std/reference-to-video", "provider": "Kling", "name": "Kling Video O3 Std Reference-to-Video", "type": "Video", "mode": "reference-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-std/image-to-video", "provider": "Kling", "name": "Kling Video O3 Std Image-to-Video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o3-std/text-to-video", "provider": "Kling", "name": "Kling Video O3 Std Text-to-Video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "kwaivgi/kling-video-o1/image-to-video", "provider": "Kling", "name": "Kling Video O1 Image-to-video", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "kwaivgi/kling-video-o1/text-to-video", "provider": "Kling", "name": "Kling Video O1 Text-to-video", "type": "Video", "mode": "text-to-video", "supports_image": False},
+    {"id": "bytedance/seedance-v1.5-pro/image-to-video-spicy", "provider": "ByteDance", "name": "Seedance v1.5 Pro Image-to-Video Spicy", "type": "Video", "mode": "image-to-video", "supports_image": True},
+    {"id": "alibaba/wan-2.5/video-extend", "provider": "Wan", "name": "Wan-2.5 Video Extend", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "minimax/hailuo-2.3/t2v-standard", "provider": "MiniMax", "name": "Hailuo-2.3 t2v Standard", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "minimax/hailuo-2.3/t2v-pro", "provider": "MiniMax", "name": "Hailuo-2.3 t2v Pro", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "minimax/hailuo-2.3/i2v-standard", "provider": "MiniMax", "name": "Hailuo-2.3 i2v Standard", "type": "Video", "mode": "other", "supports_image": True},
+    {"id": "minimax/hailuo-2.3/i2v-pro", "provider": "MiniMax", "name": "Hailuo-2.3 i2v Pro", "type": "Video", "mode": "other", "supports_image": True},
 ]
 
-# Static supported-params schema — verified against Atlas ?tab=api reference
+# Static schema map based on Atlas official API structure
 def _get_supported_params(provider: str, type: str) -> list:
     if type == "Video":
         if provider == "ByteDance":
-            return ["aspect_ratio", "duration", "resolution", "generate_audio", "watermark"]
+            return ["aspect_ratio", "duration", "resolution", "output_format", "generate_audio", "watermark", "return_last_frame"]
         if provider == "MiniMax":
-            return ["aspect_ratio", "duration", "resolution", "generate_audio"]
+            return ["aspect_ratio", "duration", "resolution"]
         if provider == "Kling":
-            return ["aspect_ratio", "duration", "resolution", "negative_prompt", "cfg_scale"]
+            return ["aspect_ratio", "duration", "generate_audio", "negative_prompt"]
         if provider == "Wan":
-            return ["aspect_ratio", "duration", "resolution", "negative_prompt", "generate_audio"]
-        if provider == "Google":
-            return ["aspect_ratio", "duration", "resolution"]
+            return ["aspect_ratio", "duration", "resolution", "seed"]
         if provider == "Midjourney":
-            return ["aspect_ratio", "duration", "resolution"]
+            return ["resolution", "motion"]
+        if provider == "Google":
+            return ["aspect_ratio"]
         return ["aspect_ratio", "duration"]
-
+    
     if type == "Image":
         if provider == "OpenAI":
             return ["size", "num_outputs", "output_quality", "output_format"]
         if provider == "Google":
-            return ["aspect_ratio", "resolution", "thinking_level", "output_format"]
+            return ["resolution", "thinking_level", "media_resolution", "output_format"]
         if provider == "FLUX":
-            return ["size", "output_format", "seed", "safety_tolerance"]
+            return ["aspect_ratio", "output_format", "seed", "output_quality"]
         if provider == "Wan":
             return ["aspect_ratio", "negative_prompt", "seed", "guidance_scale"]
         if provider == "Midjourney":
-            return ["aspect_ratio", "hd", "stylize", "chaos", "weird", "seed", "sref"]
+            return ["sref", "aspect_ratio", "hd", "stylize", "chaos", "weird", "output_quality", "seed"]
         return ["aspect_ratio"]
 
 
@@ -190,6 +326,7 @@ async def generate_asset(
     chaos: Optional[int] = Form(None),
     weird: Optional[int] = Form(None),
     sref: Optional[str] = Form(None),
+    motion: Optional[str] = Form(None),
     watermark: Optional[str] = Form(None),
     return_last_frame: Optional[str] = Form(None),
     thinking_level: Optional[str] = Form(None),
@@ -271,7 +408,10 @@ async def generate_asset(
             }
 
             if "aspect_ratio" in supported:
-                payload["aspect_ratio"] = aspect_ratio
+                if model_info["provider"] in ["MiniMax", "ByteDance", "Kling", "Wan"]:
+                    payload["ratio"] = aspect_ratio
+                else:
+                    payload["aspect_ratio"] = aspect_ratio
 
             if type == "Video" and "duration" in supported:
                 try:
@@ -301,19 +441,16 @@ async def generate_asset(
             if "sref"                 in supported and sref:                  payload["sref"]                  = sref
             if "thinking_level"       in supported and thinking_level:        payload["thinking_level"]        = thinking_level
             if "media_resolution"     in supported and media_resolution:      payload["media_resolution"]      = media_resolution
+            if "motion"               in supported and motion:                payload["motion"]                = motion
+
+            # Special case for Midjourney quality (mapped from output_quality)
+            if model_info["provider"] == "Midjourney" and "output_quality" in supported and output_quality is not None:
+                payload["quality"] = output_quality
 
             if "hd" in supported:
                 hd_val = _bool(hd)
                 if hd_val is not None:
                     payload["hd"] = hd_val
-
-            # cfg_scale for Kling video models
-            if "cfg_scale" in supported and guidance_scale is not None:
-                payload["cfg_scale"] = guidance_scale
-
-            # quality param for Midjourney
-            if "quality" in supported and output_quality is not None:
-                payload["quality"] = output_quality
 
             if "watermark" in supported:
                 wm_val = _bool(watermark)
