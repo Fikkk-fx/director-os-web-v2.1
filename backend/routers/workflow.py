@@ -14,7 +14,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
-ATLAS_BASE_URL = "https://api.atlascloud.ai/api/v1"
+ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 DEFAULT_CHAT_MODEL = "openai/gpt-5.6-sol"
 
