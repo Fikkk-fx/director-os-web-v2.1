@@ -17,8 +17,18 @@ interface SettingsModalProps {
   setNumOutputs: (v: number) => void;
   quality: number;
   setQuality: (v: number) => void;
-  duration: string;
+duration: string;
   setDuration: (v: string) => void;
+  negPrompt: string;
+  setNegPrompt: (v: string) => void;
+  format: string;
+  setFormat: (v: string) => void;
+  guidance: string;
+  setGuidance: (v: string) => void;
+  steps: string;
+  setSteps: (v: string) => void;
+  seed: string;
+  setSeed: (v: string) => void;
   hasParam: (param: string) => boolean;
 }
 
@@ -26,8 +36,13 @@ export function SettingsModal({
   isOpen, onClose, mode, models, selectedModelId, onSelectModel, isLight,
   aspectRatio, setAspectRatio,
   numOutputs, setNumOutputs,
-  quality, setQuality,
+quality, setQuality,
   duration, setDuration,
+  negPrompt, setNegPrompt,
+  format, setFormat,
+  guidance, setGuidance,
+  steps, setSteps,
+  seed, setSeed,
   hasParam
 }: SettingsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -180,15 +195,17 @@ export function SettingsModal({
 
             <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>
 
-            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
-              <button 
-                onClick={() => setPromptEnhancer(!promptEnhancer)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
-              >
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
-              </button>
-            </div>
+            {hasParam('prompt_enhancer') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
+                <button 
+                  onClick={() => setPromptEnhancer(!promptEnhancer)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
+                >
+                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
 
             {hasParam('num_outputs') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
@@ -211,20 +228,22 @@ export function SettingsModal({
               </div>
             )}
 
-            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
-              <div className="flex gap-4">
-                {['1K', '2K', '4K'].map(res => (
-                  <label key={res} className="flex items-center gap-2 cursor-pointer">
-                    <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolutionPreset === res ? 'border-violet-500' : borderCol}`}>
-                      {resolutionPreset === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
-                    </div>
-                    <input type="radio" className="hidden" checked={resolutionPreset === res} onChange={() => setResolutionPreset(res)} />
-                    <span className="text-sm font-medium">{res}</span>
-                  </label>
-                ))}
+            {hasParam('resolution') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
+                <div className="flex gap-4">
+                  {['1K', '2K', '4K'].map(res => (
+                    <label key={res} className="flex items-center gap-2 cursor-pointer">
+                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolutionPreset === res ? 'border-violet-500' : borderCol}`}>
+                        {resolutionPreset === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                      </div>
+                      <input type="radio" className="hidden" checked={resolutionPreset === res} onChange={() => setResolutionPreset(res)} />
+                      <span className="text-sm font-medium">{res}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {hasParam('output_quality') && (
               <div className="flex items-center justify-between border-b ${borderCol} pb-5 mb-5">
@@ -243,8 +262,8 @@ export function SettingsModal({
               </div>
             )}
 
-            {mode === 'Video' && (
-              <div className="flex items-center justify-between">
+            {hasParam('duration') && (
+              <div className={`flex items-center justify-between ${hasParam('output_quality') || hasParam('resolution') ? 'border-t mt-5 pt-5 ' + borderCol : ''}`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Duration</span>
                 <div className="flex gap-4">
                   {['5s', '10s', '15s'].map(d => (
@@ -260,6 +279,45 @@ export function SettingsModal({
               </div>
             )}
 
+
+            {hasParam('output_format') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Format</span>
+                <select className={`bg-transparent border ${borderCol} rounded-lg px-2 py-1 text-sm outline-none`} value={format} onChange={e => setFormat(e.target.value)}>
+                  <option value="webp">WebP</option>
+                  <option value="png">PNG</option>
+                  <option value="jpg">JPG</option>
+                </select>
+              </div>
+            )}
+            
+            {hasParam('seed') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Seed</span>
+                <input type="number" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32`} placeholder="Random" value={seed} onChange={e => setSeed(e.target.value)} />
+              </div>
+            )}
+            
+            {hasParam('guidance_scale') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>CFG Scale</span>
+                <input type="number" step={0.1} className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32`} placeholder="Default" value={guidance} onChange={e => setGuidance(e.target.value)} />
+              </div>
+            )}
+            
+            {hasParam('num_inference_steps') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Steps</span>
+                <input type="number" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32`} placeholder="Default" value={steps} onChange={e => setSteps(e.target.value)} />
+              </div>
+            )}
+
+            {hasParam('negative_prompt') && (
+              <div className="mt-4">
+                <span className={`block text-sm font-semibold mb-2 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Negative Prompt</span>
+                <textarea className={`w-full bg-transparent border ${borderCol} rounded-xl p-3 text-sm outline-none min-h-[80px]`} value={negPrompt} onChange={e => setNegPrompt(e.target.value)} placeholder="Ugly, blurry, distorted…" />
+              </div>
+            )}
           </div>
         </div>
       </div>

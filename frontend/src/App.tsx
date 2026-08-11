@@ -208,6 +208,11 @@ function App() {
   const [durationVid, setDurationVid]       = useState('5s');
   const [numOutputsImg, setNumOutputsImg]   = useState<number>(1);
   const [qualityImg, setQualityImg]         = useState<number>(80);
+  const [negPromptImg, setNegPromptImg]     = useState('');
+  const [formatImg, setFormatImg]           = useState('webp');
+  const [guidanceImg, setGuidanceImg]       = useState('');
+  const [stepsImg, setStepsImg]             = useState('');
+  const [seedImg, setSeedImg]               = useState('');
 
   /* ── Files ── */
   const [refFile, setRefFile]   = useState<File | null>(null);
@@ -278,8 +283,13 @@ function App() {
       fd.append('type', type); fd.append('prompt', up); fd.append('model_keyword', model);
       fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
       if (isImg) {
+        if (negPromptImg.trim())  fd.append('negative_prompt',     negPromptImg.trim());
         if (numOutputsImg > 1)    fd.append('num_outputs',         numOutputsImg.toString());
+        if (formatImg !== 'webp') fd.append('output_format',       formatImg);
         if (qualityImg !== 80)    fd.append('output_quality',      qualityImg.toString());
+        if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
+        if (stepsImg)             fd.append('num_inference_steps', stepsImg);
+        if (seedImg)              fd.append('seed',                seedImg);
       } else { fd.append('duration', durationVid); }
       if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -735,6 +745,16 @@ function App() {
         setQuality={setQualityImg}
         duration={durationVid}
         setDuration={setDurationVid}
+        negPrompt={negPromptImg}
+        setNegPrompt={setNegPromptImg}
+        format={formatImg}
+        setFormat={setFormatImg}
+        guidance={guidanceImg}
+        setGuidance={setGuidanceImg}
+        steps={stepsImg}
+        setSteps={setStepsImg}
+        seed={seedImg}
+        setSeed={setSeedImg}
         hasParam={hasParam}
       />
     </div>
