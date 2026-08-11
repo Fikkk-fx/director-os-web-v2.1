@@ -109,8 +109,8 @@ export function SettingsModal({
     if (s.includes('wan') || s.includes('qwen') || s.includes('alibaba')) return '/logos/wan.png';
 
     if (s.includes('openai') || s.includes('gpt') || s.includes('dall')) return '/logos/openai.png';
-    if (s.includes('deepseek')) return '/logos/deepseek.svg';
-    if (s.includes('moonshot') || s.includes('kimi')) return '/logos/moonshot.svg';
+    if (s.includes('deepseek')) return '/logos/deepseek.png';
+    if (s.includes('moonshot') || s.includes('kimi')) return '/logos/moonshot.png';
 
     if (s.includes('ideogram')) return '/logos/ideogram.png';
     if (s.includes('microsoft')) return '/logos/microsoft.jpeg';
