@@ -1,9 +1,15 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Request
 from typing import Optional
 import uuid
 import os
 import httpx
 import base64
+import logging
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+logger = logging.getLogger(__name__)
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
@@ -13,9 +19,9 @@ ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 # In-memory cache
 MODEL_LIST_CACHE = None
 
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 # COMPLETE MODEL CATALOGUE  (sourced live from Atlas Cloud, August 2026)
-# ──────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
 IMAGE_MODELS = [
     # ── OpenAI ──────────────────────────────────────────────────────────────
     {"id": "openai/gpt-image-2/text-to-image",        "name": "GPT Image 2 · T2I",             "type": "Image", "supports_image": False},
@@ -26,90 +32,27 @@ IMAGE_MODELS = [
     {"id": "openai/gpt-image-1/edit",                 "name": "GPT Image 1 · Edit",            "type": "Image", "supports_image": True},
     {"id": "openai/gpt-image-1-mini/text-to-image",   "name": "GPT Image 1 Mini · T2I",        "type": "Image", "supports_image": False},
     {"id": "openai/gpt-image-1-mini/edit",            "name": "GPT Image 1 Mini · Edit",       "type": "Image", "supports_image": True},
-    {"id": "openai/gpt-image-2-developer/text-to-image", "name": "GPT Image 2 Dev · T2I",      "type": "Image", "supports_image": False},
-    {"id": "openai/gpt-image-2-developer/edit",       "name": "GPT Image 2 Dev · Edit",        "type": "Image", "supports_image": True},
-    # ── ByteDance Seedream ───────────────────────────────────────────────────
-    {"id": "bytedance/seedream-v5.0-pro/text-to-image", "name": "Seedream v5.0 Pro · T2I",     "type": "Image", "supports_image": False},
-    {"id": "bytedance/seedream-v5.0-pro/edit",          "name": "Seedream v5.0 Pro · Edit",    "type": "Image", "supports_image": True},
-    {"id": "bytedance/seedream-v5.0-pro/layer-decomposition", "name": "Seedream v5.0 Pro · Layer Decomp", "type": "Image", "supports_image": True},
-    {"id": "bytedance/seedream-v5.0-lite",             "name": "Seedream v5.0 Lite",           "type": "Image", "supports_image": False},
-    {"id": "bytedance/seedream-v5.0-lite/edit",        "name": "Seedream v5.0 Lite · Edit",    "type": "Image", "supports_image": True},
-    {"id": "bytedance/seedream-v5.0-lite/sequential",  "name": "Seedream v5.0 Lite · Batch",   "type": "Image", "supports_image": False},
-    {"id": "bytedance/seedream-v4.5",                  "name": "Seedream v4.5",                "type": "Image", "supports_image": False},
-    {"id": "bytedance/seedream-v4.5/edit",             "name": "Seedream v4.5 · Edit",         "type": "Image", "supports_image": True},
-    {"id": "bytedance/seedream-v4",                    "name": "Seedream v4",                  "type": "Image", "supports_image": False},
-    {"id": "bytedance/seedream-v4/edit",               "name": "Seedream v4 · Edit",           "type": "Image", "supports_image": True},
-    # ── Black Forest Labs Flux ───────────────────────────────────────────────
-    {"id": "black-forest-labs/flux-2-pro/text-to-image", "name": "FLUX.2 Pro · T2I",          "type": "Image", "supports_image": False},
-    {"id": "black-forest-labs/flux-2-pro/edit",          "name": "FLUX.2 Pro · Edit",         "type": "Image", "supports_image": True},
-    {"id": "black-forest-labs/flux-2-flex/text-to-image","name": "FLUX.2 Flex · T2I",         "type": "Image", "supports_image": False},
-    {"id": "black-forest-labs/flux-2-flex/edit",         "name": "FLUX.2 Flex · Edit",        "type": "Image", "supports_image": True},
-    {"id": "black-forest-labs/flux-kontext-dev",       "name": "Flux Kontext Dev",             "type": "Image", "supports_image": True},
-    {"id": "black-forest-labs/flux-kontext-dev-lora",  "name": "Flux Kontext Dev LoRA",        "type": "Image", "supports_image": True},
-    {"id": "black-forest-labs/flux-dev",               "name": "Flux Dev",                     "type": "Image", "supports_image": False},
-    {"id": "black-forest-labs/flux-dev-lora",          "name": "Flux Dev LoRA",                "type": "Image", "supports_image": False},
-    {"id": "black-forest-labs/flux-schnell",           "name": "Flux Schnell",                 "type": "Image", "supports_image": False},
-    # ── Google ───────────────────────────────────────────────────────────────
-    {"id": "google/imagen4-ultra",                     "name": "Imagen 4 Ultra",               "type": "Image", "supports_image": False},
-    {"id": "google/imagen4",                           "name": "Imagen 4",                     "type": "Image", "supports_image": False},
-    {"id": "google/imagen4-fast",                      "name": "Imagen 4 Fast",                "type": "Image", "supports_image": False},
-    {"id": "google/imagen3",                           "name": "Imagen 3",                     "type": "Image", "supports_image": False},
-    {"id": "google/imagen3-fast",                      "name": "Imagen 3 Fast",                "type": "Image", "supports_image": False},
+    # ── Google Nano Banana ───────────────────────────────────────────────────
     {"id": "google/nano-banana-2/text-to-image",       "name": "Nano Banana 2 · T2I",          "type": "Image", "supports_image": False},
     {"id": "google/nano-banana-2/edit",                "name": "Nano Banana 2 · Edit",         "type": "Image", "supports_image": True},
     {"id": "google/nano-banana-2/reference-to-image",  "name": "Nano Banana 2 · Ref2Img",      "type": "Image", "supports_image": True},
     {"id": "google/nano-banana-pro/text-to-image",     "name": "Nano Banana Pro · T2I",        "type": "Image", "supports_image": False},
-    {"id": "google/nano-banana-pro/text-to-image-ultra", "name": "Nano Banana Pro · Ultra",    "type": "Image", "supports_image": False},
+    {"id": "google/nano-banana-pro/text-to-image-ultra","name": "Nano Banana Pro · Ultra",      "type": "Image", "supports_image": False},
     {"id": "google/nano-banana-pro/edit",              "name": "Nano Banana Pro · Edit",       "type": "Image", "supports_image": True},
     {"id": "google/nano-banana-2-lite/text-to-image",  "name": "Nano Banana 2 Lite · T2I",     "type": "Image", "supports_image": False},
     {"id": "google/nano-banana-2-lite/edit",           "name": "Nano Banana 2 Lite · Edit",    "type": "Image", "supports_image": True},
-    {"id": "google/nano-banana/text-to-image",         "name": "Nano Banana · T2I",            "type": "Image", "supports_image": False},
-    {"id": "google/nano-banana/edit",                  "name": "Nano Banana · Edit",           "type": "Image", "supports_image": True},
-    # ── Alibaba / Qwen ───────────────────────────────────────────────────────
+    # ── Alibaba / Wan ────────────────────────────────────────────────────────
     {"id": "alibaba/wan-2.7/text-to-image",            "name": "Wan-2.7 · T2I",                "type": "Image", "supports_image": False},
     {"id": "alibaba/wan-2.7/image-edit",               "name": "Wan-2.7 · Edit",               "type": "Image", "supports_image": True},
     {"id": "alibaba/wan-2.7-pro/text-to-image",        "name": "Wan-2.7 Pro · T2I",            "type": "Image", "supports_image": False},
     {"id": "alibaba/wan-2.7-pro/image-edit",           "name": "Wan-2.7 Pro · Edit",           "type": "Image", "supports_image": True},
-    {"id": "alibaba/wan-2.6/text-to-image",            "name": "Wan-2.6 · T2I",                "type": "Image", "supports_image": False},
-    {"id": "alibaba/wan-2.5/text-to-image",            "name": "Wan-2.5 · T2I",                "type": "Image", "supports_image": False},
-    {"id": "alibaba/qwen-image/text-to-image-max",     "name": "Qwen Image 2.0 Max · T2I",     "type": "Image", "supports_image": False},
-    {"id": "alibaba/qwen-image/text-to-image-plus",    "name": "Qwen Image 2.0 Plus · T2I",    "type": "Image", "supports_image": False},
-    {"id": "qwen/qwen-image-2.0/text-to-image",        "name": "Qwen Image 2.0 · T2I",         "type": "Image", "supports_image": False},
-    {"id": "qwen/qwen-image-2.0/edit",                 "name": "Qwen Image 2.0 · Edit",        "type": "Image", "supports_image": True},
-    {"id": "qwen/qwen-image-2.0-pro/text-to-image",    "name": "Qwen Image 2.0 Pro · T2I",     "type": "Image", "supports_image": False},
-    {"id": "qwen/qwen-image-2.0-pro/edit",             "name": "Qwen Image 2.0 Pro · Edit",    "type": "Image", "supports_image": True},
-    {"id": "qwen-image-3.0/text-to-image",             "name": "Qwen Image 3.0 · T2I",         "type": "Image", "supports_image": False},
-    {"id": "qwen-image-3.0/edit",                      "name": "Qwen Image 3.0 · Edit",        "type": "Image", "supports_image": True},
     # ── Midjourney (Youchuan) ────────────────────────────────────────────────
     {"id": "youchuan/v8.2/text-to-image",              "name": "Midjourney V8.2 · T2I",        "type": "Image", "supports_image": False},
     {"id": "youchuan/v8.2/image-to-image",             "name": "Midjourney V8.2 · I2I",        "type": "Image", "supports_image": True},
     {"id": "youchuan/v8.2/blend",                      "name": "Midjourney V8.2 · Blend",      "type": "Image", "supports_image": True},
     {"id": "youchuan/v8.2/style-transfer",             "name": "Midjourney V8.2 · Style",      "type": "Image", "supports_image": True},
-    {"id": "youchuan/v8.2/remove-background",          "name": "Midjourney V8.2 · RemoveBG",   "type": "Image", "supports_image": True},
     {"id": "youchuan/v8.1/text-to-image",              "name": "Midjourney V8.1 · T2I",        "type": "Image", "supports_image": False},
     {"id": "youchuan/v8.1/image-to-image",             "name": "Midjourney V8.1 · I2I",        "type": "Image", "supports_image": True},
-    # ── xAI Grok Imagine ────────────────────────────────────────────────────
-    {"id": "xai/grok-imagine-image-quality/text-to-image", "name": "Grok Imagine Quality · T2I", "type": "Image", "supports_image": False},
-    {"id": "xai/grok-imagine-image-quality/edit",      "name": "Grok Imagine Quality · Edit",  "type": "Image", "supports_image": True},
-    {"id": "xai/grok-imagine-image/text-to-image",     "name": "Grok Imagine · T2I",           "type": "Image", "supports_image": False},
-    {"id": "xai/grok-imagine-image/edit",              "name": "Grok Imagine · Edit",          "type": "Image", "supports_image": True},
-    # ── Microsoft ────────────────────────────────────────────────────────────
-    {"id": "microsoft/mai-image-2.5/text-to-image",    "name": "MAI Image 2.5 · T2I",          "type": "Image", "supports_image": False},
-    {"id": "microsoft/mai-image-2.5/edit",             "name": "MAI Image 2.5 · Edit",         "type": "Image", "supports_image": True},
-    {"id": "microsoft/mai-image-2.5-flash/text-to-image", "name": "MAI Image 2.5 Flash · T2I", "type": "Image", "supports_image": False},
-    {"id": "microsoft/mai-image-2.5-flash/edit",       "name": "MAI Image 2.5 Flash · Edit",   "type": "Image", "supports_image": True},
-    # ── Reve AI ──────────────────────────────────────────────────────────────
-    {"id": "reve-ai/reve-2.1/text-to-image",           "name": "Reve 2.1 · T2I",               "type": "Image", "supports_image": False},
-    {"id": "reve-ai/reve-2.1/edit",                    "name": "Reve 2.1 · Edit",              "type": "Image", "supports_image": True},
-    {"id": "reve-ai/reve-2.1/remix",                   "name": "Reve 2.1 · Remix",             "type": "Image", "supports_image": True},
-    # ── Ideogram ─────────────────────────────────────────────────────────────
-    {"id": "ideogram/v4/quality/text-to-image",        "name": "Ideogram v4 Quality",          "type": "Image", "supports_image": False},
-    {"id": "ideogram/v4/turbo/text-to-image",          "name": "Ideogram v4 Turbo",            "type": "Image", "supports_image": False},
-    # ── AtlasCloud ──────────────────────────────────────────────────────────
-    {"id": "atlascloud/face-swap-image",               "name": "Face Swap (Image)",            "type": "Image", "supports_image": True},
-    {"id": "atlascloud/image-upscaler",                "name": "Image Upscaler 4x",            "type": "Image", "supports_image": True},
-    {"id": "atlascloud/photo-cleanup",                 "name": "Photo Cleanup",                "type": "Image", "supports_image": True},
-    {"id": "z-image/turbo",                            "name": "Z-Image Turbo",                "type": "Image", "supports_image": False},
 ]
 
 VIDEO_MODELS = [
@@ -121,10 +64,6 @@ VIDEO_MODELS = [
     {"id": "bytedance/seedance-2.0/image-to-video",     "name": "Seedance 2.0 · I2V",           "type": "Video", "supports_image": True},
     {"id": "bytedance/seedance-2.0-fast/text-to-video", "name": "Seedance 2.0 Fast · T2V",      "type": "Video", "supports_image": False},
     {"id": "bytedance/seedance-2.0-fast/image-to-video","name": "Seedance 2.0 Fast · I2V",      "type": "Video", "supports_image": True},
-    {"id": "bytedance/seedance-2.0-mini/text-to-video", "name": "Seedance 2.0 Mini · T2V",      "type": "Video", "supports_image": False},
-    {"id": "bytedance/seedance-2.0-mini/image-to-video","name": "Seedance 2.0 Mini · I2V",      "type": "Video", "supports_image": True},
-    {"id": "bytedance/seedance-v1.5-pro/text-to-video", "name": "Seedance v1.5 Pro · T2V",      "type": "Video", "supports_image": False},
-    {"id": "bytedance/seedance-v1.5-pro/image-to-video","name": "Seedance v1.5 Pro · I2V",      "type": "Video", "supports_image": True},
     # ── Kuaishou Kling ───────────────────────────────────────────────────────
     {"id": "kwaivgi/kling-v3.0-pro/text-to-video",     "name": "Kling v3.0 Pro · T2V",         "type": "Video", "supports_image": False},
     {"id": "kwaivgi/kling-v3.0-pro/image-to-video",    "name": "Kling v3.0 Pro · I2V",         "type": "Video", "supports_image": True},
@@ -132,36 +71,16 @@ VIDEO_MODELS = [
     {"id": "kwaivgi/kling-v3.0-4k/image-to-video",     "name": "Kling v3.0 4K · I2V",          "type": "Video", "supports_image": True},
     {"id": "kwaivgi/kling-v3.0-std/text-to-video",     "name": "Kling v3.0 Std · T2V",         "type": "Video", "supports_image": False},
     {"id": "kwaivgi/kling-v3.0-std/image-to-video",    "name": "Kling v3.0 Std · I2V",         "type": "Video", "supports_image": True},
-    {"id": "kwaivgi/kling-v3.0-turbo/text-to-video",   "name": "Kling v3.0 Turbo · T2V",       "type": "Video", "supports_image": False},
-    {"id": "kwaivgi/kling-v3.0-turbo/image-to-video",  "name": "Kling v3.0 Turbo · I2V",       "type": "Video", "supports_image": True},
     {"id": "kwaivgi/kling-video-o3-pro/text-to-video", "name": "Kling O3 Pro · T2V",           "type": "Video", "supports_image": False},
     {"id": "kwaivgi/kling-video-o3-pro/image-to-video","name": "Kling O3 Pro · I2V",           "type": "Video", "supports_image": True},
-    {"id": "kwaivgi/kling-video-o3-4k/text-to-video",  "name": "Kling O3 4K · T2V",            "type": "Video", "supports_image": False},
-    {"id": "kwaivgi/kling-video-o3-4k/image-to-video", "name": "Kling O3 4K · I2V",            "type": "Video", "supports_image": True},
-    {"id": "kwaivgi/kling-video-o3-std/text-to-video", "name": "Kling O3 Std · T2V",           "type": "Video", "supports_image": False},
-    {"id": "kwaivgi/kling-video-o3-std/image-to-video","name": "Kling O3 Std · I2V",           "type": "Video", "supports_image": True},
     {"id": "kwaivgi/kling-v2.6-pro/text-to-video",     "name": "Kling v2.6 Pro · T2V",         "type": "Video", "supports_image": False},
     {"id": "kwaivgi/kling-v2.6-pro/image-to-video",    "name": "Kling v2.6 Pro · I2V",         "type": "Video", "supports_image": True},
-    # ── Google Veo / Gemini Omni ─────────────────────────────────────────────
-    {"id": "google/veo3.1/text-to-video",               "name": "Veo 3.1 · T2V",                "type": "Video", "supports_image": False},
-    {"id": "google/veo3.1/image-to-video",              "name": "Veo 3.1 · I2V",                "type": "Video", "supports_image": True},
-    {"id": "google/veo3.1/reference-to-video",          "name": "Veo 3.1 · Ref2V",              "type": "Video", "supports_image": True},
-    {"id": "google/veo3.1-fast/text-to-video",          "name": "Veo 3.1 Fast · T2V",           "type": "Video", "supports_image": False},
-    {"id": "google/veo3.1-fast/image-to-video",         "name": "Veo 3.1 Fast · I2V",           "type": "Video", "supports_image": True},
-    {"id": "google/veo3.1-lite/text-to-video",          "name": "Veo 3.1 Lite · T2V",           "type": "Video", "supports_image": False},
-    {"id": "google/veo3.1-lite/image-to-video",         "name": "Veo 3.1 Lite · I2V",           "type": "Video", "supports_image": True},
-    {"id": "google/gemini-omni-flash/text-to-video",    "name": "Gemini Omni Flash · T2V",      "type": "Video", "supports_image": False},
-    {"id": "google/gemini-omni-flash/image-to-video",   "name": "Gemini Omni Flash · I2V",      "type": "Video", "supports_image": True},
-    {"id": "google/gemini-omni-flash/reference-to-video","name": "Gemini Omni Flash · Ref2V",   "type": "Video", "supports_image": True},
     # ── Alibaba Wan ──────────────────────────────────────────────────────────
     {"id": "alibaba/wan-2.7/text-to-video",             "name": "Wan-2.7 · T2V",                "type": "Video", "supports_image": False},
     {"id": "alibaba/wan-2.7/image-to-video",            "name": "Wan-2.7 · I2V",                "type": "Video", "supports_image": True},
     {"id": "alibaba/wan-2.7/reference-to-video",        "name": "Wan-2.7 · Ref2V",              "type": "Video", "supports_image": True},
-    {"id": "alibaba/wan-2.7/video-edit",                "name": "Wan-2.7 · Video Edit",         "type": "Video", "supports_image": True},
     {"id": "alibaba/wan-2.6/text-to-video",             "name": "Wan-2.6 · T2V",                "type": "Video", "supports_image": False},
     {"id": "alibaba/wan-2.6/image-to-video",            "name": "Wan-2.6 · I2V",                "type": "Video", "supports_image": True},
-    {"id": "alibaba/happyhorse-1.1/text-to-video",      "name": "HappyHorse 1.1 · T2V",         "type": "Video", "supports_image": False},
-    {"id": "alibaba/happyhorse-1.1/image-to-video",     "name": "HappyHorse 1.1 · I2V",         "type": "Video", "supports_image": True},
     # ── MiniMax / Hailuo ─────────────────────────────────────────────────────
     {"id": "minimax/h3/text-to-video",                  "name": "MiniMax H3 · T2V",             "type": "Video", "supports_image": False},
     {"id": "minimax/h3/image-to-video",                 "name": "MiniMax H3 · I2V",             "type": "Video", "supports_image": True},
@@ -170,35 +89,10 @@ VIDEO_MODELS = [
     {"id": "minimax/hailuo-2.3/t2v-standard",           "name": "Hailuo 2.3 Standard · T2V",    "type": "Video", "supports_image": False},
     {"id": "minimax/hailuo-2.3/i2v-pro",                "name": "Hailuo 2.3 Pro · I2V",         "type": "Video", "supports_image": True},
     {"id": "minimax/hailuo-2.3/i2v-standard",           "name": "Hailuo 2.3 Standard · I2V",    "type": "Video", "supports_image": True},
-    # ── Pixverse ─────────────────────────────────────────────────────────────
-    {"id": "pixverse/v6/text-to-video",                 "name": "Pixverse v6 · T2V",            "type": "Video", "supports_image": False},
-    {"id": "pixverse/v6/image-to-video",                "name": "Pixverse v6 · I2V",            "type": "Video", "supports_image": True},
-    {"id": "pixverse/v6/reference-to-video",            "name": "Pixverse v6 · Ref2V",          "type": "Video", "supports_image": True},
-    {"id": "pixverse/c1/text-to-video",                 "name": "Pixverse c1 · T2V",            "type": "Video", "supports_image": False},
-    {"id": "pixverse/c1/image-to-video",                "name": "Pixverse c1 · I2V",            "type": "Video", "supports_image": True},
-    # ── xAI Grok ─────────────────────────────────────────────────────────────
-    {"id": "xai/grok-imagine-video-v1.5/text-to-video", "name": "Grok Video v1.5 · T2V",        "type": "Video", "supports_image": False},
-    {"id": "xai/grok-imagine-video-v1.5/image-to-video","name": "Grok Video v1.5 · I2V",        "type": "Video", "supports_image": True},
-    {"id": "xai/grok-imagine-video/text-to-video",      "name": "Grok Video · T2V",             "type": "Video", "supports_image": False},
-    {"id": "xai/grok-imagine-video/image-to-video",     "name": "Grok Video · I2V",             "type": "Video", "supports_image": True},
-    # ── Vidu ─────────────────────────────────────────────────────────────────
-    {"id": "vidu/q3-pro/text-to-video",                 "name": "Vidu Q3-Pro · T2V",            "type": "Video", "supports_image": False},
-    {"id": "vidu/q3-pro/image-to-video",                "name": "Vidu Q3-Pro · I2V",            "type": "Video", "supports_image": True},
-    {"id": "vidu/q3-turbo/text-to-video",               "name": "Vidu Q3-Turbo · T2V",          "type": "Video", "supports_image": False},
-    {"id": "vidu/q3-turbo/image-to-video",              "name": "Vidu Q3-Turbo · I2V",          "type": "Video", "supports_image": True},
-    # ── Midjourney (Youchuan) ────────────────────────────────────────────────
-    {"id": "youchuan/v8.2/image-to-video",              "name": "Midjourney V8.2 · I2V",        "type": "Video", "supports_image": True},
-    {"id": "youchuan/v8.1/image-to-video",              "name": "Midjourney V8.1 · I2V",        "type": "Video", "supports_image": True},
-    # ── AtlasCloud ──────────────────────────────────────────────────────────
-    {"id": "atlascloud/wan-2.7-spicy/text-to-video",    "name": "Wan 2.7 Spicy · T2V",          "type": "Video", "supports_image": False},
-    {"id": "atlascloud/wan-2.7-spicy/image-to-video",   "name": "Wan 2.7 Spicy · I2V",          "type": "Video", "supports_image": True},
-    {"id": "atlascloud/wan-2.2-turbo/image-to-video",   "name": "Wan 2.2 Turbo · I2V",          "type": "Video", "supports_image": True},
-    {"id": "atlascloud/face-swap-video",                "name": "Face Swap (Video)",             "type": "Video", "supports_image": True},
-    {"id": "atlascloud/video-upscaler",                 "name": "Video Upscaler 2K",            "type": "Video", "supports_image": True},
-    {"id": "atlascloud/infinitetalk",                   "name": "InfiniteTalk (Talking Head)",  "type": "Video", "supports_image": True},
 ]
 
 FALLBACK_MODELS = IMAGE_MODELS + VIDEO_MODELS
+
 
 def _headers():
     return {
@@ -213,100 +107,53 @@ def _get_supported_params(mtype, mid):
 
     if mtype == "Video":
         params.append("duration")
-        if "google" in mid_low or "veo" in mid_low or "gemini" in mid_low:
-            params.extend(["resolution", "generate_audio", "negative_prompt", "seed"])
-        elif "kwaivgi" in mid_low or "kling" in mid_low:
+        if "kwaivgi" in mid_low or "kling" in mid_low:
             params.extend(["guidance_scale", "generate_audio", "negative_prompt"])
         elif "minimax" in mid_low or "hailuo" in mid_low:
             params.extend(["resolution"])
         elif "bytedance" in mid_low or "seedance" in mid_low:
             params.extend(["resolution", "output_format", "generate_audio", "watermark", "return_last_frame"])
-        elif "alibaba" in mid_low or "wan" in mid_low or "happyhorse" in mid_low or "qwen" in mid_low:
+        elif "alibaba" in mid_low or "wan" in mid_low:
             params.extend(["resolution", "seed"])
-        elif "xai" in mid_low or "grok" in mid_low:
-            params.extend(["resolution"])
-        elif "youchuan" in mid_low:
-            params.extend(["resolution"])
         return params
 
     if "youchuan" in mid_low or "midjourney" in mid_low:
         params.extend(["hd", "stylize", "chaos", "weird", "output_quality", "seed", "sref"])
         return params
-        
+
     if "gpt" in mid_low or "openai" in mid_low:
         params.extend(["resolution", "output_quality", "output_format"])
         return params
-        
+
     if "nano-banana" in mid_low:
         params.extend(["resolution", "thinking_level", "media_resolution", "output_format"])
+        return params
+
+    # Wan image
+    if "wan" in mid_low or "alibaba" in mid_low:
+        params.extend(["negative_prompt", "seed", "guidance_scale"])
         return params
 
     # Default for other image models
     params.extend(["negative_prompt", "seed", "num_outputs", "output_format", "output_quality", "guidance_scale", "num_inference_steps"])
     return params
 
+
 @router.get("/models")
 async def get_models():
-    """Return full model catalogue — live from Atlas Cloud API merged with built-in fallback."""
+    """Return curated model catalogue — Image: GPT, Midjourney, Nano Banana, Wan | Video: Kling, Seedance, MiniMax, Wan."""
     global MODEL_LIST_CACHE
     if MODEL_LIST_CACHE:
         return {"models": MODEL_LIST_CACHE}
 
-    # Initialize with enriched fallback models
-    base_models = {}
+    # Build from curated FALLBACK_MODELS
+    model_list = []
     for m in FALLBACK_MODELS:
         m_copy = dict(m)
         m_copy["supported_params"] = _get_supported_params(m["type"], m["id"])
-        base_models[m["id"]] = m_copy
+        model_list.append(m_copy)
 
-    if ATLAS_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=15) as client:
-                r = await client.get(f"{ATLAS_BASE_URL}/models", headers=_headers())
-                if r.status_code == 200:
-                    data = r.json()
-                    raw = data.get("data", data) if isinstance(data, dict) else data
-                    for m in raw:
-                        mid = m.get("id", "")
-                        # Inherit type if it's already in fallback
-                        if mid in base_models:
-                            base_models[mid]["name"] = m.get("name", base_models[mid]["name"])
-                            continue
-                            
-                        # Otherwise categorize it using API type if available
-                        api_type = m.get("type", "").capitalize()
-                        if api_type in ("Image", "Video"):
-                            mtype = api_type
-                        elif any(k in mid for k in ["image", "flux", "seedream", "dall-e", "gpt-image", "imagen", "nano-banana", "youchuan", "reve", "ideogram", "z-image", "mai-image", "krea"]):
-                            mtype = "Image"
-                        elif any(k in mid for k in ["video", "seedance", "kling", "wan", "sora", "veo", "vidu", "pixverse", "hailuo", "minimax/h", "happyhorse", "grok-imagine-video"]):
-                            mtype = "Video"
-                        else:
-                            mtype = "LLM"
-                            
-                        if mtype in ("Image", "Video"):
-                            base_models[mid] = {
-                                "id": mid,
-                                "name": m.get("name", mid.split("/")[-1]),
-                                "type": mtype,
-                                "supports_image": "image-to" in mid or "i2v" in mid or "edit" in mid or "reference" in mid,
-                                "supported_params": _get_supported_params(mtype, mid)
-                            }
-        except Exception as e:
-            print(f"Atlas API model fetch failed: {e}")
-
-    # Apply user requested filtering
-    filtered_models = []
-    for m in base_models.values():
-        mid_low = m["id"].lower()
-        if m["type"] == "Image":
-            if any(k in mid_low for k in ["gpt", "midjourney", "youchuan", "nano-banana", "wan"]):
-                filtered_models.append(m)
-        elif m["type"] == "Video":
-            if any(k in mid_low for k in ["kling", "kwaivgi", "seedance", "bytedance", "minimax", "hailuo", "wan"]):
-                filtered_models.append(m)
-
-    MODEL_LIST_CACHE = filtered_models
+    MODEL_LIST_CACHE = model_list
     return {"models": MODEL_LIST_CACHE}
 
 
@@ -320,8 +167,8 @@ async def get_model_details(model_id: str):
             r = await client.get(f"{ATLAS_BASE_URL}/models/{model_id}", headers=_headers())
             if r.status_code == 200:
                 return {"model": r.json()}
-    except Exception as e:
-        print(f"Model detail fetch failed: {e}")
+    except Exception:
+        logger.exception(f"Model detail fetch failed for {model_id}")
     return {"model": {"id": model_id}}
 
 
@@ -342,21 +189,31 @@ async def generate_asset(
     num_inference_steps: Optional[int] = Form(None),
     seed: Optional[int] = Form(None),
     resolution: Optional[str] = Form(None),
-    generate_audio: Optional[bool] = Form(None),
-    hd: Optional[bool] = Form(None),
+    generate_audio: Optional[str] = Form(None),   # keep as str – booleans via Form are tricky
+    hd: Optional[str] = Form(None),
     stylize: Optional[int] = Form(None),
     chaos: Optional[int] = Form(None),
     weird: Optional[int] = Form(None),
     sref: Optional[str] = Form(None),
-    watermark: Optional[bool] = Form(None),
-    return_last_frame: Optional[bool] = Form(None),
+    watermark: Optional[str] = Form(None),
+    return_last_frame: Optional[str] = Form(None),
     thinking_level: Optional[str] = Form(None),
     media_resolution: Optional[str] = Form(None),
     reference_file: Optional[UploadFile] = File(None)
 ):
     """Submit generation task to Atlas Cloud REST API."""
     try:
-        # Early base64 conversion removed to prevent double-reading the stream
+        # --- Upload validation ---
+        if reference_file:
+            ct = reference_file.content_type or ""
+            if not (ct.startswith("image/") or ct.startswith("video/")):
+                raise HTTPException(status_code=400, detail="Invalid file type. Only images or videos are allowed.")
+            # Read and size-check
+            raw_bytes = await reference_file.read()
+            if len(raw_bytes) > 10 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="File size exceeds 10MB limit.")
+        else:
+            raw_bytes = None
 
         prediction_id = f"pred_{uuid.uuid4().hex[:12]}"
 
@@ -368,29 +225,31 @@ async def generate_asset(
                 "prompt_used": prompt
             }
 
+        mid_low = model_keyword.lower()
+
         payload: dict = {
             "model": model_keyword,
             "prompt": prompt,
-            "aspect_ratio": aspect_ratio,
         }
-        
-        mid_low = model_keyword.lower()
 
-        # Handle specific parameter name mappings
-        if "minimax" in mid_low or "seedance" in mid_low:
-            payload["ratio"] = payload.pop("aspect_ratio")
+        # ── Aspect ratio key mapping ──────────────────────────────────────────
+        # MiniMax/Hailuo/Seedance expect "ratio" instead of "aspect_ratio"
+        if "minimax" in mid_low or "hailuo" in mid_low or "seedance" in mid_low or "bytedance" in mid_low:
+            payload["ratio"] = aspect_ratio
+        else:
+            payload["aspect_ratio"] = aspect_ratio
 
+        # ── Duration (Video only) ─────────────────────────────────────────────
         if type == "Video":
-            # Strip 's' and convert to int for video models
             try:
-                dur_int = int(duration.replace('s', ''))
+                dur_int = int(str(duration).replace("s", "").strip())
                 payload["duration"] = dur_int
             except ValueError:
-                payload["duration"] = duration
+                payload["duration"] = 5
 
+        # ── Upload reference image/video ──────────────────────────────────────
         async with httpx.AsyncClient(timeout=120) as client:
-            if reference_file:
-                raw_bytes = await reference_file.read()
+            if raw_bytes is not None:
                 upload_res = await client.post(
                     f"{ATLAS_BASE_URL}/model/uploadMedia",
                     headers={"Authorization": f"Bearer {ATLAS_API_KEY}"},
@@ -398,54 +257,65 @@ async def generate_asset(
                 )
                 if upload_res.status_code in (200, 201):
                     upload_data = upload_res.json()
-                    image_url = upload_data.get("url") or upload_data.get("media_url") or upload_data.get("image_url")
+                    image_url = (
+                        upload_data.get("url") or
+                        upload_data.get("media_url") or
+                        upload_data.get("image_url")
+                    )
                     if image_url:
                         payload["image"] = image_url
-                        payload["image_url"] = image_url # some models prefer image_url
+                        payload["image_url"] = image_url  # some models prefer image_url
                 else:
-                    print(f"Failed to upload media: {upload_res.text}")
-                    # Fallback to base64 if upload fails
+                    logger.warning(f"Media upload failed ({upload_res.status_code}): {upload_res.text[:200]}")
+                    # Fallback: send as base64
                     ref_b64 = base64.b64encode(raw_bytes).decode("utf-8")
                     payload["image"] = f"data:{reference_file.content_type};base64,{ref_b64}"
-            
-            # Add optional advanced parameters
-            if negative_prompt: payload["negative_prompt"] = negative_prompt
-            if num_outputs: payload["num_outputs"] = num_outputs
-            if output_format: payload["output_format"] = output_format
-            if output_quality: payload["output_quality"] = output_quality
-            if guidance_scale: payload["guidance_scale"] = guidance_scale
-            if num_inference_steps: payload["num_inference_steps"] = num_inference_steps
-            if seed is not None: payload["seed"] = seed
-            if resolution: payload["resolution"] = resolution
-            if generate_audio is not None: 
-                payload["generate_audio"] = generate_audio
-                # Kling expects 'sound'
-                if "kling" in mid_low or "kwaivgi" in mid_low:
-                    payload["sound"] = generate_audio
 
-            if hd is not None: payload["hd"] = hd
-            if stylize is not None: payload["stylize"] = stylize
-            if chaos is not None: payload["chaos"] = chaos
-            if weird is not None: payload["weird"] = weird
-            if sref is not None: payload["sref"] = sref
-            if watermark is not None: payload["watermark"] = watermark
-            if return_last_frame is not None: payload["return_last_frame"] = return_last_frame
-            if thinking_level: payload["thinking_level"] = thinking_level
-            if media_resolution: payload["media_resolution"] = media_resolution
-            
-            # GPT resolution map
-            if "gpt" in mid_low and resolution:
-                size_map = {
-                    "720p": "1024x768",
-                    "1080p": "1024x1024",
-                    "1440p": "1536x1024",
-                    "2k": "1536x1024",
-                    "4k": "2048x1152"
-                }
-                payload["size"] = size_map.get(resolution.lower(), "1024x1024")
-                if "resolution" in payload:
-                    del payload["resolution"]
+            # ── Optional parameters ───────────────────────────────────────────
+            if negative_prompt:           payload["negative_prompt"]      = negative_prompt
+            if num_outputs:               payload["num_outputs"]           = num_outputs
+            if output_format:             payload["output_format"]         = output_format
+            if output_quality:            payload["output_quality"]        = output_quality
+            if guidance_scale:            payload["guidance_scale"]        = guidance_scale
+            if num_inference_steps:       payload["num_inference_steps"]   = num_inference_steps
+            if seed is not None:          payload["seed"]                  = seed
+            if stylize is not None:       payload["stylize"]               = stylize
+            if chaos is not None:         payload["chaos"]                 = chaos
+            if weird is not None:         payload["weird"]                 = weird
+            if sref:                      payload["sref"]                  = sref
+            if thinking_level:            payload["thinking_level"]        = thinking_level
+            if media_resolution:          payload["media_resolution"]      = media_resolution
 
+            # Bool-as-string fields
+            def _bool(v): return v.lower() in ("true", "1", "yes") if v else None
+
+            if _bool(hd) is not None:              payload["hd"]               = _bool(hd)
+            if _bool(watermark) is not None:        payload["watermark"]        = _bool(watermark)
+            if _bool(return_last_frame) is not None:payload["return_last_frame"] = _bool(return_last_frame)
+
+            if generate_audio is not None:
+                gen_audio_bool = _bool(generate_audio)
+                if gen_audio_bool is not None:
+                    payload["generate_audio"] = gen_audio_bool
+                    if "kling" in mid_low or "kwaivgi" in mid_low:
+                        payload["sound"] = gen_audio_bool  # Kling uses "sound"
+
+            # ── Resolution / size mapping ─────────────────────────────────────
+            if resolution:
+                if "gpt" in mid_low or "openai" in mid_low:
+                    # GPT uses explicit size strings
+                    size_map = {
+                        "720p":  "1024x768",
+                        "1080p": "1024x1024",
+                        "1440p": "1536x1024",
+                        "2k":    "1536x1024",
+                        "4k":    "2048x1152",
+                    }
+                    payload["size"] = size_map.get(resolution.lower(), "1024x1024")
+                else:
+                    payload["resolution"] = resolution
+
+            # ── Send to Atlas ────────────────────────────────────────────────
             endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
             r = await client.post(
                 f"{ATLAS_BASE_URL}{endpoint}",
@@ -465,6 +335,6 @@ async def generate_asset(
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         logger.exception("Atlas Cloud generation failed")
         raise HTTPException(status_code=500, detail="Internal server error")
