@@ -730,6 +730,19 @@ function App() {
 
                   </div>
                 </div>
+
+                  {/* Powered by Atlas Cloud */}
+                  <p className={`mt-2 text-center text-[10px] font-medium tracking-wide select-none ${isLight ? 'text-slate-400' : 'text-slate-600'}`}>
+                    Powered by&nbsp;
+                    <a
+                      href="https://atlascloud.ai"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`font-semibold transition-colors duration-200 ${isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-500 hover:text-slate-300'}`}
+                    >
+                      Atlas Cloud
+                    </a>
+                  </p>
               </div>
             </div>
           </div>
