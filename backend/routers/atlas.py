@@ -208,12 +208,47 @@ def _headers():
 
 
 def _get_supported_params(mtype, mid):
+    mid_low = mid.lower()
+    
+    # Base parameters for all image models
+    if mtype != "Image":
+        return ["aspect_ratio"]
+        
     params = ["aspect_ratio"]
-    if mtype == "Image":
-        params.append("seed")
-        if not any(k in mid.lower() for k in ["gpt-image", "imagen", "gemini"]):
-            params.extend(["negative_prompt", "guidance_scale", "num_inference_steps"])
+    
+    # OpenAI GPT Image
+    if "gpt-image" in mid_low or "dall-e" in mid_low:
         params.extend(["num_outputs", "output_format", "output_quality"])
+        return params
+        
+    # ByteDance Seedream
+    if "seedream" in mid_low:
+        params.extend(["output_format"])
+        return params
+        
+    # Google Nano Banana & Imagen
+    if "nano-banana" in mid_low or "imagen" in mid_low or "veo" in mid_low or "gemini" in mid_low:
+        params.extend(["seed", "output_format", "output_quality"])
+        return params
+        
+    # Black Forest Labs Flux
+    if "flux" in mid_low:
+        params.extend(["seed", "num_outputs", "output_format", "guidance_scale", "num_inference_steps"])
+        return params
+        
+    # Midjourney / Youchuan
+    if "youchuan" in mid_low:
+        return params
+        
+    # Alibaba / Qwen / Wan
+    if "wan" in mid_low or "qwen" in mid_low or "happyhorse" in mid_low:
+        params.extend(["negative_prompt", "seed", "num_outputs"])
+        if "wan" not in mid_low:
+            params.extend(["guidance_scale", "num_inference_steps"])
+        return params
+        
+    # Default for other image models
+    params.extend(["negative_prompt", "seed", "num_outputs", "output_format", "output_quality", "guidance_scale", "num_inference_steps"])
     return params
 
 @router.get("/models")

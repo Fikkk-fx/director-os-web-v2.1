@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
   Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video,
-  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X,
+  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X, Download,
 } from 'lucide-react';
 // import { useAuth } from './AuthContext';
 // import LoginPage from './LoginPage';
@@ -76,6 +76,7 @@ function CustomSelect({ label, value, options, onChange, isLight, accentClass }:
 interface ChatMessage {
   id: string; role: 'user' | 'ai'; content: string; timestamp: string;
   imageUrl?: string;
+  videoUrl?: string;
 }
 interface ChatSession {
   id: string; title: string; tab: 'Home' | 'Image' | 'Video';
@@ -545,7 +546,40 @@ function App() {
                           {activeTab === 'Home' ? modelLabel(selectedHomeModel) : `Agent ${activeTab}`}
                         </div>
                       )}
-                      {msg.imageUrl && <img src={msg.imageUrl} alt="Reference" className="mb-3 max-h-48 w-full rounded-xl object-cover" />}
+                      {msg.imageUrl && (
+                        <div className="group relative mb-3 max-w-full">
+                          <img src={msg.imageUrl} alt="Result" className="max-h-48 w-full rounded-xl object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = msg.imageUrl!;
+                              a.download = `download-${msg.id}.jpg`;
+                              a.click();
+                            }}
+                            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 text-white opacity-0 backdrop-blur-md transition-all duration-200 group-hover:opacity-100 hover:bg-black/70"
+                          >
+                            <Download size={14} />
+                          </button>
+                        </div>
+                      )}
+                      {msg.videoUrl && (
+                        <div className="group relative mb-3 max-w-full">
+                          <video src={msg.videoUrl} controls className="max-h-64 w-full rounded-xl object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const a = document.createElement('a');
+                              a.href = msg.videoUrl!;
+                              a.download = `download-${msg.id}.mp4`;
+                              a.click();
+                            }}
+                            className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/50 text-white opacity-0 backdrop-blur-md transition-all duration-200 group-hover:opacity-100 hover:bg-black/70"
+                          >
+                            <Download size={14} />
+                          </button>
+                        </div>
+                      )}
                       <div className={`whitespace-pre-wrap text-[14px] leading-[1.75] ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                         {msg.content}
                       </div>
