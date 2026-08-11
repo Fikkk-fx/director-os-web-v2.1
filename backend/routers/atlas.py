@@ -220,7 +220,7 @@ def _get_supported_params(mtype, mid):
         elif "minimax" in mid_low or "hailuo" in mid_low:
             params.extend(["resolution"])
         elif "bytedance" in mid_low or "seedance" in mid_low:
-            params.extend(["resolution", "output_format", "generate_audio"])
+            params.extend(["resolution", "output_format", "generate_audio", "watermark", "return_last_frame"])
         elif "alibaba" in mid_low or "wan" in mid_low or "happyhorse" in mid_low or "qwen" in mid_low:
             params.extend(["resolution", "seed"])
         elif "xai" in mid_low or "grok" in mid_low:
@@ -229,33 +229,18 @@ def _get_supported_params(mtype, mid):
             params.extend(["resolution"])
         return params
 
-    # Below is for Image models
-    if "gpt-image" in mid_low or "dall-e" in mid_low:
-        params.extend(["num_outputs", "output_format", "output_quality"])
+    if "youchuan" in mid_low or "midjourney" in mid_low:
+        params.extend(["hd", "stylize", "chaos", "weird", "output_quality", "seed", "sref"])
         return params
         
-    if "seedream" in mid_low:
-        params.extend(["output_format"])
+    if "gpt" in mid_low or "openai" in mid_low:
+        params.extend(["resolution", "output_quality", "output_format"])
         return params
         
-    if "nano-banana" in mid_low or "imagen" in mid_low or "veo" in mid_low or "gemini" in mid_low:
-        params.extend(["seed", "output_format", "output_quality"])
+    if "nano-banana" in mid_low:
+        params.extend(["resolution", "thinking_level", "media_resolution", "output_format"])
         return params
-        
-    if "flux" in mid_low:
-        params.extend(["seed", "num_outputs", "output_format", "guidance_scale", "num_inference_steps"])
-        return params
-        
-    if "youchuan" in mid_low:
-        params.extend(["resolution"])
-        return params
-        
-    if "wan" in mid_low or "qwen" in mid_low or "happyhorse" in mid_low:
-        params.extend(["negative_prompt", "seed", "num_outputs"])
-        if "wan" not in mid_low:
-            params.extend(["guidance_scale", "num_inference_steps"])
-        return params
-        
+
     # Default for other image models
     params.extend(["negative_prompt", "seed", "num_outputs", "output_format", "output_quality", "guidance_scale", "num_inference_steps"])
     return params
@@ -310,7 +295,18 @@ async def get_models():
         except Exception as e:
             print(f"Atlas API model fetch failed: {e}")
 
-    MODEL_LIST_CACHE = list(base_models.values())
+    # Apply user requested filtering
+    filtered_models = []
+    for m in base_models.values():
+        mid_low = m["id"].lower()
+        if m["type"] == "Image":
+            if any(k in mid_low for k in ["gpt", "midjourney", "youchuan", "nano-banana", "wan"]):
+                filtered_models.append(m)
+        elif m["type"] == "Video":
+            if any(k in mid_low for k in ["kling", "kwaivgi", "seedance", "bytedance", "minimax", "hailuo", "wan"]):
+                filtered_models.append(m)
+
+    MODEL_LIST_CACHE = filtered_models
     return {"models": MODEL_LIST_CACHE}
 
 
@@ -345,6 +341,15 @@ async def generate_asset(
     seed: Optional[int] = Form(None),
     resolution: Optional[str] = Form(None),
     generate_audio: Optional[bool] = Form(None),
+    hd: Optional[bool] = Form(None),
+    stylize: Optional[int] = Form(None),
+    chaos: Optional[int] = Form(None),
+    weird: Optional[int] = Form(None),
+    sref: Optional[str] = Form(None),
+    watermark: Optional[bool] = Form(None),
+    return_last_frame: Optional[bool] = Form(None),
+    thinking_level: Optional[str] = Form(None),
+    media_resolution: Optional[str] = Form(None),
     reference_file: Optional[UploadFile] = File(None)
 ):
     """Submit generation task to Atlas Cloud REST API."""
@@ -415,6 +420,29 @@ async def generate_asset(
                 # Kling expects 'sound'
                 if "kling" in mid_low or "kwaivgi" in mid_low:
                     payload["sound"] = generate_audio
+
+            if hd is not None: payload["hd"] = hd
+            if stylize is not None: payload["stylize"] = stylize
+            if chaos is not None: payload["chaos"] = chaos
+            if weird is not None: payload["weird"] = weird
+            if sref is not None: payload["sref"] = sref
+            if watermark is not None: payload["watermark"] = watermark
+            if return_last_frame is not None: payload["return_last_frame"] = return_last_frame
+            if thinking_level: payload["thinking_level"] = thinking_level
+            if media_resolution: payload["media_resolution"] = media_resolution
+            
+            # GPT resolution map
+            if "gpt" in mid_low and resolution:
+                size_map = {
+                    "720p": "1024x768",
+                    "1080p": "1024x1024",
+                    "1440p": "1536x1024",
+                    "2k": "1536x1024",
+                    "4k": "2048x1152"
+                }
+                payload["size"] = size_map.get(resolution.lower(), "1024x1024")
+                if "resolution" in payload:
+                    del payload["resolution"]
 
             endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
             r = await client.post(

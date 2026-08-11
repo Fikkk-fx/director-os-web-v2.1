@@ -12,15 +12,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /* ── Tab accent system ─────────────────────────────────────────── */
 const TAB_CFG = {
-  Home: { grad: 'from-blue-500   to-cyan-400', shadow: 'shadow-blue-500/35', accent: 'text-cyan-400', accentL: 'text-cyan-600', orb1: 'bg-blue-500/28', orb2: 'bg-violet-500/18', border: 'border-blue-400/30' },
-  Image: { grad: 'from-violet-500 to-purple-400', shadow: 'shadow-violet-500/35', accent: 'text-violet-400', accentL: 'text-violet-600', orb1: 'bg-violet-500/28', orb2: 'bg-pink-500/18', border: 'border-violet-400/30' },
-  Video: { grad: 'from-orange-500 to-amber-400', shadow: 'shadow-orange-500/35', accent: 'text-amber-400', accentL: 'text-orange-600', orb1: 'bg-orange-400/25', orb2: 'bg-rose-400/15', border: 'border-orange-400/30' },
-  Assets: { grad: 'from-teal-500   to-emerald-400', shadow: 'shadow-teal-500/30', accent: 'text-teal-400', accentL: 'text-teal-600', orb1: 'bg-teal-500/24', orb2: 'bg-emerald-500/16', border: 'border-teal-400/30' },
+  Home:   { grad: 'from-blue-500   to-cyan-400',   shadow: 'shadow-blue-500/35',   accent: 'text-cyan-400',    accentL: 'text-cyan-600',    orb1: 'bg-blue-500/28',    orb2: 'bg-violet-500/18',  border: 'border-blue-400/30'   },
+  Image:  { grad: 'from-violet-500 to-purple-400', shadow: 'shadow-violet-500/35', accent: 'text-violet-400',  accentL: 'text-violet-600',  orb1: 'bg-violet-500/28',  orb2: 'bg-pink-500/18',    border: 'border-violet-400/30' },
+  Video:  { grad: 'from-orange-500 to-amber-400',  shadow: 'shadow-orange-500/35', accent: 'text-amber-400',   accentL: 'text-orange-600',  orb1: 'bg-orange-400/25',  orb2: 'bg-rose-400/15',    border: 'border-orange-400/30' },
+  Assets: { grad: 'from-teal-500   to-emerald-400',shadow: 'shadow-teal-500/30',   accent: 'text-teal-400',    accentL: 'text-teal-600',    orb1: 'bg-teal-500/24',    orb2: 'bg-emerald-500/16', border: 'border-teal-400/30'   },
 } as const;
 type TabKey = keyof typeof TAB_CFG;
 
 /* ── Custom Select ─────────────────────────────────────────────── */
-interface SelectOption { value: string; label: string; logo?: string; }
+interface SelectOption { value: string; label: string; }
 interface CustomSelectProps {
   label: string; value: string; onChange: (v: string) => void;
   options: SelectOption[]; isLight: boolean; accentClass: string;
@@ -29,9 +29,7 @@ interface CustomSelectProps {
 function CustomSelect({ label, value, options, onChange, isLight, accentClass }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const selectedOpt = options.find(o => o.value === value);
-  const selected = selectedOpt?.label ?? value;
-  const selectedLogo = selectedOpt?.logo;
+  const selected = options.find(o => o.value === value)?.label ?? value;
   const close = useCallback(() => setOpen(false), []);
 
   useEffect(() => {
@@ -49,7 +47,6 @@ function CustomSelect({ label, value, options, onChange, isLight, accentClass }:
           ${isLight ? 'text-slate-700 hover:bg-black/5' : 'text-slate-200 hover:bg-white/10'}`}
       >
         <span className={`text-[9px] font-bold uppercase tracking-[0.2em] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{label}</span>
-        {selectedLogo && <img src={selectedLogo} alt="" className="w-3.5 h-3.5 object-contain opacity-80" />}
         <span className={accentClass}>{selected}</span>
         <ChevronDown size={12} className={`transition-transform duration-200 ${open ? 'rotate-180' : ''} opacity-50`} />
       </button>
@@ -63,13 +60,12 @@ function CustomSelect({ label, value, options, onChange, isLight, accentClass }:
         {options.map(opt => (
           <button key={opt.value} type="button" role="option" aria-selected={opt.value === value}
             onClick={() => { onChange(opt.value); close(); }}
-            className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition-all duration-100
+            className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-100
               ${opt.value === value
                 ? isLight ? 'bg-blue-50 text-blue-700 font-semibold' : `${accentClass} bg-white/10 font-semibold`
                 : isLight ? 'text-slate-600 hover:bg-black/5' : 'text-slate-300 hover:bg-white/8'}`}
           >
-            {opt.logo && <img src={opt.logo} alt="" className="w-4 h-4 object-contain opacity-80" />}
-            <span className="flex-1 text-left">{opt.label}</span>
+            <span>{opt.label}</span>
             {opt.value === value && <Check size={11} className="shrink-0 opacity-70" />}
           </button>
         ))}
@@ -90,9 +86,9 @@ interface ChatSession {
 }
 
 const HOME_MODELS: SelectOption[] = [
-  { value: 'openai/gpt-5.6-sol', label: 'GPT-5.6 Sol', logo: '/logos/openai.svg' },
-  { value: 'moonshotai/kimi-k3', label: 'Kimi K3', logo: '/logos/moonshot.png' },
-  { value: 'deepseek-ai/deepseek-v4-pro', label: 'Deepseek V4 Pro', logo: '/logos/deepseek.png' },
+  { value: 'openai/gpt-5.6-sol',         label: 'GPT-5.6 Sol'     },
+  { value: 'moonshotai/kimi-k3',          label: 'Kimi K3'         },
+  { value: 'deepseek-ai/deepseek-v4-pro', label: 'Deepseek V4 Pro' },
 ];
 const modelLabel = (id: string) => HOME_MODELS.find(m => m.value === id)?.label ?? 'GPT-5.6 Sol';
 
@@ -151,11 +147,10 @@ function App() {
   const createSession = (tab: 'Home' | 'Image' | 'Video') => {
     const s: ChatSession = {
       id: Date.now().toString(), title: 'New Chat', tab,
-      messages: [{
-        id: 'w', role: 'ai', timestamp: new Date().toLocaleTimeString(),
+      messages: [{ id: 'w', role: 'ai', timestamp: new Date().toLocaleTimeString(),
         content: tab === 'Home' ? 'Hello, Director. What are we creating today?'
           : tab === 'Image' ? 'Ready to generate images. Describe your vision.'
-            : 'Ready to generate cinematic videos. What is the scene?',
+          : 'Ready to generate cinematic videos. What is the scene?',
       }],
       updatedAt: Date.now(),
     };
@@ -194,7 +189,7 @@ function App() {
 
   /* ── Prompts & Mode ── */
   const [generateMode, setGenerateMode] = useState<'Brief' | 'Image' | 'Video'>('Brief');
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt]   = useState('');
   const [showSettings, setShowSettings] = useState(false);
 
   /* ── Generation tracking ── */
@@ -202,28 +197,37 @@ function App() {
   const isGenerating = activeSessionId ? !!generatingSessions[activeSessionId] : false;
 
   /* ── Models ── */
-  const [models, setModels] = useState<any[]>([]);
+  const [models, setModels]                         = useState<any[]>([]);
   const [selectedImageModel, setSelectedImageModel] = useState('');
   const [selectedVideoModel, setSelectedVideoModel] = useState('');
-  const [selectedHomeModel, setSelectedHomeModel] = useState('openai/gpt-5.6-sol');
+  const [selectedHomeModel, setSelectedHomeModel]   = useState('openai/gpt-5.6-sol');
 
   /* ── Media settings ── */
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
   const [aspectRatioVid, setAspectRatioVid] = useState('16:9');
-  const [durationVid, setDurationVid] = useState('5s');
-  const [numOutputsImg, setNumOutputsImg] = useState<number>(1);
-  const [qualityImg, setQualityImg] = useState<number>(80);
-  const [negPromptImg, setNegPromptImg] = useState('');
-  const [formatImg, setFormatImg] = useState('webp');
-  const [guidanceImg, setGuidanceImg] = useState('');
-  const [stepsImg, setStepsImg] = useState('');
-  const [seedImg, setSeedImg] = useState('');
-  const [resolution, setResolution] = useState('1K');
-  const [generateAudio, setGenerateAudio] = useState(false);
+  const [durationVid, setDurationVid]       = useState('5s');
+  const [numOutputsImg, setNumOutputsImg]   = useState<number>(1);
+  const [qualityImg, setQualityImg]         = useState<number>(80);
+  const [negPromptImg, setNegPromptImg]     = useState('');
+  const [formatImg, setFormatImg]           = useState('webp');
+  const [guidanceImg, setGuidanceImg]       = useState('');
+  const [stepsImg, setStepsImg]             = useState('');
+  const [seedImg, setSeedImg]               = useState('');
+  const [resolution, setResolution]         = useState('1080p');
+  const [generateAudio, setGenerateAudio]   = useState(false);
+  const [hd, setHd]                         = useState(false);
+  const [stylize, setStylize]               = useState(0);
+  const [chaos, setChaos]                   = useState(0);
+  const [weird, setWeird]                   = useState(0);
+  const [sref, setSref]                     = useState('');
+  const [watermark, setWatermark]           = useState(false);
+  const [returnLastFrame, setReturnLastFrame] = useState(false);
+  const [thinkingLevel, setThinkingLevel]   = useState('default');
+  const [mediaResolution, setMediaResolution] = useState('default');
 
   /* ── Files ── */
-  const [refFile, setRefFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [refFile, setRefFile]   = useState<File | null>(null);
+  const fileInputRef  = useRef<HTMLInputElement>(null);
   const feedEndRef = useRef<HTMLDivElement>(null);
 
   /* ── Effects ── */
@@ -262,10 +266,10 @@ function App() {
       fd.append('history', JSON.stringify(activeSession?.messages.map(m => ({ role: m.role, content: m.content })) ?? []));
       if (refFile) fd.append('reference_image', refFile);
       const res = await axios.post(`${API_BASE}/api/chat`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      updateMsgs(p => [...p, { id: (Date.now() + 1).toString(), role: 'ai', content: res.data.response, timestamp: new Date().toLocaleTimeString() }]);
+      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: res.data.response, timestamp: new Date().toLocaleTimeString() }]);
       setRefFile(null);
     } catch (e: any) {
-      updateMsgs(p => [...p, { id: (Date.now() + 1).toString(), role: 'ai', content: `**Error:** ${e.response?.data?.detail || e.message}`, timestamp: new Date().toLocaleTimeString() }]);
+      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.response?.data?.detail || e.message}`, timestamp: new Date().toLocaleTimeString() }]);
     } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
   };
 
@@ -289,32 +293,44 @@ function App() {
       const fd = new FormData();
       fd.append('type', type); fd.append('prompt', up); fd.append('model_keyword', model);
       fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
-
+      
       // Shared params
-      if (negPromptImg.trim()) fd.append('negative_prompt', negPromptImg.trim());
-      if (guidanceImg) fd.append('guidance_scale', guidanceImg);
-      if (seedImg) fd.append('seed', seedImg);
-      if (resolution) fd.append('resolution', resolution);
+      if (negPromptImg.trim())  fd.append('negative_prompt',     negPromptImg.trim());
+      if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
+      if (seedImg)              fd.append('seed',                seedImg);
+      if (resolution)           fd.append('resolution',          resolution);
 
       if (isImg) {
-        if (numOutputsImg > 1) fd.append('num_outputs', numOutputsImg.toString());
-        if (formatImg !== 'webp') fd.append('output_format', formatImg);
-        if (qualityImg !== 80) fd.append('output_quality', qualityImg.toString());
-        if (stepsImg) fd.append('num_inference_steps', stepsImg);
-      } else {
-        fd.append('duration', durationVid);
+        if (numOutputsImg > 1)    fd.append('num_outputs',         numOutputsImg.toString());
+        if (formatImg !== 'webp') fd.append('output_format',       formatImg);
+        if (qualityImg !== 80)    fd.append('output_quality',      qualityImg.toString());
+        if (stepsImg)             fd.append('num_inference_steps', stepsImg);
+        if (hd) fd.append('hd', String(hd));
+        if (stylize !== 0) fd.append('stylize', String(stylize));
+        if (chaos !== 0) fd.append('chaos', String(chaos));
+        if (weird !== 0) fd.append('weird', String(weird));
+        if (sref) fd.append('sref', sref);
+        if (thinkingLevel !== 'default') fd.append('thinking_level', thinkingLevel);
+        if (mediaResolution !== 'default') fd.append('media_resolution', mediaResolution);
+        fd.append('generate_audio', String(generateAudio));
+        fd.append('resolution', resolution);
+      } else { 
+        fd.append('duration', durationVid); 
         if (generateAudio) fd.append('generate_audio', 'true');
+        if (watermark) fd.append('watermark', String(watermark));
+        if (returnLastFrame) fd.append('return_last_frame', String(returnLastFrame));
+        fd.append('generate_audio', String(generateAudio));
+        fd.append('resolution', resolution);
       }
       if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      updateMsgs(p => [...p, {
-        id: (Date.now() + 1).toString(), role: 'ai',
+      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai',
         content: `**Task Submitted**\nID: ${res.data.prediction_id}\n*Model: ${mdl?.name}*\n\nYour ${type} is being generated on Atlas Cloud. It will appear in the Assets tab when ready.`,
         timestamp: new Date().toLocaleTimeString(),
       }]);
       setRefFile(null);
     } catch (e: any) {
-      updateMsgs(p => [...p, { id: (Date.now() + 1).toString(), role: 'ai', content: `**Error:** ${e.message}`, timestamp: new Date().toLocaleTimeString() }]);
+      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.message}`, timestamp: new Date().toLocaleTimeString() }]);
     } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
   };
 
@@ -328,7 +344,7 @@ function App() {
 
   /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
-    { id: 'Home', label: 'Home', icon: Home },
+    { id: 'Home',   label: 'Home',   icon: Home         },
     { id: 'Assets', label: 'Assets', icon: FolderKanban },
   ];
 
@@ -440,10 +456,11 @@ function App() {
           </button>
 
           {/* Health */}
-          <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-[11px] font-semibold ${healthStatus.includes('Online')
-            ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400'
-            : 'border-rose-500/20 bg-rose-500/8 text-rose-400'
-            }`}>
+          <div className={`flex items-center gap-2 rounded-2xl border px-3 py-2 text-[11px] font-semibold ${
+            healthStatus.includes('Online')
+              ? 'border-emerald-500/20 bg-emerald-500/8 text-emerald-400'
+              : 'border-rose-500/20 bg-rose-500/8 text-rose-400'
+          }`}>
             <span className={`h-1.5 w-1.5 rounded-full ${healthStatus.includes('Online') ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
             {healthStatus}
           </div>
@@ -475,8 +492,9 @@ function App() {
                     </h1>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${isLight ? `${cfg.border} bg-current/5 ${cfg.accentL}` : `${cfg.border} bg-white/5 ${cfg.accent}`
-                      }`}>
+                    <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] ${
+                      isLight ? `${cfg.border} bg-current/5 ${cfg.accentL}` : `${cfg.border} bg-white/5 ${cfg.accent}`
+                    }`}>
                       <span className={`h-1.5 w-1.5 animate-pulse rounded-full bg-current`} />
                       Live
                     </span>
@@ -603,21 +621,21 @@ function App() {
               {/* ── Prompt Bar ── */}
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <div className="mx-auto max-w-4xl">
-
+                  
                   {/* Settings Panel is now external */}
 
                   <div className={`glass-elevated rounded-[24px] p-2 transition-all duration-300 hover:-translate-y-0.5`}>
-
+                    
                     {/* Image Preview */}
                     {refFile && (
                       <div className="relative self-start mb-2 ml-4 mt-2 group">
-                        <img
-                          src={refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : ''}
-                          alt="Reference"
+                        <img 
+                          src={refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : ''} 
+                          alt="Reference" 
                           className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
                         />
-                        {refFile.type.startsWith('video') && <span className="absolute inset-0 flex items-center justify-center text-white bg-black/40 rounded-[12px]"><Film size={20} /></span>}
-                        <button
+                        {refFile.type.startsWith('video') && <span className="absolute inset-0 flex items-center justify-center text-white bg-black/40 rounded-[12px]"><Film size={20}/></span>}
+                        <button 
                           type="button"
                           onClick={() => setRefFile(null)}
                           className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
@@ -631,8 +649,9 @@ function App() {
                       {/* Upload Button */}
                       <button type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition duration-200 ${isLight ? 'text-slate-500 hover:bg-black/5 hover:text-slate-900' : 'text-slate-400 hover:bg-white/10 hover:text-white'
-                          }`}>
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition duration-200 ${
+                          isLight ? 'text-slate-500 hover:bg-black/5 hover:text-slate-900' : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                        }`}>
                         <Plus size={22} className={refFile ? 'text-emerald-400' : ''} />
                       </button>
                       <input type="file" accept="image/*,video/*" ref={fileInputRef} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFile(e.target.files[0]); }} />
@@ -655,7 +674,7 @@ function App() {
                     {/* Bottom Controls Row */}
                     <div className="mt-2 flex items-center justify-between px-2 pb-1">
                       <div className="flex flex-wrap items-center gap-2">
-
+                        
                         {/* Mode Selector Pill */}
                         <div className={`flex items-center rounded-xl p-1 ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
                           <button onClick={() => setGenerateMode('Brief')} className={`flex h-8 px-3 items-center justify-center rounded-lg text-xs font-medium transition-all ${generateMode === 'Brief' ? (isLight ? 'bg-white text-slate-900 shadow' : 'bg-[#2a2b36] text-white shadow') : (isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-white')}`}>
@@ -682,11 +701,12 @@ function App() {
                             />
                           </div>
                         ) : (
-                          <button
+                          <button 
                             type="button"
                             onClick={() => setShowSettings(true)}
-                            className={`flex h-9 items-center gap-2 rounded-xl border px-4 transition-all ${isLight ? 'border-black/8 bg-white text-slate-700 hover:bg-slate-50' : 'border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'
-                              }`}
+                            className={`flex h-9 items-center gap-2 rounded-xl border px-4 transition-all ${
+                              isLight ? 'border-black/8 bg-white text-slate-700 hover:bg-slate-50' : 'border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'
+                            }`}
                           >
                             <Settings size={14} className={isLight ? 'text-slate-400' : 'text-slate-500'} />
                             <span className="text-xs font-semibold truncate max-w-[150px]">
@@ -767,6 +787,24 @@ function App() {
         setResolution={setResolution}
         generateAudio={generateAudio}
         setGenerateAudio={setGenerateAudio}
+        hd={hd}
+        setHd={setHd}
+        stylize={stylize}
+        setStylize={setStylize}
+        chaos={chaos}
+        setChaos={setChaos}
+        weird={weird}
+        setWeird={setWeird}
+        sref={sref}
+        setSref={setSref}
+        watermark={watermark}
+        setWatermark={setWatermark}
+        returnLastFrame={returnLastFrame}
+        setReturnLastFrame={setReturnLastFrame}
+        thinkingLevel={thinkingLevel}
+        setThinkingLevel={setThinkingLevel}
+        mediaResolution={mediaResolution}
+        setMediaResolution={setMediaResolution}
       />
     </div>
   );

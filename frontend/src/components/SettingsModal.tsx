@@ -33,6 +33,24 @@ interface SettingsModalProps {
   setResolution: (v: string) => void;
   generateAudio: boolean;
   setGenerateAudio: (v: boolean) => void;
+  hd: boolean;
+  setHd: (v: boolean) => void;
+  stylize: number;
+  setStylize: (v: number) => void;
+  chaos: number;
+  setChaos: (v: number) => void;
+  weird: number;
+  setWeird: (v: number) => void;
+  sref: string;
+  setSref: (v: string) => void;
+  watermark: boolean;
+  setWatermark: (v: boolean) => void;
+  returnLastFrame: boolean;
+  setReturnLastFrame: (v: boolean) => void;
+  thinkingLevel: string;
+  setThinkingLevel: (v: string) => void;
+  mediaResolution: string;
+  setMediaResolution: (v: string) => void;
 }
 
 export function SettingsModal({
@@ -47,7 +65,14 @@ export function SettingsModal({
   steps, setSteps,
   seed, setSeed,
   resolution, setResolution,
-  generateAudio, setGenerateAudio
+  generateAudio, setGenerateAudio,
+  hd, setHd,
+  stylize, setStylize,
+  chaos, setChaos,
+  weird, setWeird,
+  sref, setSref,
+  watermark, setWatermark,
+  returnLastFrame, setReturnLastFrame
 }: SettingsModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const activeModalModel = models.find(m => m.id === selectedModelId);
@@ -374,6 +399,10 @@ export function SettingsModal({
                   <option value="webp" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>WebP</option>
                   <option value="png" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>PNG</option>
                   <option value="jpg" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>JPG</option>
+                  <option value="mp4" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>MP4</option>
+                  <option value="mov" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>MOV</option>
+                  <option value="mp4" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>MP4</option>
+                  <option value="mov" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>MOV</option>
                 </select>
               </div>
             )}
@@ -384,6 +413,136 @@ export function SettingsModal({
                 <input type="number" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="Random" value={seed} onChange={e => setSeed(e.target.value)} />
               </div>
             )}
+
+            {hasParam('hd') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Native 2K HD</span>
+                <button
+                  onClick={() => setHd(!hd)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hd ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hd ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+            
+            {hasParam('watermark') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Watermark</span>
+                <button
+                  onClick={() => setWatermark(!watermark)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${watermark ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${watermark ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+
+            {hasParam('return_last_frame') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Return Last Frame</span>
+                <button
+                  onClick={() => setReturnLastFrame(!returnLastFrame)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${returnLastFrame ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${returnLastFrame ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+            
+            {hasParam('stylize') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Stylize</span>
+                <input type="number" min="0" max="1000" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={stylize} onChange={e => setStylize(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('chaos') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Chaos</span>
+                <input type="number" min="0" max="100" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={chaos} onChange={e => setChaos(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('weird') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Weird</span>
+                <input type="number" min="0" max="3000" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={weird} onChange={e => setWeird(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('sref') && (
+              <div className={`flex flex-col border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold mb-2 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Style Reference (sref URL)</span>
+                <input type="text" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-2 text-sm outline-none w-full ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="https://..." value={sref} onChange={e => setSref(e.target.value)} />
+              </div>
+            )}
+
+
+            {hasParam('hd') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Native 2K HD</span>
+                <button
+                  onClick={() => setHd(!hd)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${hd ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${hd ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+            
+            {hasParam('watermark') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Watermark</span>
+                <button
+                  onClick={() => setWatermark(!watermark)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${watermark ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${watermark ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+
+            {hasParam('return_last_frame') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Return Last Frame</span>
+                <button
+                  onClick={() => setReturnLastFrame(!returnLastFrame)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${returnLastFrame ? 'bg-violet-500' : (isLight ? 'bg-slate-300' : 'bg-slate-600')}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${returnLastFrame ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+            
+            {hasParam('stylize') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Stylize</span>
+                <input type="number" min="0" max="1000" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={stylize} onChange={e => setStylize(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('chaos') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Chaos</span>
+                <input type="number" min="0" max="100" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={chaos} onChange={e => setChaos(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('weird') && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Weird</span>
+                <input type="number" min="0" max="3000" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="0" value={weird} onChange={e => setWeird(Number(e.target.value))} />
+              </div>
+            )}
+            
+            {hasParam('sref') && (
+              <div className={`flex flex-col border-b ${borderCol} pb-5 mb-5`}>
+                <span className={`text-sm font-semibold mb-2 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Style Reference (sref URL)</span>
+                <input type="text" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-2 text-sm outline-none w-full ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="https://..." value={sref} onChange={e => setSref(e.target.value)} />
+              </div>
+            )}
+
 
             {hasParam('guidance_scale') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
