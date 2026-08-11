@@ -18,13 +18,11 @@ ATLAS_BASE_URL = "https://api.atlascloud.ai/v1"
 ATLAS_API_KEY = os.getenv("ATLAS_API_KEY", "")
 DEFAULT_CHAT_MODEL = "openai/gpt-5.6-sol"
 
-# Load a trimmed workflow summary to avoid token bloat (only first 8000 chars)
+# Load the full unified master workflow without truncation
 BASE_DIR = Path(__file__).resolve().parent.parent
 try:
-    with open(BASE_DIR / "director_os_master_workflow.txt", "r", encoding="utf-8") as f:
-        _full_workflow = f.read()
-    # Use only the first 8000 chars to prevent context overflow on every request
-    MASTER_WORKFLOW = _full_workflow[:8000] + ("\n\n[...workflow truncated for context efficiency...]" if len(_full_workflow) > 8000 else "")
+    with open(BASE_DIR / "DIRECTOR_OS_V19_UNIFIED_MASTER.md", "r", encoding="utf-8") as f:
+        MASTER_WORKFLOW = f.read()
 except Exception:
     MASTER_WORKFLOW = "Master workflow context is unavailable."
 
