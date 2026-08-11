@@ -492,7 +492,7 @@ function App() {
 
               {/* Feed */}
               <div className="flex-1 overflow-y-auto px-5 pt-5 relative">
-                <div className="mx-auto flex max-w-3xl flex-col gap-4 pb-48">
+                <div className="mx-auto flex max-w-3xl flex-col gap-4">
 
                   {/* Creative Flow — Home only */}
                   {activeTab === 'Home' && (
@@ -568,7 +568,8 @@ function App() {
                       </div>
                     </div>
                   )}
-                  <div ref={feedEndRef} />
+                  {/* Spacer block to prevent collision with absolute prompt bar */}
+                  <div ref={feedEndRef} className="h-[260px] w-full shrink-0" />
                 </div>
               </div>
 
@@ -577,9 +578,27 @@ function App() {
                 <div className="mx-auto max-w-3xl">
                   <div className={`glass-elevated rounded-[24px] p-3 transition-all duration-300 hover:-translate-y-0.5`}>
 
-                    {/* Home: model chip */}
-                    {activeTab === 'Home' && (
-                      <div className="mb-2.5 flex items-center gap-2">
+                    {/* Top Row: Model and Upload */}
+                    <div className="mb-2.5 flex items-center gap-2">
+                      {/* Upload (Left) */}
+                      <button type="button"
+                        title="Upload reference file"
+                        onClick={() => {
+                          if (activeTab === 'Home')  fileInputRefHome.current?.click();
+                          if (activeTab === 'Image') fileInputRefImage.current?.click();
+                          if (activeTab === 'Video') fileInputRefVideo.current?.click();
+                        }}
+                        className={`glass-chip flex h-8 w-8 items-center justify-center rounded-full transition duration-200 hover:-translate-y-0.5 ${
+                          isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                        }`}>
+                        <Upload size={14} className={
+                          (activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)
+                            ? 'text-emerald-400' : ''
+                        } />
+                      </button>
+
+                      {/* Home: model chip (Right) */}
+                      {activeTab === 'Home' && (
                         <div className="glass-chip flex items-center rounded-full">
                           <CustomSelect
                             label="Model" isLight={isLight}
@@ -587,26 +606,10 @@ function App() {
                             options={HOME_MODELS} accentClass={cfg.accent}
                           />
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     <div className="flex items-end gap-2.5">
-                      {/* Upload */}
-                      <button type="button"
-                        onClick={() => {
-                          if (activeTab === 'Home')  fileInputRefHome.current?.click();
-                          if (activeTab === 'Image') fileInputRefImage.current?.click();
-                          if (activeTab === 'Video') fileInputRefVideo.current?.click();
-                        }}
-                        className={`flex h-10 w-10 items-center justify-center rounded-xl border transition duration-200 hover:-translate-y-0.5 ${
-                          isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900' : 'border-white/10 bg-white/6 text-slate-400 hover:bg-white/10 hover:text-white'
-                        }`}>
-                        <Upload size={16} className={
-                          (activeTab === 'Home' && refFileHome) || (activeTab === 'Image' && refFileImage) || (activeTab === 'Video' && refFileVideo)
-                            ? 'text-emerald-400' : ''
-                        } />
-                      </button>
-
                       <input type="file" accept="image/*" ref={fileInputRefHome}  className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileHome(e.target.files[0]); }} />
                       <input type="file" accept="image/*" ref={fileInputRefImage} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileImage(e.target.files[0]); }} />
                       <input type="file" accept="image/*" ref={fileInputRefVideo} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFileVideo(e.target.files[0]); }} />
