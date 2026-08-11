@@ -408,10 +408,7 @@ async def generate_asset(
             }
 
             if "aspect_ratio" in supported:
-                if model_info["provider"] in ["MiniMax", "ByteDance", "Kling", "Wan"]:
-                    payload["ratio"] = aspect_ratio
-                else:
-                    payload["aspect_ratio"] = aspect_ratio
+                payload["aspect_ratio"] = aspect_ratio
 
             if type == "Video" and "duration" in supported:
                 try:
