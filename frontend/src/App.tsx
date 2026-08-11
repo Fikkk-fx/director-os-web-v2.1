@@ -925,6 +925,8 @@ function App() {
         setHd={setHd}
         stylize={stylize}
         setStylize={setStylize}
+        motion={motion}
+        setMotion={setMotion}
         chaos={chaos}
         setChaos={setChaos}
         weird={weird}
