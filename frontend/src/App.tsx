@@ -198,9 +198,12 @@ function App() {
 
   /* ── Models ── */
   const [models, setModels]                         = useState<any[]>([]);
-  const [selectedImageModel, setSelectedImageModel] = useState('');
-  const [selectedVideoModel, setSelectedVideoModel] = useState('');
+  const [selectedImageModel, setSelectedImageModel] = useState('openai/gpt-image-2/text-to-image');
+  const [selectedVideoModel, setSelectedVideoModel] = useState('bytedance/seedance-2.5/text-to-video');
   const [selectedHomeModel, setSelectedHomeModel]   = useState('openai/gpt-5.6-sol');
+
+  /* ── Generated Assets ── */
+  const [assets, setAssets] = useState<Array<{id: string; type: 'Image'|'Video'; url: string; prompt: string; model: string; modelName: string; ts: string}>>([]);
 
   /* ── Media settings ── */
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
@@ -240,10 +243,19 @@ function App() {
     axios.get(`${API_BASE}/api/health`).then(() => setHealthStatus('System: Online')).catch(() => setHealthStatus('System: Offline'));
     axios.get(`${API_BASE}/api/atlas/models`).then(res => {
       setModels(res.data.models);
-      const fv = res.data.models.find((m: any) => m.type === 'Video');
-      const fi = res.data.models.find((m: any) => m.type === 'Image');
-      if (fv) setSelectedVideoModel(fv.id);
-      if (fi) setSelectedImageModel(fi.id);
+      // Explicit defaults — validate they exist in catalogue
+      const DEFAULT_IMAGE = 'openai/gpt-image-2/text-to-image';
+      const DEFAULT_VIDEO = 'bytedance/seedance-2.5/text-to-video';
+      const imgExists = res.data.models.some((m: any) => m.id === DEFAULT_IMAGE);
+      const vidExists = res.data.models.some((m: any) => m.id === DEFAULT_VIDEO);
+      if (!imgExists) {
+        const fi = res.data.models.find((m: any) => m.type === 'Image');
+        if (fi) setSelectedImageModel(fi.id);
+      }
+      if (!vidExists) {
+        const fv = res.data.models.find((m: any) => m.type === 'Video');
+        if (fv) setSelectedVideoModel(fv.id);
+      }
     }).catch(err => console.error('Failed to load models', err));
   }, []);
 
@@ -280,8 +292,11 @@ function App() {
     if (!up || !model) return;
     if (!activeSessionId) createSession('Home');
     setPrompt('');
-    const mdl = models.find(m => m.id === model);
+    const mdl = models.find((m: any) => m.id === model);
+    const supported: string[] = mdl?.supported_params ?? [];
+    const has = (p: string) => supported.includes(p);
     const tid = activeSessionId!;
+
     updateMsgs(p => [...p, {
       id: Date.now().toString(), role: 'user', content: up,
       imageUrl: refFile && refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : undefined,
@@ -289,49 +304,111 @@ function App() {
       timestamp: new Date().toLocaleTimeString(),
     }]);
     setGeneratingSessions(p => ({ ...p, [tid]: true }));
+
     try {
       const fd = new FormData();
-      fd.append('type', type); fd.append('prompt', up); fd.append('model_keyword', model);
-      fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
-      
-      // Shared params
-      if (negPromptImg.trim())  fd.append('negative_prompt',     negPromptImg.trim());
-      if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
-      if (seedImg)              fd.append('seed',                seedImg);
-      if (resolution)           fd.append('resolution',          resolution);
+      fd.append('type', type);
+      fd.append('prompt', up);
+      fd.append('model_keyword', model);
 
-      if (isImg) {
-        if (numOutputsImg > 1)    fd.append('num_outputs',         numOutputsImg.toString());
-        if (formatImg !== 'webp') fd.append('output_format',       formatImg);
-        if (qualityImg !== 80)    fd.append('output_quality',      qualityImg.toString());
-        if (stepsImg)             fd.append('num_inference_steps', stepsImg);
-        if (hd) fd.append('hd', String(hd));
-        if (stylize !== 0) fd.append('stylize', String(stylize));
-        if (chaos !== 0) fd.append('chaos', String(chaos));
-        if (weird !== 0) fd.append('weird', String(weird));
-        if (sref) fd.append('sref', sref);
-        if (thinkingLevel !== 'default') fd.append('thinking_level', thinkingLevel);
-        if (mediaResolution !== 'default') fd.append('media_resolution', mediaResolution);
-        fd.append('generate_audio', String(generateAudio));
-        fd.append('resolution', resolution);
-      } else { 
-        fd.append('duration', durationVid); 
-        if (generateAudio) fd.append('generate_audio', 'true');
-        if (watermark) fd.append('watermark', String(watermark));
-        if (returnLastFrame) fd.append('return_last_frame', String(returnLastFrame));
-        fd.append('generate_audio', String(generateAudio));
-        fd.append('resolution', resolution);
-      }
+      // Always send aspect_ratio and duration — backend filters by supported_params
+      fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
+      if (!isImg) fd.append('duration', durationVid);
+
+      // Only append params supported by this model
+      if (has('negative_prompt') && negPromptImg.trim()) fd.append('negative_prompt', negPromptImg.trim());
+      if (has('guidance_scale')  && guidanceImg)         fd.append('guidance_scale', guidanceImg);
+      if (has('seed')            && seedImg)             fd.append('seed', seedImg);
+      if (has('resolution')      && resolution)          fd.append('resolution', resolution);
+      if (has('num_outputs')     && numOutputsImg > 1)   fd.append('num_outputs', numOutputsImg.toString());
+      if (has('output_format')   && formatImg !== 'webp')fd.append('output_format', formatImg);
+      if (has('output_quality')  && qualityImg !== 80)   fd.append('output_quality', qualityImg.toString());
+      if (has('num_inference_steps') && stepsImg)        fd.append('num_inference_steps', stepsImg);
+      if (has('hd')              && hd)                  fd.append('hd', String(hd));
+      if (has('stylize')         && stylize !== 0)       fd.append('stylize', String(stylize));
+      if (has('chaos')           && chaos !== 0)         fd.append('chaos', String(chaos));
+      if (has('weird')           && weird !== 0)         fd.append('weird', String(weird));
+      if (has('sref')            && sref)                fd.append('sref', sref);
+      if (has('thinking_level')  && thinkingLevel !== 'default') fd.append('thinking_level', thinkingLevel);
+      if (has('media_resolution')&& mediaResolution !== 'default') fd.append('media_resolution', mediaResolution);
+      if (has('generate_audio'))                         fd.append('generate_audio', String(generateAudio));
+      if (has('watermark')       && watermark)           fd.append('watermark', String(watermark));
+      if (has('return_last_frame')&& returnLastFrame)    fd.append('return_last_frame', String(returnLastFrame));
+
       if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
+
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const predId = res.data.prediction_id;
+      const modelName = res.data.model_name || mdl?.name || model;
+
+      setRefFile(null);
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai',
-        content: `**Task Submitted**\nID: ${res.data.prediction_id}\n*Model: ${mdl?.name}*\n\nYour ${type} is being generated on Atlas Cloud. It will appear in the Assets tab when ready.`,
+        content: `**Generating ${type}...**\n*Model: ${modelName}*\n\nID: \`${predId}\`\nPolling for result...`,
         timestamp: new Date().toLocaleTimeString(),
       }]);
-      setRefFile(null);
+
+      // Poll Atlas status until completed or failed
+      let attempts = 0;
+      const maxAttempts = 60; // ~5 min at 5s intervals
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        try {
+          const statusRes = await axios.get(`${API_BASE}/api/atlas/status/${predId}`);
+          const { status, output } = statusRes.data;
+
+          if (status === 'completed' || status === 'succeeded' || output) {
+            clearInterval(pollInterval);
+            setGeneratingSessions(p => ({ ...p, [tid]: false }));
+
+            if (output) {
+              // Add to assets
+              setAssets(prev => [{
+                id: predId,
+                type: type as 'Image' | 'Video',
+                url: output,
+                prompt: up,
+                model: model,
+                modelName,
+                ts: new Date().toLocaleTimeString(),
+              }, ...prev]);
+              updateMsgs(p => [...p, { id: (Date.now()+2).toString(), role: 'ai',
+                content: `✅ **${type} ready!** Check the Assets tab to view your result.`,
+                timestamp: new Date().toLocaleTimeString(),
+              }]);
+            } else {
+              updateMsgs(p => [...p, { id: (Date.now()+2).toString(), role: 'ai',
+                content: `✅ **${type} submitted.** No preview URL returned — check Atlas dashboard.`,
+                timestamp: new Date().toLocaleTimeString(),
+              }]);
+            }
+          } else if (status === 'failed' || status === 'error') {
+            clearInterval(pollInterval);
+            setGeneratingSessions(p => ({ ...p, [tid]: false }));
+            updateMsgs(p => [...p, { id: (Date.now()+2).toString(), role: 'ai',
+              content: `❌ **Generation failed.** Atlas status: ${status}`,
+              timestamp: new Date().toLocaleTimeString(),
+            }]);
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            setGeneratingSessions(p => ({ ...p, [tid]: false }));
+            updateMsgs(p => [...p, { id: (Date.now()+2).toString(), role: 'ai',
+              content: `⏳ **Generation timed out.** ID: \`${predId}\` — still may complete on Atlas.`,
+              timestamp: new Date().toLocaleTimeString(),
+            }]);
+          }
+        } catch {
+          // Network hiccup — keep polling
+        }
+      }, 5000);
+
     } catch (e: any) {
-      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.message}`, timestamp: new Date().toLocaleTimeString() }]);
-    } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
+      const detail = e.response?.data?.detail || e.message;
+      updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai',
+        content: `❌ **Error:** ${detail}`,
+        timestamp: new Date().toLocaleTimeString(),
+      }]);
+      setGeneratingSessions(p => ({ ...p, [tid]: false }));
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, fn: () => void) => {
@@ -749,21 +826,70 @@ function App() {
         ) : (
           /* ══ ASSETS ══ */
           <div className="flex-1 overflow-y-auto p-8">
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-5xl">
               <div className="mb-8 flex items-center justify-between">
                 <div>
                   <p className={`mb-1 text-[10px] font-bold uppercase tracking-[0.22em] ${isLight ? cfg.accentL : cfg.accent}`}>Library</p>
                   <h1 className={`text-3xl font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>Asset Library</h1>
-                  <p className={`mt-1.5 text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Review your generated images and videos here.</p>
+                  <p className={`mt-1.5 text-sm ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Generated images and videos from this session.</p>
                 </div>
-                <span className={`rounded-full border px-3 py-1.5 text-xs font-bold ${isLight ? `${cfg.border} ${cfg.accentL}` : `${cfg.border} ${cfg.accent}`} bg-white/5`}>0 assets</span>
+                <span className={`rounded-full border px-3 py-1.5 text-xs font-bold ${isLight ? `${cfg.border} ${cfg.accentL}` : `${cfg.border} ${cfg.accent}`} bg-white/5`}>{assets.length} asset{assets.length !== 1 ? 's' : ''}</span>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                <div className={`soft-panel-hover flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed ${isLight ? 'border-slate-300/60 text-slate-400' : 'border-white/10 text-slate-600'}`}>
-                  <ImageIcon size={28} className="opacity-40" />
-                  <span className="text-sm font-medium">No assets generated yet.</span>
+
+              {assets.length === 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  <div className={`soft-panel-hover flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed ${isLight ? 'border-slate-300/60 text-slate-400' : 'border-white/10 text-slate-600'}`}>
+                    <ImageIcon size={28} className="opacity-40" />
+                    <span className="text-sm font-medium">No assets yet — generate something!</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {assets.map(asset => (
+                    <div key={asset.id} className={`group relative overflow-hidden rounded-[22px] border ${isLight ? 'border-black/8 bg-white' : 'border-white/8 bg-white/4'} shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}>
+                      {/* Media */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-black/10">
+                        {asset.type === 'Video' ? (
+                          <video
+                            src={asset.url}
+                            controls
+                            className="h-full w-full object-cover"
+                            poster=""
+                          />
+                        ) : (
+                          <img
+                            src={asset.url}
+                            alt={asset.prompt}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )}
+                        {/* Download button */}
+                        <a
+                          href={asset.url}
+                          download={`director-os-${asset.type.toLowerCase()}-${asset.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white opacity-0 backdrop-blur-md transition-all duration-200 group-hover:opacity-100 hover:bg-black/80"
+                        >
+                          <Download size={14} />
+                        </a>
+                        {/* Type badge */}
+                        <span className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${asset.type === 'Video' ? 'bg-orange-500/90 text-white' : 'bg-violet-500/90 text-white'}`}>
+                          {asset.type}
+                        </span>
+                      </div>
+                      {/* Meta */}
+                      <div className="p-4">
+                        <p className={`text-xs font-semibold line-clamp-2 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{asset.prompt}</p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{asset.modelName}</span>
+                          <span className={`text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{asset.ts}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
