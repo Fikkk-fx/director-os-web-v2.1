@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, X, ChevronDown, Star, Monitor, Smartphone, LayoutDashboard, LayoutTemplate } from 'lucide-react';
+import { Search, X, ChevronDown, Check, Star, Monitor, Smartphone, LayoutDashboard, LayoutTemplate, Shuffle, BarChart2, Zap } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -65,6 +65,17 @@ quality, setQuality,
   const textMuted = isLight ? 'text-slate-500' : 'text-slate-400';
   const btnHover = isLight ? 'hover:bg-slate-200' : 'hover:bg-white/5';
   
+
+  const [selectedProvider, setSelectedProvider] = useState<string>('All');
+  const [isProviderOpen, setIsProviderOpen] = useState(false);
+
+  // Dynamic providers from models
+
+  // Extract unique providers dynamically
+  const uniqueProviders = useMemo(() => {
+    const provs = new Set(models.map(m => getProvider(m.id)));
+    return ['All', ...Array.from(provs).sort()];
+  }, [models]);
   // Helpers to get Provider from ID
   const getProvider = (id: string) => {
     const parts = id.split('/');
@@ -104,12 +115,41 @@ quality, setQuality,
                   onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button className={`flex items-center gap-1 rounded-xl border ${borderCol} px-4 py-2 text-sm font-medium ${isLight ? 'bg-white hover:bg-slate-50' : 'bg-[#1e1e24] hover:bg-white/5'}`}>
-                Providers <ChevronDown size={14} />
-              </button>
-              <button className={`flex items-center gap-1 rounded-xl border ${borderCol} px-4 py-2 text-sm font-medium ${isLight ? 'bg-white hover:bg-slate-50' : 'bg-[#1e1e24] hover:bg-white/5'}`}>
-                Resolutions <ChevronDown size={14} />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsProviderOpen(!isProviderOpen)}
+                  className={`flex items-center gap-1 rounded-xl border ${borderCol} px-4 py-2 text-sm font-medium ${isLight ? 'bg-white hover:bg-slate-50' : 'bg-[#1e1e24] hover:bg-white/5'}`}
+                >
+                  {selectedProvider === 'All' ? 'Providers' : selectedProvider} <ChevronDown size={14} />
+                </button>
+                {isProviderOpen && (
+                  <div className={`absolute top-11 right-0 z-50 min-w-[200px] rounded-xl border ${borderCol} p-2 shadow-xl ${isLight ? 'bg-white' : 'bg-[#1e1e24]'}`}>
+                    {uniqueProviders.map(prov => (
+                      <button
+                        key={prov}
+                        onClick={() => { setSelectedProvider(prov); setIsProviderOpen(false); }}
+                        className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                          selectedProvider === prov 
+                            ? (isLight ? 'bg-slate-100 text-slate-900' : 'bg-white/10 text-white') 
+                            : (isLight ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300 hover:bg-white/5')
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {prov === 'All' && <Shuffle size={14} />}
+                          {prov === 'OpenAI' && <span className="font-bold text-xs">AI</span>}
+                          {prov === 'Google' && <span className="font-bold text-xs">G</span>}
+                          {prov === 'ByteDance' && <BarChart2 size={14} />}
+                          {prov === 'Stability AI' && <span className="font-bold text-xs">S.</span>}
+                          {prov === 'ImagineArt' && <Zap size={14} />}
+                          {prov !== 'All' && prov !== 'OpenAI' && prov !== 'Google' && prov !== 'ByteDance' && prov !== 'Stability AI' && prov !== 'ImagineArt' && <Star size={14} />}
+                          {prov}
+                        </div>
+                        {selectedProvider === prov && <Check size={14} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Model List */}
