@@ -2,10 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
   Film, Image as ImageIcon, Moon, Sun, Upload, Send, Video,
-  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, LogOut, Trash2, Plus,
+  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus,
 } from 'lucide-react';
-import { useAuth } from './AuthContext';
-import LoginPage from './LoginPage';
+// import { useAuth } from './AuthContext';
+// import LoginPage from './LoginPage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
