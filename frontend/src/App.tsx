@@ -5,8 +5,6 @@ import {
   Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X, Download, Settings,
 } from 'lucide-react';
 import { SettingsModal } from './components/SettingsModal';
-// import { useAuth } from './AuthContext';
-// import LoginPage from './LoginPage';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -105,9 +103,6 @@ function TypingDots({ color }: { color: string }) {
 
 /* ════════════════════ APP ════════════════════ */
 function App() {
-  // --- Auth Disabled for now ---
-  // const { user, logout } = useAuth();
-  // if (!user) return <LoginPage />;
 
   /* ── Theme ── */
   const [theme, setTheme] = useState<'light' | 'dark'>(() =>
@@ -311,9 +306,9 @@ function App() {
       fd.append('prompt', up);
       fd.append('model_keyword', model);
 
-      // Always send aspect_ratio and duration — backend filters by supported_params
-      fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
-      if (!isImg) fd.append('duration', durationVid);
+      // Only send aspect_ratio and duration if the model supports them
+      if (has('aspect_ratio')) fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
+      if (!isImg && has('duration')) fd.append('duration', durationVid);
 
       // Only append params supported by this model
       if (has('negative_prompt') && negPromptImg.trim()) fd.append('negative_prompt', negPromptImg.trim());
@@ -355,17 +350,21 @@ function App() {
         try {
           const statusRes = await axios.get(`${API_BASE}/api/atlas/status/${predId}`);
           const { status, output } = statusRes.data;
+          // Normalize output — Atlas may return a string or array of URLs
+          const outputUrl: string | null = Array.isArray(output)
+            ? (output.length > 0 ? output[0] : null)
+            : (output || null);
 
-          if (status === 'completed' || status === 'succeeded' || output) {
+          if (status === 'completed' || status === 'succeeded' || outputUrl) {
             clearInterval(pollInterval);
             setGeneratingSessions(p => ({ ...p, [tid]: false }));
 
-            if (output) {
+            if (outputUrl) {
               // Add to assets
               setAssets(prev => [{
                 id: predId,
                 type: type as 'Image' | 'Video',
-                url: output,
+                url: outputUrl,
                 prompt: up,
                 model: model,
                 modelName,
@@ -377,7 +376,7 @@ function App() {
               }]);
             } else {
               updateMsgs(p => [...p, { id: (Date.now()+2).toString(), role: 'ai',
-                content: `✅ **${type} submitted.** No preview URL returned — check Atlas dashboard.`,
+                content: `✅ **${type} submitted.** No output URL returned — check Atlas dashboard.`,
                 timestamp: new Date().toLocaleTimeString(),
               }]);
             }
@@ -414,10 +413,6 @@ function App() {
   const handleKeyDown = (e: React.KeyboardEvent, fn: () => void) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); fn(); }
   };
-
-  /* ── Computed ── */
-
-
 
   /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
