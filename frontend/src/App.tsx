@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import {
-  Film, Image as ImageIcon, Moon, Sun, Video, Settings2, Type, Wand2,
-  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X, Download,
+  Film, Image as ImageIcon, Moon, Sun, Video, Type, Wand2,
+  Home, FolderKanban, Sparkles, Bot, ChevronDown, Check, Trash2, Plus, X, Download, Settings,
 } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
 // import { useAuth } from './AuthContext';
 // import LoginPage from './LoginPage';
 
@@ -90,15 +91,6 @@ const HOME_MODELS: SelectOption[] = [
   { value: 'deepseek-ai/deepseek-v4-pro', label: 'Deepseek V4 Pro' },
 ];
 const modelLabel = (id: string) => HOME_MODELS.find(m => m.value === id)?.label ?? 'GPT-5.6 Sol';
-
-/* ── Small reusable label ─────────────────────────────────────── */
-function SettingLabel({ children, isLight }: { children: React.ReactNode; isLight: boolean }) {
-  return (
-    <p className={`mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
-      {children}
-    </p>
-  );
-}
 
 /* ── Dot bounce typing indicator ─────────────────────────────── */
 function TypingDots({ color }: { color: string }) {
@@ -214,13 +206,8 @@ function App() {
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
   const [aspectRatioVid, setAspectRatioVid] = useState('16:9');
   const [durationVid, setDurationVid]       = useState('5s');
-  const [negPromptImg, setNegPromptImg]     = useState('');
   const [numOutputsImg, setNumOutputsImg]   = useState<number>(1);
-  const [formatImg, setFormatImg]           = useState('webp');
   const [qualityImg, setQualityImg]         = useState<number>(80);
-  const [guidanceImg, setGuidanceImg]       = useState('');
-  const [stepsImg, setStepsImg]             = useState('');
-  const [seedImg, setSeedImg]               = useState('');
 
   /* ── Files ── */
   const [refFile, setRefFile]   = useState<File | null>(null);
@@ -291,13 +278,8 @@ function App() {
       fd.append('type', type); fd.append('prompt', up); fd.append('model_keyword', model);
       fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
       if (isImg) {
-        if (negPromptImg.trim())  fd.append('negative_prompt',    negPromptImg.trim());
         if (numOutputsImg > 1)    fd.append('num_outputs',         numOutputsImg.toString());
-        if (formatImg !== 'webp') fd.append('output_format',       formatImg);
         if (qualityImg !== 80)    fd.append('output_quality',      qualityImg.toString());
-        if (guidanceImg)          fd.append('guidance_scale',      guidanceImg);
-        if (stepsImg)             fd.append('num_inference_steps', stepsImg);
-        if (seedImg)              fd.append('seed',                seedImg);
       } else { fd.append('duration', durationVid); }
       if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
@@ -322,9 +304,7 @@ function App() {
     : models.find(m => m.id === selectedHomeModel);
   const hasParam = (p: string) => activeModel?.supported_params?.includes(p) ?? false;
 
-  const RATIO_OPTIONS: SelectOption[] = ['16:9','9:16','1:1','21:9','4:3','3:4'].map(r => ({ value: r, label: r }));
-
-  /* ── Helpers ── */
+  /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
     { id: 'Home',   label: 'Home',   icon: Home         },
     { id: 'Assets', label: 'Assets', icon: FolderKanban },
@@ -332,9 +312,7 @@ function App() {
 
   const tabCfg = (id: TabKey) => TAB_CFG[id];
 
-  const inputCls = `glass-input w-full`;
-
-  /* ════════════════ RENDER ════════════════ */
+  /* ── RENDER ────────────────────────────────────────── */
   return (
     <div className={`flex h-screen gap-3 p-3 ${isLight ? 'text-slate-900' : 'text-white'}`}>
 
@@ -606,58 +584,7 @@ function App() {
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <div className="mx-auto max-w-4xl">
                   
-                  {/* Settings Panel (Popover) */}
-                  {showSettings && generateMode !== 'Text' && (
-                    <div className="mb-3 rounded-2xl glass-elevated p-4 animate-in slide-in-from-bottom-2">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                          {generateMode} Settings
-                        </h3>
-                        <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-slate-300">
-                          <X size={16} />
-                        </button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {/* Ratio */}
-                        {hasParam('aspect_ratio') && (
-                          <div>
-                            <SettingLabel isLight={isLight}>Aspect Ratio</SettingLabel>
-                            <select className={inputCls}
-                              value={generateMode === 'Image' ? aspectRatioImg : aspectRatioVid}
-                              onChange={e => { generateMode === 'Image' ? setAspectRatioImg(e.target.value) : setAspectRatioVid(e.target.value); }}>
-                              {RATIO_OPTIONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                            </select>
-                          </div>
-                        )}
-
-                        {/* Duration */}
-                        {generateMode === 'Video' && (
-                          <div>
-                            <SettingLabel isLight={isLight}>Duration</SettingLabel>
-                            <select className={inputCls} value={durationVid} onChange={e => setDurationVid(e.target.value)}>
-                              {['5s','10s','15s','30s'].map(d => <option key={d} value={d}>{d.replace('s',' sec')}</option>)}
-                            </select>
-                          </div>
-                        )}
-
-                        {generateMode === 'Image' && hasParam('num_outputs') && <div><SettingLabel isLight={isLight}>Outputs</SettingLabel><input type="number" min={1} max={4} className={inputCls} value={numOutputsImg} onChange={e => setNumOutputsImg(parseInt(e.target.value)||1)} /></div>}
-                        {generateMode === 'Image' && hasParam('output_format') && <div><SettingLabel isLight={isLight}>Format</SettingLabel><select className={inputCls} value={formatImg} onChange={e => setFormatImg(e.target.value)}><option value="webp">WebP</option><option value="png">PNG</option><option value="jpg">JPG</option></select></div>}
-                        {generateMode === 'Image' && hasParam('output_quality') && <div><SettingLabel isLight={isLight}>Quality</SettingLabel><input type="number" min={1} max={100} className={inputCls} value={qualityImg} onChange={e => setQualityImg(parseInt(e.target.value)||80)} /></div>}
-                        {generateMode === 'Image' && hasParam('seed') && <div><SettingLabel isLight={isLight}>Seed</SettingLabel><input type="number" className={inputCls} placeholder="Random" value={seedImg} onChange={e => setSeedImg(e.target.value)} /></div>}
-                        {generateMode === 'Image' && hasParam('guidance_scale') && <div><SettingLabel isLight={isLight}>CFG Scale</SettingLabel><input type="number" step={0.1} className={inputCls} placeholder="Default" value={guidanceImg} onChange={e => setGuidanceImg(e.target.value)} /></div>}
-                        {generateMode === 'Image' && hasParam('num_inference_steps') && <div><SettingLabel isLight={isLight}>Steps</SettingLabel><input type="number" className={inputCls} placeholder="Default" value={stepsImg} onChange={e => setStepsImg(e.target.value)} /></div>}
-                      </div>
-
-                      {generateMode === 'Image' && hasParam('negative_prompt') && (
-                        <div className="mt-4">
-                          <SettingLabel isLight={isLight}>Negative Prompt</SettingLabel>
-                          <textarea className={`${inputCls} min-h-[56px]`} value={negPromptImg}
-                            onChange={e => setNegPromptImg(e.target.value)} placeholder="Ugly, blurry, distorted…" />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Settings Panel is now external */}
 
                   <div className={`glass-elevated rounded-[24px] p-2 transition-all duration-300 hover:-translate-y-0.5`}>
                     
@@ -724,38 +651,29 @@ function App() {
                         </div>
 
                         {/* Model Selector */}
-                        <div className="w-56">
-                          <CustomSelect
-                            label="Model" isLight={isLight}
-                            value={generateMode === 'Text' ? selectedHomeModel : generateMode === 'Image' ? selectedImageModel : selectedVideoModel}
-                            onChange={v => {
-                              if (generateMode === 'Text') setSelectedHomeModel(v);
-                              else if (generateMode === 'Image') setSelectedImageModel(v);
-                              else setSelectedVideoModel(v);
-                            }}
-                            options={generateMode === 'Text' ? HOME_MODELS : models.filter(m => m.type === generateMode)}
-                            accentClass={cfg.accent}
-                            compact={true}
-                          />
-                        </div>
-
-                        {/* Add References Button */}
-                        <button type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className={`hidden sm:flex h-9 px-3 items-center justify-center rounded-xl border text-xs font-medium transition duration-200 ${
-                            isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10 hover:text-slate-900' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-                          }`}>
-                          <ImageIcon size={13} className="mr-2 opacity-70" /> Add references
-                        </button>
-
-                        {/* Settings Toggle */}
-                        {generateMode !== 'Text' && (
-                          <button type="button"
-                            onClick={() => setShowSettings(!showSettings)}
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl border transition duration-200 ${
-                              showSettings ? (isLight ? 'bg-slate-200 border-slate-300 text-slate-800' : 'bg-white/20 border-white/20 text-white') : (isLight ? 'border-black/8 bg-black/5 text-slate-600 hover:bg-black/10' : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10')
-                            }`}>
-                            <Settings2 size={15} />
+                        {generateMode === 'Text' ? (
+                          <div className="w-56">
+                            <CustomSelect
+                              label="Model" isLight={isLight}
+                              value={selectedHomeModel}
+                              onChange={setSelectedHomeModel}
+                              options={HOME_MODELS}
+                              accentClass={cfg.accent}
+                              compact={true}
+                            />
+                          </div>
+                        ) : (
+                          <button 
+                            type="button"
+                            onClick={() => setShowSettings(true)}
+                            className={`flex h-9 items-center gap-2 rounded-xl border px-4 transition-all ${
+                              isLight ? 'border-black/8 bg-white text-slate-700 hover:bg-slate-50' : 'border-white/10 bg-white/5 text-slate-200 hover:bg-white/10'
+                            }`}
+                          >
+                            <Settings size={14} className={isLight ? 'text-slate-400' : 'text-slate-500'} />
+                            <span className="text-xs font-semibold truncate max-w-[150px]">
+                              {models.find(m => m.id === (generateMode === 'Image' ? selectedImageModel : selectedVideoModel))?.name || 'Select Model'}
+                            </span>
                           </button>
                         )}
                       </div>
@@ -799,6 +717,26 @@ function App() {
           </div>
         )}
       </main>
+
+      {/* MODALS */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        mode={generateMode === 'Text' ? 'Image' : generateMode}
+        models={models}
+        selectedModelId={generateMode === 'Image' ? selectedImageModel : selectedVideoModel}
+        onSelectModel={(id) => generateMode === 'Image' ? setSelectedImageModel(id) : setSelectedVideoModel(id)}
+        isLight={isLight}
+        aspectRatio={generateMode === 'Image' ? aspectRatioImg : aspectRatioVid}
+        setAspectRatio={(v) => generateMode === 'Image' ? setAspectRatioImg(v) : setAspectRatioVid(v)}
+        numOutputs={numOutputsImg}
+        setNumOutputs={setNumOutputsImg}
+        quality={qualityImg}
+        setQuality={setQualityImg}
+        duration={durationVid}
+        setDuration={setDurationVid}
+        hasParam={hasParam}
+      />
     </div>
   );
 }
