@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, X, ChevronDown, Star, Monitor, Smartphone, LayoutDashboard, LayoutTemplate } from 'lucide-react';
+import { Search, X, ChevronDown, Monitor, Smartphone, LayoutDashboard, LayoutTemplate } from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -214,47 +214,56 @@ export function SettingsModal({
               </div>
             </div>
 
-            {/* Model List */}
+            {/* Model List Grouped by Provider */}
             <div className="flex-1 overflow-y-auto px-5 pb-5">
-              <div className={`mb-3 text-xs font-semibold uppercase tracking-wider ${textMuted} flex items-center gap-1.5`}>
-                <Star size={12} /> Featured models
-              </div>
+              {availableProviders.map(provider => {
+                const pModels = filteredModels.filter(m => (m.provider || getProvider(m.id)) === provider);
+                if (pModels.length === 0) return null;
 
-              <div className="flex flex-col gap-2">
-                {filteredModels.map((m, idx) => {
-                  const isSelected = selectedModelId === m.id;
-                  const provider = getProvider(m.id);
-                  const isNew = idx % 5 === 0; // Fake "new" badge for aesthetics
-                  const logo = getLogo(m.name, m.id);
+                return (
+                  <div key={provider} className="mb-6">
+                    <div className={`mb-3 text-[10px] font-bold uppercase tracking-wider ${textMuted} flex items-center gap-1.5`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center border ${borderCol} ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
+                        {getLogo('', pModels[0].id) ? (
+                           <img src={getLogo('', pModels[0].id)!} alt={provider} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                           <span>{provider.charAt(0)}</span>
+                        )}
+                      </div>
+                      {provider}
+                    </div>
 
-                  return (
-                    <button
-                      key={m.id}
-                      onClick={() => onSelectModel(m.id)}
-                      className={`flex items-center gap-4 rounded-2xl border p-3 text-left transition-all ${isSelected
-                        ? `border-violet-500/50 ${isLight ? 'bg-violet-50 text-slate-900' : 'bg-violet-500/20 text-white'}`
-                        : `${borderCol} transparent ${btnHover} ${isLight ? 'text-slate-700' : 'text-slate-300'}`
-                        }`}
-                    >
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${borderCol} overflow-hidden ${isLight ? 'bg-black/5' : 'bg-white/5'}`}>
-                        {logo ? <img src={logo} alt={provider} className="h-full w-full object-cover" /> : <span className="font-bold text-sm">{provider.charAt(0)}</span>}
-                      </div>
-                      <div className="flex-1 overflow-hidden">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold truncate text-[15px]">{m.name}</span>
-                          {isNew && <span className="rounded-full bg-violet-600 px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">New</span>}
-                        </div>
-                        <p className={`truncate text-xs ${textMuted} mt-0.5`}>
-                          By {provider} • {m.type} Generation
-                        </p>
-                      </div>
-                    </button>
-                  )
-                })}
-                {filteredModels.length === 0 && (
-                  <div className={`text-center py-10 text-sm ${textMuted}`}>No models found.</div>
-                )}
-              </div>
+                    <div className="flex flex-col gap-2">
+                      {pModels.map((m) => {
+                        const isSelected = selectedModelId === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            onClick={() => onSelectModel(m.id)}
+                            className={`flex items-center gap-4 rounded-2xl border p-3 text-left transition-all ${isSelected
+                              ? `border-violet-500/50 ${isLight ? 'bg-violet-50 text-slate-900' : 'bg-violet-500/20 text-white'}`
+                              : `${borderCol} transparent ${btnHover} ${isLight ? 'text-slate-700' : 'text-slate-300'}`
+                              }`}
+                          >
+                            <div className="flex-1 overflow-hidden">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold truncate text-sm">{m.name}</span>
+                              </div>
+                              <p className={`truncate text-[10px] uppercase font-bold tracking-widest ${textMuted} mt-0.5`}>
+                                {m.mode || m.type}
+                              </p>
+                            </div>
+                            {isSelected && <div className="h-2 w-2 rounded-full bg-violet-500 shrink-0" />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              {filteredModels.length === 0 && (
+                <div className={`text-center py-10 text-sm ${textMuted}`}>No models found.</div>
+              )}
             </div>
           </div>
 
