@@ -279,10 +279,13 @@ async def get_models():
                             base_models[mid]["name"] = m.get("name", base_models[mid]["name"])
                             continue
                             
-                        # Otherwise categorize it
-                        if any(k in mid for k in ["image", "flux", "seedream", "dall-e", "gpt-image", "imagen", "nano-banana", "youchuan", "reve", "ideogram", "z-image", "mai-image"]):
+                        # Otherwise categorize it using API type if available
+                        api_type = m.get("type", "").capitalize()
+                        if api_type in ("Image", "Video"):
+                            mtype = api_type
+                        elif any(k in mid for k in ["image", "flux", "seedream", "dall-e", "gpt-image", "imagen", "nano-banana", "youchuan", "reve", "ideogram", "z-image", "mai-image", "krea"]):
                             mtype = "Image"
-                        elif any(k in mid for k in ["video", "seedance", "kling", "wan-2", "sora", "veo", "vidu", "pixverse", "hailuo", "minimax/h", "happyhorse", "grok-imagine-video"]):
+                        elif any(k in mid for k in ["video", "seedance", "kling", "wan", "sora", "veo", "vidu", "pixverse", "hailuo", "minimax/h", "happyhorse", "grok-imagine-video"]):
                             mtype = "Video"
                         else:
                             mtype = "LLM"
