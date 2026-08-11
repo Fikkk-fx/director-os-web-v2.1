@@ -300,10 +300,7 @@ async def generate_asset(
 ):
     """Submit generation task to Atlas Cloud REST API."""
     try:
-        ref_b64 = None
-        if reference_file:
-            raw_bytes = await reference_file.read()
-            ref_b64 = base64.b64encode(raw_bytes).decode("utf-8")
+        # Early base64 conversion removed to prevent double-reading the stream
 
         prediction_id = f"pred_{uuid.uuid4().hex[:12]}"
 
@@ -322,19 +319,36 @@ async def generate_asset(
         }
         if type == "Video":
             payload["duration"] = duration
-        if ref_b64:
-            payload["image"] = f"data:image/jpeg;base64,{ref_b64}"
-            
-        # Add optional advanced parameters
-        if negative_prompt: payload["negative_prompt"] = negative_prompt
-        if num_outputs: payload["num_outputs"] = num_outputs
-        if output_format: payload["output_format"] = output_format
-        if output_quality: payload["output_quality"] = output_quality
-        if guidance_scale: payload["guidance_scale"] = guidance_scale
-        if num_inference_steps: payload["num_inference_steps"] = num_inference_steps
-        if seed is not None: payload["seed"] = seed
 
         async with httpx.AsyncClient(timeout=120) as client:
+            if reference_file:
+                raw_bytes = await reference_file.read()
+                upload_res = await client.post(
+                    f"{ATLAS_BASE_URL}/model/uploadMedia",
+                    headers={"Authorization": f"Bearer {ATLAS_API_KEY}"},
+                    files={"file": (reference_file.filename, raw_bytes, reference_file.content_type)}
+                )
+                if upload_res.status_code in (200, 201):
+                    upload_data = upload_res.json()
+                    image_url = upload_data.get("url") or upload_data.get("media_url") or upload_data.get("image_url")
+                    if image_url:
+                        payload["image"] = image_url
+                        payload["image_url"] = image_url # some models prefer image_url
+                else:
+                    print(f"Failed to upload media: {upload_res.text}")
+                    # Fallback to base64 if upload fails
+                    ref_b64 = base64.b64encode(raw_bytes).decode("utf-8")
+                    payload["image"] = f"data:{reference_file.content_type};base64,{ref_b64}"
+            
+            # Add optional advanced parameters
+            if negative_prompt: payload["negative_prompt"] = negative_prompt
+            if num_outputs: payload["num_outputs"] = num_outputs
+            if output_format: payload["output_format"] = output_format
+            if output_quality: payload["output_quality"] = output_quality
+            if guidance_scale: payload["guidance_scale"] = guidance_scale
+            if num_inference_steps: payload["num_inference_steps"] = num_inference_steps
+            if seed is not None: payload["seed"] = seed
+
             endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
             r = await client.post(
                 f"{ATLAS_BASE_URL}{endpoint}",
