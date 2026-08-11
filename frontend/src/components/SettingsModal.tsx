@@ -71,19 +71,18 @@ quality, setQuality,
 
   // Dynamic providers from models
 
-  // Extract unique providers dynamically
-  const uniqueProviders = useMemo(() => {
-    const provs = new Set(models.map(m => getProvider(m.id)));
-    return ['All', ...Array.from(provs).sort()];
-  }, [models]);
-  // Helpers to get Provider from ID
-  const getProvider = (id: string) => {
-    const parts = id.split('/');
-    if (parts.length > 1) {
-      return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
-    }
-    return 'Unknown';
+  const getProvider = (_id: string, name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('gpt') || n.includes('openai')) return 'OpenAI';
+    if (n.includes('gemini') || n.includes('nano')) return 'Google';
+    if (n.includes('seedream') || n.includes('seedance') || n.includes('kling') || n.includes('bytedance')) return 'ByteDance';
+    if (n.includes('flux') || n.includes('stable') || n.includes('sd')) return 'Stability AI';
+    if (n.includes('imagineart')) return 'ImagineArt';
+    return 'Other';
   };
+
+  const hardcodedProviders = ['All', 'OpenAI', 'Google', 'ByteDance', 'Stability AI', 'ImagineArt'];
+  const uniqueProviders = hardcodedProviders;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -161,7 +160,7 @@ quality, setQuality,
               <div className="flex flex-col gap-2">
                 {filteredModels.map((m, idx) => {
                   const isSelected = selectedModelId === m.id;
-                  const provider = getProvider(m.id);
+                  const provider = getProvider(m.id, m.name);
                   const isNew = idx % 5 === 0; // Fake "new" badge for aesthetics
                   
                   return (
@@ -235,17 +234,15 @@ quality, setQuality,
 
             <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>
 
-            {hasParam('prompt_enhancer') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
-                <button 
-                  onClick={() => setPromptEnhancer(!promptEnhancer)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
-                >
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            )}
+            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
+              <button 
+                onClick={() => setPromptEnhancer(!promptEnhancer)}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
+              >
+                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
+              </button>
+            </div>
 
             {hasParam('num_outputs') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
@@ -268,22 +265,20 @@ quality, setQuality,
               </div>
             )}
 
-            {hasParam('resolution') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
-                <div className="flex gap-4">
-                  {['1K', '2K', '4K'].map(res => (
-                    <label key={res} className="flex items-center gap-2 cursor-pointer">
-                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolutionPreset === res ? 'border-violet-500' : borderCol}`}>
-                        {resolutionPreset === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
-                      </div>
-                      <input type="radio" className="hidden" checked={resolutionPreset === res} onChange={() => setResolutionPreset(res)} />
-                      <span className="text-sm font-medium">{res}</span>
-                    </label>
-                  ))}
-                </div>
+            <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+              <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
+              <div className="flex gap-4">
+                {['1K', '2K', '4K'].map(res => (
+                  <label key={res} className="flex items-center gap-2 cursor-pointer">
+                    <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolutionPreset === res ? 'border-violet-500' : borderCol}`}>
+                      {resolutionPreset === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                    </div>
+                    <input type="radio" className="hidden" checked={resolutionPreset === res} onChange={() => setResolutionPreset(res)} />
+                    <span className="text-sm font-medium">{res}</span>
+                  </label>
+                ))}
               </div>
-            )}
+            </div>
 
             {hasParam('output_quality') && (
               <div className="flex items-center justify-between border-b ${borderCol} pb-5 mb-5">
@@ -302,8 +297,8 @@ quality, setQuality,
               </div>
             )}
 
-            {hasParam('duration') && (
-              <div className={`flex items-center justify-between ${hasParam('output_quality') || hasParam('resolution') ? 'border-t mt-5 pt-5 ' + borderCol : ''}`}>
+            {mode === 'Video' && (
+              <div className={`flex items-center justify-between border-t mt-5 pt-5 ${borderCol}`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Duration</span>
                 <div className="flex gap-4">
                   {['5s', '10s', '15s'].map(d => (
