@@ -490,6 +490,7 @@ function App() {
   const [numOutputsImg, setNumOutputsImg]   = useState<number>(1);
   const [qualityImg, setQualityImg]         = useState<number>(80);
   const [negPromptImg, setNegPromptImg]     = useState('');
+  const [negPromptVid, setNegPromptVid]     = useState('');
   const [formatImg, setFormatImg]           = useState('webp');
   const [guidanceImg, setGuidanceImg]       = useState('');
   const [stepsImg, setStepsImg]             = useState('');
@@ -535,8 +536,24 @@ function App() {
         const fv = res.data.models.find((m: any) => m.type === 'Video');
         if (fv) setSelectedVideoModel(fv.id);
       }
+      // Reset resolution to valid default when model changes
+      if (imgExists || vidExists) {
+        // Reset after models load
+        setResolution('1080p');
+      }
     }).catch(err => console.error('Failed to load models', err));
   }, []);
+
+  // Reset resolution to a valid default when the selected model changes
+  useEffect(() => {
+    const mdl = models.find((m: any) => m.id === selectedImageModel || m.id === selectedVideoModel);
+    if (!mdl) return;
+    const prov = mdl.provider || '';
+    if (prov === 'MiniMax') setResolution('2K');
+    else if (prov === 'Wan' && mdl.type === 'Image') setResolution('1K');
+    else if (prov === 'Google' && mdl.type === 'Image') setResolution('1k');
+    else setResolution('1080p');
+  }, [selectedImageModel, selectedVideoModel]);
 
   /* ── Handlers ── */
   const handleSendHome = async () => {
@@ -598,7 +615,8 @@ function App() {
       if (!isImg && has('duration')) fd.append('duration', durationVid);
 
       // Only append params supported by this model
-      if (has('negative_prompt') && negPromptImg.trim()) fd.append('negative_prompt', negPromptImg.trim());
+      const negP = isImg ? negPromptImg : negPromptVid;
+      if (has('negative_prompt') && negP.trim()) fd.append('negative_prompt', negP.trim());
       if (has('guidance_scale')  && guidanceImg)         fd.append('guidance_scale', guidanceImg);
       if (has('seed')            && seedImg)             fd.append('seed', seedImg);
       if (has('resolution')      && resolution)          fd.append('resolution', resolution);
@@ -1202,8 +1220,8 @@ function App() {
         setQuality={setQualityImg}
         duration={durationVid}
         setDuration={setDurationVid}
-        negPrompt={negPromptImg}
-        setNegPrompt={setNegPromptImg}
+        negPrompt={generateMode === 'Image' ? negPromptImg : negPromptVid}
+        setNegPrompt={generateMode === 'Image' ? setNegPromptImg : setNegPromptVid}
         format={formatImg}
         setFormat={setFormatImg}
         guidance={guidanceImg}

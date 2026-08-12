@@ -85,7 +85,6 @@ export function SettingsModal({
   const [providerFilter, setProviderFilter] = useState('');
   const [showResMenu, setShowResMenu] = useState(false);
   const [resFilter, setResFilter] = useState('');
-  const [promptEnhancer, setPromptEnhancer] = useState(false);
 
   // Helpers to get Provider from ID
   const getProvider = (id: string) => {
@@ -311,17 +310,6 @@ export function SettingsModal({
 
             <div className={`mb-4 text-sm font-bold ${textMuted}`}>More options</div>
 
-            {hasParam('prompt_enhancer') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Prompt Enhancer</span>
-                <button
-                  onClick={() => setPromptEnhancer(!promptEnhancer)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${promptEnhancer ? 'bg-violet-500' : isLight ? 'bg-slate-300' : 'bg-slate-600'}`}
-                >
-                  <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${promptEnhancer ? 'translate-x-4.5' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            )}
 
             {hasParam('num_outputs') && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
@@ -585,19 +573,6 @@ export function SettingsModal({
               </div>
             )}
 
-            {hasParam('guidance_scale') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>CFG Scale</span>
-                <input type="number" step={0.1} className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="Default" value={guidance} onChange={e => setGuidance(e.target.value)} />
-              </div>
-            )}
-
-            {hasParam('num_inference_steps') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Steps</span>
-                <input type="number" className={`bg-transparent border ${borderCol} rounded-lg px-3 py-1 text-sm outline-none w-32 ${isLight ? 'text-slate-900' : 'text-white'}`} placeholder="Default" value={steps} onChange={e => setSteps(e.target.value)} />
-              </div>
-            )}
 
             {hasParam('negative_prompt') && (
               <div className="mt-4">

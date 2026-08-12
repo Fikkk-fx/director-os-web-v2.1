@@ -51,7 +51,7 @@ _VEO_VIDEO  = _p("aspect_ratio", "duration", "resolution", "generate_audio", "se
 _GEMINI_VID = _p("aspect_ratio", "duration", "thinking_level", "resolution", "seed")
 _NANO_IMG   = _p("aspect_ratio", "resolution", "thinking_level", "media_resolution", "output_format")
 _IMAGEN_IMG = _p("aspect_ratio", "resolution", "negative_prompt", "seed")
-_OPENAI_IMG = _p("size", "quality", "output_format")
+_OPENAI_IMG = _p("size", "quality", "output_format", "num_outputs")  # n param
 _FLUX_IMG   = _p("size", "output_format", "seed")
 _YOU_IMG    = _p("aspect_ratio", "hd", "stylize", "chaos", "weird", "sref", "quality_mj", "seed")
 _MID_VID    = _p("resolution")
@@ -502,6 +502,14 @@ async def generate_asset(
                     payload["quality"] = 4 if (output_quality or 80) >= 80 else 1
             if "quality_mj" in supported:
                 payload["quality"] = 4 if (output_quality or 80) >= 80 else 1
+
+            # ── num_outputs / n ──────────────────────────────────────────
+            # OpenAI uses "n", others use "num_outputs"
+            if "num_outputs" in supported and num_outputs and num_outputs > 1:
+                if prov == "OpenAI":
+                    payload["n"] = num_outputs
+                else:
+                    payload["num_outputs"] = num_outputs
 
             # ── cfg_scale (Kling) ────────────────────────────────────────
             if "cfg_scale" in supported:
