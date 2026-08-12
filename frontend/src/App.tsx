@@ -590,10 +590,11 @@ function App() {
       fd.append('prompt', up);
       fd.append('model_keyword', model);
 
-      // aspect_ratio — for Kling, Google, Imagen4 (uses aspect_ratio)
-      // ratio — for ByteDance, Wan, MiniMax (backend maps aspect_ratio form field → payload 'ratio')
+      // aspect_ratio — for Kling, Veo, Gemini, Nano, Imagen, Youchuan
+      // ratio        — for ByteDance video, Wan video, MiniMax, HappyHorse
+      // size         — for ByteDance image, FLUX, OpenAI, Wan image (mapped from aspect_ratio in backend)
       const ar = isImg ? aspectRatioImg : aspectRatioVid;
-      if (has('aspect_ratio') || has('ratio')) fd.append('aspect_ratio', ar);
+      if (has('aspect_ratio') || has('ratio') || has('size')) fd.append('aspect_ratio', ar);
       if (!isImg && has('duration')) fd.append('duration', durationVid);
 
       // Only append params supported by this model
@@ -603,9 +604,9 @@ function App() {
       if (has('resolution')      && resolution)          fd.append('resolution', resolution);
       if (has('num_outputs')     && numOutputsImg > 1)   fd.append('num_outputs', numOutputsImg.toString());
       if (has('output_format')   && formatImg !== 'webp')fd.append('output_format', formatImg);
-      // quality (OpenAI string) — send as output_quality int, backend maps to string
-      if (has('quality')         && qualityImg !== 80)   fd.append('output_quality', qualityImg.toString());
-      if (has('output_quality')  && qualityImg !== 80)   fd.append('output_quality', qualityImg.toString());
+      // quality — OpenAI string (low/med/high) or Youchuan (1/4) — both sent as output_quality int, backend maps
+      if ((has('quality') || has('quality_mj') || has('output_quality')) && qualityImg !== 80)
+        fd.append('output_quality', qualityImg.toString());
       if (has('num_inference_steps') && stepsImg)        fd.append('num_inference_steps', stepsImg);
       if (has('hd')              && hd)                  fd.append('hd', String(hd));
       if (has('stylize')         && stylize !== 0)       fd.append('stylize', String(stylize));

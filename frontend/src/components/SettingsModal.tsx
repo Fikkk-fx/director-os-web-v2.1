@@ -275,8 +275,8 @@ export function SettingsModal({
           {/* RIGHT PANE: Settings */}
           <div className="w-1/2 flex flex-col p-8 overflow-y-auto">
 
-            {/* ratio-based models also show aspect ratio (ByteDance, Wan, MiniMax) */}
-            {(hasParam('aspect_ratio') || hasParam('ratio')) && (
+            {/* ratio/aspect_ratio/size-based models all show aspect ratio selector */}
+            {(hasParam('aspect_ratio') || hasParam('ratio') || hasParam('size')) && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className={`text-sm font-semibold ${textMuted}`}>Select Aspect ratio</h3>
@@ -386,22 +386,38 @@ export function SettingsModal({
               </div>
             )}
 
-            {(hasParam('quality') || hasParam('output_quality')) && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Quality</span>
-                <div className="flex gap-4">
-                  {[{ l: 'Low', v: 60 }, { l: 'Medium', v: 80 }, { l: 'High', v: 100 }].map(q => (
-                    <label key={q.l} className="flex items-center gap-2 cursor-pointer">
-                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${quality === q.v ? 'border-violet-500' : borderCol}`}>
-                        {quality === q.v && <div className="h-2 w-2 rounded-full bg-violet-500" />}
-                      </div>
-                      <input type="radio" className="hidden" checked={quality === q.v} onChange={() => setQuality(q.v)} />
-                      <span className="text-sm font-medium">{q.l}</span>
-                    </label>
-                  ))}
+            {(hasParam('quality') || hasParam('output_quality') || hasParam('quality_mj')) && (() => {
+              // Youchuan uses quality as 1 or 4 (not string)
+              const isYouchuan = hasParam('quality_mj') || (activeModalModel?.provider === 'Midjourney');
+              return (
+                <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                  <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Quality</span>
+                  <div className="flex gap-4">
+                    {isYouchuan ? (
+                      [{l:'Standard', v:60},{l:'High', v:100}].map(q => (
+                        <label key={q.l} className="flex items-center gap-2 cursor-pointer">
+                          <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${quality === q.v ? 'border-violet-500' : borderCol}`}>
+                            {quality === q.v && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                          </div>
+                          <input type="radio" className="hidden" checked={quality === q.v} onChange={() => setQuality(q.v)} />
+                          <span className="text-sm font-medium">{q.l}</span>
+                        </label>
+                      ))
+                    ) : (
+                      [{l:'Low', v:60},{l:'Medium', v:80},{l:'High', v:100}].map(q => (
+                        <label key={q.l} className="flex items-center gap-2 cursor-pointer">
+                          <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${quality === q.v ? 'border-violet-500' : borderCol}`}>
+                            {quality === q.v && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                          </div>
+                          <input type="radio" className="hidden" checked={quality === q.v} onChange={() => setQuality(q.v)} />
+                          <span className="text-sm font-medium">{q.l}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {hasParam('duration') && (() => {
               // Dynamic duration options based on model provider
@@ -455,8 +471,10 @@ export function SettingsModal({
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Thinking Level</span>
                 <select className={`bg-transparent border ${borderCol} rounded-lg px-2 py-1 text-sm outline-none ${isLight ? 'text-slate-900 bg-white/50' : 'text-white bg-black/20'}`} value={thinkingLevel} onChange={e => setThinkingLevel(e.target.value)}>
                   <option value="default" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Default</option>
+                  <option value="high" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>High</option>
+                  <option value="low" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Low</option>
+                  <option value="minimal" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Minimal</option>
                   <option value="none" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>None</option>
-                  <option value="auto" className={isLight ? 'text-slate-900 bg-white' : 'text-white bg-slate-800'}>Auto</option>
                 </select>
               </div>
             )}
