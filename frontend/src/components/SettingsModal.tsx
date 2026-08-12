@@ -344,13 +344,17 @@ export function SettingsModal({
             )}
 
             {hasParam('resolution') && (() => {
-              // Provider-aware resolution options
+              // Provider-aware resolution options — must match PascalCase from catalogue
               const prov = activeModalModel?.provider || '';
               let resOptions: string[];
-              if (mode === 'Image' && (prov === 'QWEN' || prov === 'Wan' || activeModalModel?.id?.startsWith('alibaba'))) {
+              if (mode === 'Image' && (prov === 'Wan' || activeModalModel?.id?.startsWith('alibaba') || activeModalModel?.id?.startsWith('qwen'))) {
                 resOptions = ['1K', '2K'];
-              } else if (mode === 'Image' && (prov === 'GOOGLE' || activeModalModel?.id?.includes('imagen'))) {
+              } else if (mode === 'Image' && prov === 'Google') {
                 resOptions = ['1k', '2k'];
+              } else if (mode === 'Video' && prov === 'MiniMax') {
+                resOptions = ['768P', '2K'];
+              } else if (mode === 'Video' && prov === 'ByteDance') {
+                resOptions = ['480p', '720p', '1080p', '1440p', '4K'];
               } else if (mode === 'Video') {
                 resOptions = ['480p', '720p', '1080p', '1440p', '2K', '4K'];
               } else {
@@ -423,14 +427,20 @@ export function SettingsModal({
               // Dynamic duration options based on model provider
               const prov = activeModalModel?.provider || '';
               let durOptions: string[];
-              if (prov === 'BYTEDANCE') {
+              // provider from catalogue is PascalCase: ByteDance, Kling, MiniMax, Google, Wan, Midjourney
+              if (prov === 'ByteDance') {
+                // Seedance 2.5 supports up to 30s; others vary but 30s is max
                 durOptions = ['4s','5s','6s','8s','10s','15s','20s','30s'];
-              } else if (prov === 'KUAISHOU') {
+              } else if (prov === 'Kling') {
                 durOptions = ['3s','5s','8s','10s','15s'];
-              } else if (prov === 'MINIMAX') {
+              } else if (prov === 'MiniMax') {
                 durOptions = ['4s','5s','6s','8s','10s','12s','15s'];
-              } else if (prov === 'GOOGLE') {
-                durOptions = ['4s','6s','8s'];
+              } else if (prov === 'Google') {
+                // Veo: 4-8s; Gemini Omni: up to 10s
+                durOptions = ['4s','6s','8s','10s'];
+              } else if (prov === 'Wan') {
+                // HappyHorse: 3-15s; Wan video: similar
+                durOptions = ['3s','4s','5s','6s','8s','10s','15s'];
               } else {
                 durOptions = ['5s','8s','10s','15s'];
               }
