@@ -202,34 +202,48 @@ _CATALOGUE = [
     {"id": "minimax/hailuo-2.3/i2v-pro", "provider": "MiniMax", "name": "Hailuo-2.3 i2v Pro", "type": "Video", "mode": "other", "supports_image": True},
 ]
 
-# Static schema map based on Atlas official API structure
+# Static schema map based on Atlas official API structure (audited 2026-08-12)
 def _get_supported_params(provider: str, type: str) -> list:
     if type == "Video":
         if provider == "ByteDance":
-            return ["aspect_ratio", "duration", "resolution", "generate_audio", "watermark", "return_last_frame"]
+            # uses "ratio" (not aspect_ratio), output_format mp4/mov
+            return ["ratio", "duration", "resolution", "generate_audio", "watermark", "return_last_frame", "output_format"]
         if provider == "MiniMax":
-            return ["duration"]
+            # resolution REQUIRED ("768P"/"2K"), uses "ratio" not aspect_ratio
+            return ["resolution", "duration", "ratio"]
         if provider == "Kling":
-            return ["aspect_ratio", "duration", "generate_audio", "negative_prompt"]
+            # uses "sound" (not generate_audio), has cfg_scale
+            return ["aspect_ratio", "duration", "sound", "negative_prompt", "cfg_scale"]
         if provider == "Wan":
-            return ["aspect_ratio", "duration", "resolution", "seed"]
+            # uses "ratio" (not aspect_ratio)
+            return ["ratio", "duration", "resolution", "seed", "negative_prompt", "prompt_extend"]
         if provider == "Midjourney":
             return ["resolution", "motion"]
         if provider == "Google":
-            return ["aspect_ratio"]
+            # Veo: aspect_ratio, duration, resolution, generate_audio, seed, negative_prompt
+            return ["aspect_ratio", "duration", "resolution", "generate_audio", "seed", "negative_prompt"]
+        if provider == "XAI":
+            return ["aspect_ratio", "duration", "resolution", "generate_audio"]
         return ["aspect_ratio", "duration"]
-    
+
     if type == "Image":
         if provider == "OpenAI":
-            return ["size", "num_outputs", "output_quality", "output_format"]
+            # quality is string: "low"/"medium"/"high"; size is WIDTHxHEIGHT
+            return ["size", "quality", "output_format"]
         if provider == "Google":
-            return ["resolution", "thinking_level", "media_resolution", "output_format"]
+            # Imagen4: aspect_ratio, resolution ("1k"/"2k"), negative_prompt, num_images, seed
+            return ["aspect_ratio", "resolution", "negative_prompt", "num_images", "seed", "thinking_level", "output_format"]
         if provider == "FLUX":
-            return ["aspect_ratio", "output_format", "seed", "output_quality"]
+            # uses size in "WxH" format (1024*1024), output_format, seed
+            return ["size", "output_format", "seed"]
         if provider == "Wan":
-            return ["aspect_ratio", "negative_prompt", "seed", "guidance_scale"]
+            # Wan image: no aspect_ratio — uses size ("1K"/"2K"), seed, thinking_mode, n
+            return ["size", "seed", "negative_prompt", "thinking_mode"]
+        if provider == "ByteDance":
+            # Seedream: aspect_ratio, seed, output_format
+            return ["aspect_ratio", "seed", "output_format", "negative_prompt"]
         if provider == "Midjourney":
-            return ["sref", "aspect_ratio", "hd", "stylize", "chaos", "weird", "output_quality", "seed"]
+            return ["sref", "aspect_ratio", "hd", "stylize", "chaos", "weird", "seed"]
         return ["aspect_ratio"]
 
 
@@ -407,8 +421,13 @@ async def generate_asset(
                 "prompt": prompt,
             }
 
+            # aspect_ratio — only for providers that use that exact field name
             if "aspect_ratio" in supported:
                 payload["aspect_ratio"] = aspect_ratio
+
+            # ratio — ByteDance and Wan/MiniMax video use "ratio" not "aspect_ratio"
+            if "ratio" in supported:
+                payload["ratio"] = aspect_ratio
 
             if type == "Video" and "duration" in supported:
                 try:
@@ -428,7 +447,6 @@ async def generate_asset(
             if "negative_prompt"      in supported and negative_prompt:      payload["negative_prompt"]      = negative_prompt
             if "num_outputs"          in supported and num_outputs:           payload["num_outputs"]           = num_outputs
             if "output_format"        in supported and output_format:         payload["output_format"]         = output_format
-            if "output_quality"       in supported and output_quality:        payload["output_quality"]        = output_quality
             if "guidance_scale"       in supported and guidance_scale:        payload["guidance_scale"]        = guidance_scale
             if "num_inference_steps"  in supported and num_inference_steps:   payload["num_inference_steps"]   = num_inference_steps
             if "seed"                 in supported and seed is not None:      payload["seed"]                  = seed
@@ -439,10 +457,25 @@ async def generate_asset(
             if "thinking_level"       in supported and thinking_level:        payload["thinking_level"]        = thinking_level
             if "media_resolution"     in supported and media_resolution:      payload["media_resolution"]      = media_resolution
             if "motion"               in supported and motion:                payload["motion"]                = motion
+            if "prompt_extend"        in supported:                           payload["prompt_extend"]         = True
 
-            # Special case for Midjourney quality (mapped from output_quality)
-            if model_info["provider"] == "Midjourney" and "output_quality" in supported and output_quality is not None:
-                payload["quality"] = output_quality
+            # cfg_scale for Kling
+            if "cfg_scale" in supported:
+                payload["cfg_scale"] = 0.5
+
+            # quality for OpenAI Image (string: low/medium/high, mapped from int)
+            if "quality" in supported:
+                q_map = {0: "low", 50: "medium", 80: "high", 100: "high"}
+                if output_quality is not None:
+                    # map 0-100 int to string
+                    if output_quality <= 30:
+                        payload["quality"] = "low"
+                    elif output_quality <= 70:
+                        payload["quality"] = "medium"
+                    else:
+                        payload["quality"] = "high"
+                else:
+                    payload["quality"] = "medium"
 
             if "hd" in supported:
                 hd_val = _bool(hd)
@@ -459,25 +492,56 @@ async def generate_asset(
                 if rlf_val is not None:
                     payload["return_last_frame"] = rlf_val
 
+            # generate_audio — Google Veo uses this; Kling uses "sound" only
             if "generate_audio" in supported:
                 ga_val = _bool(generate_audio)
                 if ga_val is not None:
                     payload["generate_audio"] = ga_val
-                    if model_info["provider"] == "Kling":
-                        payload["sound"] = ga_val
+
+            # sound — Kling specific audio toggle
+            if "sound" in supported:
+                ga_val = _bool(generate_audio)
+                if ga_val is not None:
+                    payload["sound"] = ga_val
 
             if resolution:
-                if "size" in supported and model_info["provider"] == "OpenAI":
-                    size_map = {
-                        "720p":  "1024x768",
-                        "1080p": "1024x1024",
-                        "1440p": "1536x1024",
-                        "2k":    "1536x1024",
-                        "4k":    "2048x1152",
-                    }
-                    payload["size"] = size_map.get(resolution.lower(), "1024x1024")
+                if "size" in supported:
+                    prov = model_info["provider"]
+                    if prov == "OpenAI":
+                        # OpenAI uses exact WIDTHxHEIGHT, pass through if valid, else default
+                        size_map = {
+                            "720p":  "1024x768",
+                            "1080p": "1024x1024",
+                            "1440p": "1536x1024",
+                            "2k":    "1536x1024",
+                            "4k":    "2048x1152",
+                        }
+                        payload["size"] = size_map.get(resolution.lower(), "1024x1024")
+                    elif prov == "FLUX":
+                        # FLUX uses "WxH" with asterisk separator
+                        flux_size_map = {
+                            "720p":  "1280*720",
+                            "1080p": "1920*1080",
+                            "1440p": "2560*1440",
+                            "2k":    "2048*2048",
+                        }
+                        payload["size"] = flux_size_map.get(resolution.lower(), "1024*1024")
+                    elif prov == "Wan" and type == "Image":
+                        # Wan image uses "1K"/"2K"
+                        wan_img_map = {"1k": "1K", "2k": "2K", "720p": "1K", "1080p": "2K"}
+                        payload["size"] = wan_img_map.get(resolution.lower(), "1K")
+                    else:
+                        payload["size"] = resolution
                 elif "resolution" in supported:
-                    payload["resolution"] = resolution
+                    # MiniMax H3 always needs resolution; default to 2K
+                    if model_info["provider"] == "MiniMax" and not resolution:
+                        payload["resolution"] = "2K"
+                    else:
+                        payload["resolution"] = resolution
+            else:
+                # MiniMax requires resolution even if user didn't specify
+                if "resolution" in supported and model_info["provider"] == "MiniMax":
+                    payload["resolution"] = "2K"
 
             # FIXED: Endpoint URL
             endpoint = "/model/generateVideo" if type == "Video" else "/model/generateImage"
