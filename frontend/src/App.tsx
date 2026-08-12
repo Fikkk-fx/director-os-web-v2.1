@@ -702,8 +702,6 @@ function App() {
   /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
     { id: 'Home',   label: 'Home',      icon: Home         },
-    { id: 'Image',  label: 'Image Lab', icon: ImageIcon    },
-    { id: 'Video',  label: 'Video Lab', icon: Video        },
     { id: 'Assets', label: 'Assets',    icon: FolderKanban },
   ];
 
