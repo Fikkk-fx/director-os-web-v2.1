@@ -165,10 +165,10 @@ function MarkdownText({ text, isLight }: { text: string; isLight: boolean }) {
   return <div className="flex flex-col gap-0.5">{elements}</div>;
 }
 
-/* ── Demo session — end-to-end 4-Turn workflow example ──────────── */
+/* ── Demo session — end-to-end workflow: Brief → Image → Video ──────────── */
 const DEMO_SESSION: ChatSession = {
-  id: 'demo-v1',
-  title: 'Contoh: Filmmaker Jakarta',
+  id: 'demo-v2',
+  title: 'End-to-End: Filmmaker Jakarta',
   tab: 'Home',
   updatedAt: Date.now() - 2000000,
   messages: [
@@ -179,32 +179,26 @@ const DEMO_SESSION: ChatSession = {
     },
     {
       id: 'dm2', role: 'ai',
-      content: `**[VISION-SKILL REASONING]**
-Tema: Perjuangan kreator muda — universal, emosional, relatable.
-Genre: Coming-of-age Drama / Indie Arthouse.
+      content: `## FASE 0 — STORY BRIEF
 
-**[SYS-LOG: RNG INITIATIVE]**
-- Rolled Location: Gang sempit Kemang lama, Jakarta Selatan
-- Rolled Wardrobe: Kemeja linen lusuh, kamera film 16mm vintage
-- Rolled Camera: Dirty Medium OTS + Step-Printing slow motion
-- Rolled Lighting: Deakins Practical Chiaroscuro (satu bohlam pijar)
+**Tema:** Perjuangan kreator muda — universal, emosional, relatable.
+**Genre:** Coming-of-age Drama / Indie Arthouse.
 
 ---
 
-**[PHASE 0 GATEWAY — PILIH STYLE]**
+### Style Options
 
-**Opsi 1 — "Sinema Realisme Sosial"**
-Gaya Kamila Andini. Raw, membumi. Flat kumuh di atas bukit Menteng Atas. Cahaya satu bohlam pijar.
+**1 — Sinema Realisme Sosial** *(Kamila Andini)*
+Raw, membumi. Flat kumuh Menteng Atas. Cahaya satu bohlam pijar.
 
-**Opsi 2 — "Indie Noir Jakarta"**
-Gaya Wong Kar-Wai × Wim Umboh. Jazz mengalir pelan. Kemang malam hujan. Step-printing di gang sempit.
+**2 — Indie Noir Jakarta** *(Wong Kar-Wai × Wim Umboh)*
+Jazz mengalir pelan. Kemang malam hujan. Step-printing di gang sempit.
 
-**Opsi 3 — "Arthouse Ekspresionisme"**
-Gaya Tarkovsky. Kamera diam total. Atap gedung tua, cakrawala Jakarta berkilauan, narasi VO puitis.
+**3 — Arthouse Ekspresionisme** *(Tarkovsky)*
+Kamera diam total. Atap gedung tua, cakrawala Jakarta, narasi VO puitis.
 
 ---
-🛑 **MANDATORY HARD STOP (TURN 1 COMPLETE)**
-Ketik **1**, **2**, atau **3** untuk memilih style.`,
+🛑 **HARD STOP** — Ketik **1**, **2**, atau **3** untuk memilih style.`,
       timestamp: '09:00 AM',
     },
     {
@@ -214,129 +208,110 @@ Ketik **1**, **2**, atau **3** untuk memilih style.`,
     },
     {
       id: 'dm4', role: 'ai',
-      content: `## FASE 1 — NASKAH SCREENPLAY
+      content: `## FASE 1 — NASKAH + CHARSHEET
+
 **Style: Indie Noir Jakarta (Wong Kar-Wai × Wim Umboh)**
-
----
-
-### KLIP 1 [0s–10s] — "THE FILMMAKER'S PRAYER"
-
-- **Lokasi:** Gang sempit Kemang lama, Jakarta Selatan — malam hujan
-- **Karakter:** RAKA (24), filmmaker muda — linen lusuh, Bolex H16 di leher
-
-\`\`\`
-[0s-3s] Raka berdiri diam di bawah atap seng. Hujan memercik di depannya.
-         Jari menekan-nekan dial aperture kamera — klik, klik, klik.
-
-[3s-6s] PAMAN (OS): "Raka, udah jam berapa ini? Pulang dulu lah."
-
-[6s-10s] Raka menutup mata. Satu helaan napas panjang.
-          RAKA (pelan): "Sebentar lagi, Paman. Sebentar lagi."
-\`\`\`
-
----
-
-### KLIP 2 [0s–10s] — "THE LAST ROLL"
-
-\`\`\`
-[0s-4s] Step-printing slow motion. Raka berjalan di gang yang basah.
-         Pantulan cahaya warung di genangan air. Kamera terangkat — ia merekam.
-
-[4s-7s] CLOSE-UP: wajah nenek tua di balik gerobak nasi goreng. Senyum ompong kaya raya.
-         Raka merekam. Mata berkaca-kaca tapi senyum tersungging.
-
-[7s-10s] MACRO INSERT: Roll film terakhir di tangannya.
-          Label tulisan tangan: "ROLL 12 — TERAKHIR"
-\`\`\`
-
----
-
-🛑 **MANDATORY HARD STOP (TURN 2 COMPLETE — PHASE 1 SCRIPT)**
-Ketik **ACC Naskah** atau **Lanjut** untuk menyetujui naskah.`,
-      timestamp: '09:01 AM',
-    },
-    {
-      id: 'dm5', role: 'user',
-      content: 'ACC Naskah',
-      timestamp: '09:02 AM',
-    },
-    {
-      id: 'dm6', role: 'ai',
-      content: `## FASE 2 & 3 — SPATIAL BLUEPRINT & ASSET SPECS
-
----
-
-### SPATIAL BLUEPRINT V2 — Gang Kemang Lama
-
-**[NORTH]** Tembok bata merah, cat mengelupas, lumut hijau di nat bawah
-**[SOUTH]** Warung nasi goreng — neon "ES JERUK" kuning-oranye
-**[EAST]** Gang berlanjut ke kegelapan, cahaya jalan 30m jauhnya
-**[FLOOR]** Aspal retak dengan genangan air memantulkan neon
 
 ---
 
 ### CharSheet — RAKA
 
 \`\`\`
-3-panel casting reference on pure white background. Indonesian male, 24yo,
-sun-darkened warm brown skin, deep-set eyes, faint stubble. Cream linen shirt
-(2 buttons open), navy trousers, rubber sandals. Bolex H16 camera on neck strap.
-Shot on iPhone 15 Pro 24mm f/1.7, zero airbrushing. --ar 16:9 --style raw
+Indonesian male, 24yo, sun-darkened warm brown skin, deep-set eyes, faint
+stubble. Cream linen shirt (2 buttons open), navy trousers, rubber sandals.
+Bolex H16 camera on neck strap. Shot on iPhone 15 Pro 24mm f/1.7. --ar 16:9
+\`\`\`
+
+### Script — KLIP 1 "THE FILMMAKER'S PRAYER"
+
+\`\`\`
+[0s-3s] Gang Kemang, malam hujan. Raka berdiri diam di bawah atap seng.
+         Jari menekan dial aperture — klik, klik, klik.
+[3s-6s] PAMAN (OS): "Raka, udah jam berapa ini? Pulang dulu lah."
+[6s-10s] Raka menutup mata. Satu helaan napas panjang.
+          RAKA (pelan): "Sebentar lagi, Paman. Sebentar lagi."
 \`\`\`
 
 ---
-
-### EnvSheet — Gang Kemang Lama
-
-\`\`\`
-Narrow Jakarta alley (gang), Kemang, circa 1990s. Night, heavy rain.
-Red brick walls with peeling white paint. Neon-lit warung on right.
-Wet asphalt reflecting orange-yellow neon. Single tungsten bulb at entrance.
-Shot on Kodak Portra 400 film. --ar 16:9 --style raw
-\`\`\`
-
----
-
-🛑 **MANDATORY HARD STOP (TURN 3 COMPLETE)**
-Ketik **ACC Assets** atau **Lanjut** untuk output FASE 4 & 5 (Prompt Video + Storyboard).`,
+🛑 **HARD STOP** — Ketik **ACC Naskah** untuk lanjut ke asset generation.`,
+      timestamp: '09:01 AM',
+    },
+    {
+      id: 'dm5', role: 'user',
+      content: 'ACC Naskah — generate character reference image dulu',
       timestamp: '09:02 AM',
     },
     {
+      id: 'dm6', role: 'ai',
+      content: `**Generating Image...**
+*Model: GPT Image 2*
+
+Prompt yang digunakan:
+\`\`\`
+3-panel casting reference on pure white background. Indonesian male, 24yo,
+sun-darkened warm brown skin, deep-set eyes, faint stubble. Cream linen
+shirt (2 buttons open), navy trousers, rubber sandals. Bolex H16 camera
+on neck strap. Shot on iPhone 15 Pro 24mm f/1.7, zero airbrushing. --ar 16:9
+\`\`\`
+
+✅ **Image generated successfully.**`,
+      timestamp: '09:02 AM',
+      imageUrl: 'https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=900&q=80',
+    },
+    {
       id: 'dm7', role: 'user',
-      content: 'ACC Assets',
+      content: 'Bagus! Sekarang generate video klip pertamanya',
       timestamp: '09:03 AM',
     },
     {
       id: 'dm8', role: 'ai',
-      content: `## FASE 4 — MASTER VIDEO PROMPT
+      content: `**Generating Video...**
+*Model: Seedance 2.5 · 10s · 1080p · 16:9*
 
----
-
-### KLIP 1 — "THE FILMMAKER'S PRAYER"
-
+Prompt yang digunakan:
 \`\`\`
 [PROSE & IN-LINE SPATIAL & GLOBAL LOCK]: [0s-3s] [NIGHT, KEMANG GANG]
 In an organic human-held medium shot, Raka (@image_char) — 24yo Indonesian
-male in wrinkled cream linen shirt, single Bolex H16 16mm camera hanging
-on neck — stands frozen under corrugated tin roof, heavy rain curtain
-in foreground, warm orange neon warung glow bleeding onto wet asphalt
-midground. [3s-6s] [RACK FOCUS] Fingers press aperture dial in rhythmic
-clicks. Off-screen voice cuts through rain. [6s-10s] Eyes close one beat.
-Single slow exhale. Raka speaking quietly in fluent Indonesian: "Sebentar
-lagi, Paman. Sebentar lagi." [LOCK: cream linen + navy trousers | gang:
-red brick, wet asphalt, single tungsten | zero duplicate characters]
+male in wrinkled cream linen shirt, single Bolex H16 16mm camera hanging on
+neck — stands frozen under corrugated tin roof, heavy rain curtain in
+foreground, warm orange neon warung glow bleeding onto wet asphalt midground.
+[3s-6s] Fingers press aperture dial in rhythmic clicks. Off-screen voice cuts
+through rain. [6s-10s] Eyes close one beat. Single slow exhale.
 
-[ACTING & LIGHTING SCIENCE]: Wong Kar-Wai intimate social realism. Calm
-grounded gaze, occasional single eyelid motion every 4-5s. Warm Indonesian
-skin, velvet complexion, zero speckling. Deakins Practical Chiaroscuro:
-single 2800K tungsten key, deep shadow separation, natural rain diffusion.
-32-bit float audio, rain ambience, clear vocal headroom. [COLOR GRADE]:
-Kodak Portra warm shadows, muted cyan-green midtones, deep blacks.
+[ACTING & LIGHTING]: Wong Kar-Wai intimate social realism. Deakins Practical
+Chiaroscuro: single 2800K tungsten key, deep shadow separation.
+[CAMERA]: Panavision DXL2, f/1.4. Human-held shoulder-rig, 24fps.
+\`\`\`
 
-[CAMERA SCIENCE & KINETIC PHYSICS]: [SUBJECT MOTION: static breath, finger
-clicks on aperture] [CAMERA MOTION: human-held shoulder-rig, gentle breath
-sway, 24fps, 180-degree shutter]. Panavision DXL2, Primo 70, Light Iron
-Color 3, f/1.4 creamy bokeh. Real-time 1.0x. Zero duplicates.
+✅ **Video generated successfully.**`,
+      timestamp: '09:03 AM',
+      videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
+    },
+    {
+      id: 'dm9', role: 'user',
+      content: 'Perfect. Sekarang buat master video prompt untuk semua klip.',
+      timestamp: '09:04 AM',
+    },
+    {
+      id: 'dm10', role: 'ai',
+      content: `## FASE 4 — MASTER VIDEO PROMPT DELIVERY
+
+---
+
+### KLIP 2 — "THE LAST ROLL"
+
+\`\`\`
+[0s-4s] Step-printing slow motion 50%. Raka berjalan di gang yang basah.
+Pantulan cahaya warung di genangan air. Kamera terangkat — ia merekam.
+
+[4s-7s] CLOSE-UP: wajah nenek tua di balik gerobak nasi goreng.
+Senyum kaya raya. Raka merekam. Mata berkaca-kaca tapi senyum tersungging.
+
+[7s-10s] MACRO INSERT: Roll film terakhir di tangannya.
+Label tulisan tangan: "ROLL 12 — TERAKHIR"
+
+[CAMERA]: Step-printing 50% slow motion, handheld, 24fps, 180° shutter.
+[LIGHTING]: Practical neon bounce, orange-yellow, naturally diffused by rain.
 \`\`\`
 
 ---
@@ -352,8 +327,8 @@ Color 3, f/1.4 creamy bokeh. Real-time 1.0x. Zero duplicates.
 | 5 | Deakins Practical Light | ✅ |
 | 6 | Char Cap ≤1950 | ✅ ~1,842 |
 
-**🎬 FINAL DELIVERY COMPLETE — Prompt siap di-generate di Kling/Seedance/Sora.**`,
-      timestamp: '09:03 AM',
+**🎬 FINAL DELIVERY COMPLETE — Prompt siap di-generate di Kling/Seedance/Veo.**`,
+      timestamp: '09:04 AM',
     },
   ],
 };
