@@ -492,8 +492,6 @@ function App() {
   const [negPromptImg, setNegPromptImg]     = useState('');
   const [negPromptVid, setNegPromptVid]     = useState('');
   const [formatImg, setFormatImg]           = useState('webp');
-  const [guidanceImg, setGuidanceImg]       = useState('');
-  const [stepsImg, setStepsImg]             = useState('');
   const [seedImg, setSeedImg]               = useState('');
   const [resolution, setResolution]         = useState('1080p');
   const [generateAudio, setGenerateAudio]   = useState(false);
