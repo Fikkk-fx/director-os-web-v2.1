@@ -428,9 +428,12 @@ export function SettingsModal({
               const prov = activeModalModel?.provider || '';
               let durOptions: string[];
               // provider from catalogue is PascalCase: ByteDance, Kling, MiniMax, Google, Wan, Midjourney
-              if (prov === 'ByteDance') {
-                // Seedance 2.5 supports up to 30s; others vary but 30s is max
+              const modelId = activeModalModel?.id || '';
+              if (modelId.includes('seedance-2.5')) {
+                // Seedance 2.5 supports up to 30s
                 durOptions = ['4s','5s','6s','8s','10s','15s','20s','30s'];
+              } else if (prov === 'ByteDance') {
+                durOptions = ['4s','5s','6s','8s','10s','15s'];
               } else if (prov === 'Kling') {
                 durOptions = ['3s','5s','8s','10s','15s'];
               } else if (prov === 'MiniMax') {
