@@ -615,7 +615,6 @@ function App() {
       // Only append params supported by this model
       const negP = isImg ? negPromptImg : negPromptVid;
       if (has('negative_prompt') && negP.trim()) fd.append('negative_prompt', negP.trim());
-      if (has('guidance_scale')  && guidanceImg)         fd.append('guidance_scale', guidanceImg);
       if (has('seed')            && seedImg)             fd.append('seed', seedImg);
       if (has('resolution')      && resolution)          fd.append('resolution', resolution);
       if (has('num_outputs')     && numOutputsImg > 1)   fd.append('num_outputs', numOutputsImg.toString());
@@ -623,7 +622,6 @@ function App() {
       // quality — OpenAI string (low/med/high) or Youchuan (1/4) — both sent as output_quality int, backend maps
       if ((has('quality') || has('quality_mj') || has('output_quality')) && qualityImg !== 80)
         fd.append('output_quality', qualityImg.toString());
-      if (has('num_inference_steps') && stepsImg)        fd.append('num_inference_steps', stepsImg);
       if (has('hd')              && hd)                  fd.append('hd', String(hd));
       if (has('stylize')         && stylize !== 0)       fd.append('stylize', String(stylize));
       if (has('motion')          && motion)              fd.append('motion', motion);
