@@ -590,8 +590,10 @@ function App() {
       fd.append('prompt', up);
       fd.append('model_keyword', model);
 
-      // Only send aspect_ratio and duration if the model supports them
-      if (has('aspect_ratio')) fd.append('aspect_ratio', isImg ? aspectRatioImg : aspectRatioVid);
+      // aspect_ratio — for Kling, Google, Imagen4 (uses aspect_ratio)
+      // ratio — for ByteDance, Wan, MiniMax (backend maps aspect_ratio form field → payload 'ratio')
+      const ar = isImg ? aspectRatioImg : aspectRatioVid;
+      if (has('aspect_ratio') || has('ratio')) fd.append('aspect_ratio', ar);
       if (!isImg && has('duration')) fd.append('duration', durationVid);
 
       // Only append params supported by this model
@@ -601,6 +603,8 @@ function App() {
       if (has('resolution')      && resolution)          fd.append('resolution', resolution);
       if (has('num_outputs')     && numOutputsImg > 1)   fd.append('num_outputs', numOutputsImg.toString());
       if (has('output_format')   && formatImg !== 'webp')fd.append('output_format', formatImg);
+      // quality (OpenAI string) — send as output_quality int, backend maps to string
+      if (has('quality')         && qualityImg !== 80)   fd.append('output_quality', qualityImg.toString());
       if (has('output_quality')  && qualityImg !== 80)   fd.append('output_quality', qualityImg.toString());
       if (has('num_inference_steps') && stepsImg)        fd.append('num_inference_steps', stepsImg);
       if (has('hd')              && hd)                  fd.append('hd', String(hd));
@@ -611,7 +615,8 @@ function App() {
       if (has('sref')            && sref)                fd.append('sref', sref);
       if (has('thinking_level')  && thinkingLevel !== 'default') fd.append('thinking_level', thinkingLevel);
       if (has('media_resolution')&& mediaResolution !== 'default') fd.append('media_resolution', mediaResolution);
-      if (has('generate_audio'))                         fd.append('generate_audio', String(generateAudio));
+      // generate_audio for Google Veo; sound for Kling — both mapped from same UI toggle
+      if (has('generate_audio') || has('sound'))         fd.append('generate_audio', String(generateAudio));
       if (has('watermark')       && watermark)           fd.append('watermark', String(watermark));
       if (has('return_last_frame')&& returnLastFrame)    fd.append('return_last_frame', String(returnLastFrame));
 

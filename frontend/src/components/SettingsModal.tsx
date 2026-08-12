@@ -275,7 +275,8 @@ export function SettingsModal({
           {/* RIGHT PANE: Settings */}
           <div className="w-1/2 flex flex-col p-8 overflow-y-auto">
 
-            {hasParam('aspect_ratio') && (
+            {/* ratio-based models also show aspect ratio (ByteDance, Wan, MiniMax) */}
+            {(hasParam('aspect_ratio') || hasParam('ratio')) && (
               <div className="mb-10">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className={`text-sm font-semibold ${textMuted}`}>Select Aspect ratio</h3>
@@ -342,24 +343,38 @@ export function SettingsModal({
               </div>
             )}
 
-            {hasParam('resolution') && (
-              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
-                <div className="flex gap-4">
-                  {['480p', '720p', '1080p', '1K', '2K', '4K'].map(res => (
-                    <label key={res} className="flex items-center gap-2 cursor-pointer">
-                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolution === res ? 'border-violet-500' : borderCol}`}>
-                        {resolution === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
-                      </div>
-                      <input type="radio" className="hidden" checked={resolution === res} onChange={() => setResolution(res)} />
-                      <span className="text-sm font-medium">{res}</span>
-                    </label>
-                  ))}
+            {hasParam('resolution') && (() => {
+              // Provider-aware resolution options
+              const prov = activeModalModel?.provider || '';
+              let resOptions: string[];
+              if (mode === 'Image' && (prov === 'QWEN' || prov === 'Wan' || activeModalModel?.id?.startsWith('alibaba'))) {
+                resOptions = ['1K', '2K'];
+              } else if (mode === 'Image' && (prov === 'GOOGLE' || activeModalModel?.id?.includes('imagen'))) {
+                resOptions = ['1k', '2k'];
+              } else if (mode === 'Video') {
+                resOptions = ['480p', '720p', '1080p', '1440p', '2K', '4K'];
+              } else {
+                resOptions = ['720p', '1080p', '1440p', '2K', '4K'];
+              }
+              return (
+                <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
+                  <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Resolution</span>
+                  <div className="flex gap-4 flex-wrap justify-end">
+                    {resOptions.map(res => (
+                      <label key={res} className="flex items-center gap-2 cursor-pointer">
+                        <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${resolution === res ? 'border-violet-500' : borderCol}`}>
+                          {resolution === res && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                        </div>
+                        <input type="radio" className="hidden" checked={resolution === res} onChange={() => setResolution(res)} />
+                        <span className="text-sm font-medium">{res}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {hasParam('generate_audio') && (
+            {(hasParam('generate_audio') || hasParam('sound')) && (
               <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Generate Audio</span>
                 <button
@@ -371,8 +386,8 @@ export function SettingsModal({
               </div>
             )}
 
-            {hasParam('output_quality') && (
-              <div className="flex items-center justify-between border-b ${borderCol} pb-5 mb-5">
+            {(hasParam('quality') || hasParam('output_quality')) && (
+              <div className={`flex items-center justify-between border-b ${borderCol} pb-5 mb-5`}>
                 <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Quality</span>
                 <div className="flex gap-4">
                   {[{ l: 'Low', v: 60 }, { l: 'Medium', v: 80 }, { l: 'High', v: 100 }].map(q => (
@@ -388,22 +403,38 @@ export function SettingsModal({
               </div>
             )}
 
-            {hasParam('duration') && (
-              <div className={`flex items-center justify-between ${hasParam('output_quality') || hasParam('resolution') ? 'border-t mt-5 pt-5 ' + borderCol : ''}`}>
-                <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Duration</span>
-                <div className="flex gap-4">
-                  {['5s', '10s', '15s'].map(d => (
-                    <label key={d} className="flex items-center gap-2 cursor-pointer">
-                      <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${duration === d ? 'border-violet-500' : borderCol}`}>
-                        {duration === d && <div className="h-2 w-2 rounded-full bg-violet-500" />}
-                      </div>
-                      <input type="radio" className="hidden" checked={duration === d} onChange={() => setDuration(d)} />
-                      <span className="text-sm font-medium">{d}</span>
-                    </label>
-                  ))}
+            {hasParam('duration') && (() => {
+              // Dynamic duration options based on model provider
+              const prov = activeModalModel?.provider || '';
+              let durOptions: string[];
+              if (prov === 'BYTEDANCE') {
+                durOptions = ['4s','5s','6s','8s','10s','15s','20s','30s'];
+              } else if (prov === 'KUAISHOU') {
+                durOptions = ['3s','5s','8s','10s','15s'];
+              } else if (prov === 'MINIMAX') {
+                durOptions = ['4s','5s','6s','8s','10s','12s','15s'];
+              } else if (prov === 'GOOGLE') {
+                durOptions = ['4s','6s','8s'];
+              } else {
+                durOptions = ['5s','8s','10s','15s'];
+              }
+              return (
+                <div className={`flex items-center justify-between ${hasParam('output_quality') || hasParam('quality') || hasParam('resolution') ? 'border-t mt-5 pt-5 ' + borderCol : ''}`}>
+                  <span className={`text-sm font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Duration</span>
+                  <div className="flex gap-3 flex-wrap justify-end max-w-[260px]">
+                    {durOptions.map(d => (
+                      <label key={d} className="flex items-center gap-1.5 cursor-pointer">
+                        <div className={`flex h-4 w-4 items-center justify-center rounded-full border ${duration === d ? 'border-violet-500' : borderCol}`}>
+                          {duration === d && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                        </div>
+                        <input type="radio" className="hidden" checked={duration === d} onChange={() => setDuration(d)} />
+                        <span className="text-xs font-medium">{d}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
 
             {hasParam('output_format') && (
