@@ -407,7 +407,6 @@ function App() {
     if (activeSessionId) localStorage.setItem('active_session_id', activeSessionId);
     else localStorage.removeItem('active_session_id');
   }, [activeSessionId]);
-  useEffect(() => { localStorage.setItem('director_assets', JSON.stringify(assets)); }, [assets]);
 
   const activeSession = sessions.find(s => s.id === activeSessionId);
   const activeMessages = activeSession?.messages ?? [];
@@ -482,6 +481,7 @@ function App() {
     try { const s = localStorage.getItem('director_assets'); return s ? JSON.parse(s) : []; }
     catch { return []; }
   });
+  useEffect(() => { localStorage.setItem('director_assets', JSON.stringify(assets)); }, [assets]);
 
   /* ── Media settings ── */
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
