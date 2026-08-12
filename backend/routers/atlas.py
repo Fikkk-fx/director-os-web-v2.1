@@ -54,12 +54,40 @@ _IMAGEN_IMG = _p("aspect_ratio", "resolution", "negative_prompt", "seed")
 _OPENAI_IMG = _p("size", "quality", "output_format", "num_outputs")  # n param
 _FLUX_IMG   = _p("size", "output_format", "seed")
 _YOU_IMG    = _p("aspect_ratio", "hd", "stylize", "chaos", "weird", "sref", "quality_mj", "seed")
+# Per-model max reference images (0 = no ref, 1 = one image, 2 = start+tail for Kling, 4 = OpenAI edit multi)
+# Default for supports_image=True is 1. Overrides stored per-model below.
+KLING_I2V_MODELS = {
+    "kwaivgi/kling-v3.0-pro/image-to-video", "kwaivgi/kling-v3.0-std/image-to-video",
+    "kwaivgi/kling-v3.0-4k/image-to-video",  "kwaivgi/kling-v3.0-turbo/image-to-video",
+    "kwaivgi/kling-video-o3-pro/image-to-video", "kwaivgi/kling-video-o3-std/image-to-video",
+    "kwaivgi/kling-video-o3-4k/image-to-video",  "kwaivgi/kling-video-o1/image-to-video",
+    "kwaivgi/kling-v2.6-pro/image-to-video",
+}
+OPENAI_EDIT_MODELS = {
+    "openai/gpt-image-2/edit", "openai/gpt-image-2-developer/edit",
+    "openai/gpt-image-1.5/edit", "openai/gpt-image-1/edit", "openai/gpt-image-1-mini/edit",
+}
+MULTI_IMAGE_ARRAY_MODELS = OPENAI_EDIT_MODELS.union({
+    "alibaba/wan-2.7/reference-to-video", "atlascloud/wan-2.7-spicy/reference-to-video",
+    "alibaba/happyhorse-1.1/reference-to-video", "alibaba/happyhorse-1.0/reference-to-video",
+    "google/gemini-omni-flash/reference-to-video", "google/gemini-omni-flash/reference-to-video-developer",
+    "vidu/q3/reference-to-video", "vidu/q3-mix/reference-to-video", "vidu/q1/reference-to-video", "vidu/q2/reference-to-video", "vidu/q2-pro/reference-to-video"
+})
+SEEDANCE_REFS_MODELS = {
+    "bytedance/seedance-2.5/reference-to-video", "bytedance/seedance-2.0-mini/reference-to-video",
+    "bytedance/seedance-2.0/reference-to-video", "bytedance/seedance-2.0-fast/reference-to-video"
+}
+MINIMAX_REFS_MODELS = {
+    "minimax/h3/reference-to-video"
+}
+
 _MID_VID    = _p("resolution")
 _BASIC_VID  = _p("aspect_ratio", "duration")
 _BASIC_IMG  = _p("aspect_ratio")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CATALOGUE — id, provider, name, type, mode, supports_image, supported_params
+# CATALOGUE — id, provider, name, type, mode, supports_image, max_ref_images, supported_params
+# max_ref_images: 0=none, 1=one image, 2=start+tail (Kling i2v), 4=multi (OpenAI edit)
 # ─────────────────────────────────────────────────────────────────────────────
 _CATALOGUE = [
     # ── IMAGE ──────────────────────────────────────────────────────────────
@@ -257,7 +285,18 @@ _CATALOGUE = [
     {"id": "youchuan/v8.1/image-to-video",                    "provider": "Midjourney", "name": "Youchuan V8.1 Image-to-Video",          "type": "Video", "mode": "image-to-video",   "supports_image": True,  "supported_params": _MID_VID},
 ]
 
-MODEL_MAP: dict[str, dict] = {m["id"]: m for m in _CATALOGUE}
+# Compute max_ref_images dynamically
+def _max_refs(m: dict) -> int:
+    mid = m["id"]
+    if mid in KLING_I2V_MODELS:   return 2
+    if mid in OPENAI_EDIT_MODELS: return 4
+    if m.get("supports_image"):   return 1
+    return 0
+
+MODEL_MAP: dict[str, dict] = {
+    m["id"]: {**m, "max_ref_images": _max_refs(m)}
+    for m in _CATALOGUE
+}
 
 
 def _headers():
@@ -338,7 +377,8 @@ async def generate_asset(
     return_last_frame: Optional[str] = Form(None),
     thinking_level: Optional[str] = Form(None),
     media_resolution: Optional[str] = Form(None),
-    reference_file: Optional[UploadFile] = File(None)
+    reference_file: Optional[UploadFile] = File(None),
+    reference_file_2: Optional[UploadFile] = File(None),
 ):
     if model_keyword not in MODEL_MAP:
         raise HTTPException(status_code=400, detail=f"Unsupported model: '{model_keyword}'.")
@@ -354,17 +394,31 @@ async def generate_asset(
     supported = set(model_info["supported_params"])
 
     image_url_for_payload: Optional[str] = None
+    image_url_2_for_payload: Optional[str] = None
     raw_bytes: Optional[bytes] = None
+    raw_bytes_2: Optional[bytes] = None
+
+    max_refs = model_info.get("max_ref_images", 0)
 
     if reference_file:
-        if not model_info.get("supports_image", False):
+        if max_refs == 0:
             raise HTTPException(status_code=400, detail=f"Model '{model_keyword}' does not support a reference file.")
         ct = reference_file.content_type or ""
         if not (ct.startswith("image/") or ct.startswith("video/")):
-            raise HTTPException(status_code=400, detail="Invalid file type.")
+            raise HTTPException(status_code=400, detail="Invalid file type for reference_file.")
         raw_bytes = await reference_file.read()
         if len(raw_bytes) > 10 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="Reference file exceeds 10MB limit.")
+            raise HTTPException(status_code=400, detail="reference_file exceeds 10MB limit.")
+
+    if reference_file_2:
+        if max_refs < 2:
+            raise HTTPException(status_code=400, detail=f"Model '{model_keyword}' does not support a second reference file.")
+        ct2 = reference_file_2.content_type or ""
+        if not (ct2.startswith("image/") or ct2.startswith("video/")):
+            raise HTTPException(status_code=400, detail="Invalid file type for reference_file_2.")
+        raw_bytes_2 = await reference_file_2.read()
+        if len(raw_bytes_2) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="reference_file_2 exceeds 10MB limit.")
 
     prediction_id = f"pred_{uuid.uuid4().hex[:12]}"
     if not ATLAS_API_KEY:
@@ -396,6 +450,25 @@ async def generate_asset(
                 )
                 if not image_url_for_payload:
                     raise HTTPException(status_code=502, detail="Atlas returned no URL after upload.")
+
+            # Upload second reference file if provided
+            if raw_bytes_2 is not None:
+                upload_res2 = await client.post(
+                    f"{ATLAS_BASE_URL}/model/uploadMedia",
+                    headers={"Authorization": f"Bearer {ATLAS_API_KEY}"},
+                    files={"file": (reference_file_2.filename, raw_bytes_2, reference_file_2.content_type)}
+                )
+                if upload_res2.status_code not in (200, 201):
+                    raise HTTPException(status_code=502, detail="Failed to upload reference_file_2 to Atlas Cloud.")
+                upload_json2 = upload_res2.json()
+                data_obj2 = upload_json2.get("data", {})
+                image_url_2_for_payload = (
+                    data_obj2.get("download_url") or
+                    data_obj2.get("url") or
+                    upload_json2.get("url")
+                )
+                if not image_url_2_for_payload:
+                    raise HTTPException(status_code=502, detail="Atlas returned no URL for reference_file_2.")
 
             payload: dict = {"model": model_keyword, "prompt": prompt}
             prov = model_info["provider"]
@@ -468,8 +541,33 @@ async def generate_asset(
 
             # ── Image reference ─────────────────────────────────────────
             if image_url_for_payload:
-                payload["image"] = image_url_for_payload
-                payload["image_url"] = image_url_for_payload
+                mid = model_keyword
+                if mid in KLING_I2V_MODELS:
+                    # Kling i2v: image = start frame, end_image = end frame
+                    payload["image"] = image_url_for_payload
+                    if image_url_2_for_payload:
+                        payload["end_image"] = image_url_2_for_payload
+                elif mid in MULTI_IMAGE_ARRAY_MODELS:
+                    # Array of image URLs (OpenAI, Wan, HappyHorse, Gemini, Vidu)
+                    images = [image_url_for_payload]
+                    if image_url_2_for_payload:
+                        images.append(image_url_2_for_payload)
+                    payload["images"] = images
+                elif mid in SEEDANCE_REFS_MODELS:
+                    # Seedance requires reference_images
+                    images = [image_url_for_payload]
+                    if image_url_2_for_payload:
+                        images.append(image_url_2_for_payload)
+                    payload["reference_images"] = images
+                elif mid in MINIMAX_REFS_MODELS:
+                    # Minimax requires refers array of objects
+                    refers = [{"url": image_url_for_payload, "type": "image"}]
+                    if image_url_2_for_payload:
+                        refers.append({"url": image_url_2_for_payload, "type": "image"})
+                    payload["refers"] = refers
+                else:
+                    payload["image"] = image_url_for_payload
+                    payload["image_url"] = image_url_for_payload
 
             # ── Audio: generate_audio (Veo) / sound (Kling) ─────────────
             if "generate_audio" in supported:

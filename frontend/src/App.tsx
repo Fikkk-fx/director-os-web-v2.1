@@ -374,6 +374,14 @@ function App() {
     }
     catch { return [DEMO_SESSION]; }
   });
+  useEffect(() => {
+    // Inject demo session if it doesn't exist
+    setSessions(prev => {
+      if (prev.find(s => s.id === 'demo-v2')) return prev;
+      return [...prev, DEMO_SESSION];
+    });
+  }, []);
+
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() =>
     localStorage.getItem('active_session_id')
   );
@@ -482,7 +490,7 @@ function App() {
   const [mediaResolution, setMediaResolution] = useState('default');
 
   /* ── Files ── */
-  const [refFile, setRefFile]   = useState<File | null>(null);
+  const [refFiles, setRefFiles] = useState<File[]>([]);
   const fileInputRef  = useRef<HTMLInputElement>(null);
   const feedEndRef = useRef<HTMLDivElement>(null);
 
@@ -530,14 +538,14 @@ function App() {
 
   /* ── Handlers ── */
   const handleSendHome = async () => {
-    if (!prompt.trim() && !refFile) return;
+    if (!prompt.trim() && refFiles.length === 0) return;
     if (!activeSessionId) createSession('Home');
     const up = prompt.trim(); setPrompt('');
     const tid = activeSessionId!;
     updateMsgs(p => [...p, {
       id: Date.now().toString(), role: 'user',
-      content: up || (refFile ? 'Sent a reference file.' : ''),
-      imageUrl: refFile && refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : undefined,
+      content: up || (refFiles.length > 0 ? 'Sent reference files.' : ''),
+      imageUrl: refFiles.length > 0 && refFiles[0].type.startsWith('image') ? URL.createObjectURL(refFiles[0]) : undefined,
       timestamp: new Date().toLocaleTimeString(),
     }]);
     setGeneratingSessions(p => ({ ...p, [tid]: true }));
@@ -545,10 +553,10 @@ function App() {
       const fd = new FormData();
       fd.append('prompt', up); fd.append('model', selectedHomeModel);
       fd.append('history', JSON.stringify(activeSession?.messages.map(m => ({ role: m.role, content: m.content })) ?? []));
-      if (refFile) fd.append('reference_image', refFile);
+      if (refFiles[0]) fd.append('reference_image', refFiles[0]);
       const res = await axios.post(`${API_BASE}/api/chat`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: res.data.response, timestamp: new Date().toLocaleTimeString() }]);
-      setRefFile(null);
+      setRefFiles([]);
     } catch (e: any) {
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai', content: `**Error:** ${e.response?.data?.detail || e.message}`, timestamp: new Date().toLocaleTimeString() }]);
     } finally { setGeneratingSessions(p => ({ ...p, [tid]: false })); }
@@ -568,8 +576,8 @@ function App() {
 
     updateMsgs(p => [...p, {
       id: Date.now().toString(), role: 'user', content: up,
-      imageUrl: refFile && refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : undefined,
-      videoUrl: refFile && refFile.type.startsWith('video') ? URL.createObjectURL(refFile) : undefined,
+      imageUrl: refFiles.length > 0 && refFiles[0].type.startsWith('image') ? URL.createObjectURL(refFiles[0]) : undefined,
+      videoUrl: refFiles.length > 0 && refFiles[0].type.startsWith('video') ? URL.createObjectURL(refFiles[0]) : undefined,
       timestamp: new Date().toLocaleTimeString(),
     }]);
     setGeneratingSessions(p => ({ ...p, [tid]: true }));
@@ -610,13 +618,14 @@ function App() {
       if (has('watermark')       && watermark)           fd.append('watermark', String(watermark));
       if (has('return_last_frame')&& returnLastFrame)    fd.append('return_last_frame', String(returnLastFrame));
 
-      if (refFile && mdl?.supports_image) fd.append('reference_file', refFile);
+      if (refFiles[0] && mdl?.supports_image) fd.append('reference_file', refFiles[0]);
+      if (refFiles[1] && mdl?.supports_image) fd.append('reference_file_2', refFiles[1]);
 
       const res = await axios.post(`${API_BASE}/api/atlas/generate`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       const predId = res.data.prediction_id;
       const modelName = res.data.model_name || mdl?.name || model;
 
-      setRefFile(null);
+      setRefFiles([]);
       updateMsgs(p => [...p, { id: (Date.now()+1).toString(), role: 'ai',
         content: `**Generating ${type}...**\n*Model: ${modelName}*\n\nID: \`${predId}\`\nPolling for result...`,
         timestamp: new Date().toLocaleTimeString(),
@@ -983,21 +992,25 @@ function App() {
                   <div className={`glass-elevated rounded-[24px] p-2 transition-all duration-300 hover:-translate-y-0.5`}>
                     
                     {/* Image Preview */}
-                    {refFile && (
-                      <div className="relative self-start mb-2 ml-4 mt-2 group">
-                        <img 
-                          src={refFile.type.startsWith('image') ? URL.createObjectURL(refFile) : ''} 
-                          alt="Reference" 
-                          className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
-                        />
-                        {refFile.type.startsWith('video') && <span className="absolute inset-0 flex items-center justify-center text-white bg-black/40 rounded-[12px]"><Film size={20}/></span>}
-                        <button 
-                          type="button"
-                          onClick={() => setRefFile(null)}
-                          className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
-                        >
-                          <X size={12} strokeWidth={3} />
-                        </button>
+                    {refFiles.length > 0 && (
+                      <div className="flex gap-2 self-start mb-2 ml-4 mt-2">
+                        {refFiles.map((file, idx) => (
+                          <div key={idx} className="relative group">
+                            <img 
+                              src={file.type.startsWith('image') ? URL.createObjectURL(file) : ''} 
+                              alt={`Reference ${idx + 1}`} 
+                              className="h-20 rounded-[12px] object-cover border border-white/20 shadow-md transition-opacity duration-200 group-hover:opacity-90"
+                            />
+                            {file.type.startsWith('video') && <span className="absolute inset-0 flex items-center justify-center text-white bg-black/40 rounded-[12px]"><Film size={20}/></span>}
+                            <button 
+                              type="button"
+                              onClick={() => setRefFiles(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg transition-transform duration-200 hover:scale-110"
+                            >
+                              <X size={12} strokeWidth={3} />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
 
@@ -1008,9 +1021,14 @@ function App() {
                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition duration-200 ${
                           isLight ? 'text-slate-500 hover:bg-black/5 hover:text-slate-900' : 'text-slate-400 hover:bg-white/10 hover:text-white'
                         }`}>
-                        <Plus size={22} className={refFile ? 'text-emerald-400' : ''} />
+                        <Plus size={22} className={refFiles.length > 0 ? 'text-emerald-400' : ''} />
                       </button>
-                      <input type="file" accept="image/*,video/*" ref={fileInputRef} className="hidden" onChange={e => { if (e.target.files?.[0]) setRefFile(e.target.files[0]); }} />
+                      <input type="file" multiple accept="image/*,video/*" ref={fileInputRef} className="hidden" onChange={e => { 
+                        if (e.target.files?.length) {
+                          const filesArray = Array.from(e.target.files);
+                          setRefFiles(prev => [...prev, ...filesArray].slice(0, 4)); // max 4 files
+                        } 
+                      }} />
 
                       {/* Textarea */}
                       <textarea
@@ -1078,7 +1096,7 @@ function App() {
                           if (generateMode === 'Brief') handleSendHome();
                           else handleSendMedia(generateMode);
                         }}
-                        disabled={isGenerating || (!prompt.trim() && !refFile)}
+                        disabled={isGenerating || (!prompt.trim() && refFiles.length === 0)}
                         className={`flex h-10 px-6 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r ${cfg.grad} text-white text-sm font-bold shadow-lg ${cfg.shadow} transition duration-200 hover:-translate-y-0.5 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40`}>
                         Create
                       </button>
