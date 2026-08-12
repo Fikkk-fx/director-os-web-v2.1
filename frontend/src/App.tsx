@@ -83,6 +83,281 @@ interface ChatSession {
   messages: ChatMessage[]; updatedAt: number;
 }
 
+/* ── Simple inline Markdown renderer (no library needed) ─────────── */
+function MarkdownText({ text, isLight }: { text: string; isLight: boolean }) {
+  const lines = text.split('\n');
+  const codeClass = isLight
+    ? 'bg-slate-100 text-slate-800 rounded px-1 font-mono text-[12px]'
+    : 'bg-white/10 text-slate-200 rounded px-1 font-mono text-[12px]';
+  const preClass = isLight
+    ? 'bg-slate-100 text-slate-800 rounded-xl p-3 font-mono text-[12px] overflow-x-auto my-2'
+    : 'bg-black/30 text-slate-200 rounded-xl p-3 font-mono text-[12px] overflow-x-auto my-2';
+  const h2Class = `font-bold text-base mt-3 mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`;
+  const h3Class = `font-bold text-[13px] mt-2 mb-0.5 ${isLight ? 'text-slate-800' : 'text-slate-100'}`;
+  const hrClass = `my-3 border-t ${isLight ? 'border-slate-200' : 'border-white/10'}`;
+  const tableClass = `w-full text-[12px] my-2 border-collapse`;
+
+  function renderInline(s: string): React.ReactNode {
+    // Replace **bold**, *italic*, `code`
+    const parts = s.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);
+    return parts.map((p, i) => {
+      if (p.startsWith('`') && p.endsWith('`') && p.length > 2)
+        return <code key={i} className={codeClass}>{p.slice(1,-1)}</code>;
+      if (p.startsWith('**') && p.endsWith('**') && p.length > 4)
+        return <strong key={i}>{p.slice(2,-2)}</strong>;
+      if (p.startsWith('*') && p.endsWith('*') && p.length > 2)
+        return <em key={i}>{p.slice(1,-1)}</em>;
+      return <span key={i}>{p}</span>;
+    });
+  }
+
+  const elements: React.ReactNode[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // Code block
+    if (line.trim().startsWith('```')) {
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith('```')) {
+        codeLines.push(lines[i]); i++;
+      }
+      elements.push(<pre key={i} className={preClass}><code>{codeLines.join('\n')}</code></pre>);
+      i++; continue;
+    }
+    // Table
+    if (line.includes('|') && lines[i+1]?.match(/^\s*\|[-| ]+\|\s*$/)) {
+      const headers = line.split('|').map(c => c.trim()).filter(Boolean);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].includes('|')) {
+        rows.push(lines[i].split('|').map(c => c.trim()).filter(Boolean));
+        i++;
+      }
+      elements.push(
+        <table key={i} className={tableClass}>
+          <thead><tr>{headers.map((h,j) => <th key={j} className={`text-left pb-1 pr-3 font-bold ${isLight ? 'text-slate-700' : 'text-slate-300'} border-b ${isLight ? 'border-slate-200' : 'border-white/10'}`}>{h}</th>)}</tr></thead>
+          <tbody>{rows.map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci} className={`py-0.5 pr-3 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{cell}</td>)}</tr>)}</tbody>
+        </table>
+      );
+      continue;
+    }
+    // HR
+    if (line.trim() === '---' || line.trim() === '***') {
+      elements.push(<hr key={i} className={hrClass} />); i++; continue;
+    }
+    // H2
+    if (line.startsWith('## ')) {
+      elements.push(<p key={i} className={h2Class}>{renderInline(line.slice(3))}</p>); i++; continue;
+    }
+    // H3
+    if (line.startsWith('### ')) {
+      elements.push(<p key={i} className={h3Class}>{renderInline(line.slice(4))}</p>); i++; continue;
+    }
+    // Empty line
+    if (line.trim() === '') {
+      elements.push(<br key={i} />); i++; continue;
+    }
+    // Normal
+    elements.push(<p key={i} className="leading-[1.75] text-[14px] mb-0">{renderInline(line)}</p>);
+    i++;
+  }
+  return <div className="flex flex-col gap-0.5">{elements}</div>;
+}
+
+/* ── Demo session — end-to-end 4-Turn workflow example ──────────── */
+const DEMO_SESSION: ChatSession = {
+  id: 'demo-v1',
+  title: 'Contoh: Filmmaker Jakarta',
+  tab: 'Home',
+  updatedAt: Date.now() - 2000000,
+  messages: [
+    {
+      id: 'dm1', role: 'user',
+      content: 'Buat video cinematic tentang seorang filmmaker muda di Jakarta yang berjuang mewujudkan film pertamanya.',
+      timestamp: '09:00 AM',
+    },
+    {
+      id: 'dm2', role: 'ai',
+      content: `**[VISION-SKILL REASONING]**
+Tema: Perjuangan kreator muda — universal, emosional, relatable.
+Genre: Coming-of-age Drama / Indie Arthouse.
+
+**[SYS-LOG: RNG INITIATIVE]**
+- Rolled Location: Gang sempit Kemang lama, Jakarta Selatan
+- Rolled Wardrobe: Kemeja linen lusuh, kamera film 16mm vintage
+- Rolled Camera: Dirty Medium OTS + Step-Printing slow motion
+- Rolled Lighting: Deakins Practical Chiaroscuro (satu bohlam pijar)
+
+---
+
+**[PHASE 0 GATEWAY — PILIH STYLE]**
+
+**Opsi 1 — "Sinema Realisme Sosial"**
+Gaya Kamila Andini. Raw, membumi. Flat kumuh di atas bukit Menteng Atas. Cahaya satu bohlam pijar.
+
+**Opsi 2 — "Indie Noir Jakarta"**
+Gaya Wong Kar-Wai × Wim Umboh. Jazz mengalir pelan. Kemang malam hujan. Step-printing di gang sempit.
+
+**Opsi 3 — "Arthouse Ekspresionisme"**
+Gaya Tarkovsky. Kamera diam total. Atap gedung tua, cakrawala Jakarta berkilauan, narasi VO puitis.
+
+---
+🛑 **MANDATORY HARD STOP (TURN 1 COMPLETE)**
+Ketik **1**, **2**, atau **3** untuk memilih style.`,
+      timestamp: '09:00 AM',
+    },
+    {
+      id: 'dm3', role: 'user',
+      content: '2',
+      timestamp: '09:01 AM',
+    },
+    {
+      id: 'dm4', role: 'ai',
+      content: `## FASE 1 — NASKAH SCREENPLAY
+**Style: Indie Noir Jakarta (Wong Kar-Wai × Wim Umboh)**
+
+---
+
+### KLIP 1 [0s–10s] — "THE FILMMAKER'S PRAYER"
+
+- **Lokasi:** Gang sempit Kemang lama, Jakarta Selatan — malam hujan
+- **Karakter:** RAKA (24), filmmaker muda — linen lusuh, Bolex H16 di leher
+
+\`\`\`
+[0s-3s] Raka berdiri diam di bawah atap seng. Hujan memercik di depannya.
+         Jari menekan-nekan dial aperture kamera — klik, klik, klik.
+
+[3s-6s] PAMAN (OS): "Raka, udah jam berapa ini? Pulang dulu lah."
+
+[6s-10s] Raka menutup mata. Satu helaan napas panjang.
+          RAKA (pelan): "Sebentar lagi, Paman. Sebentar lagi."
+\`\`\`
+
+---
+
+### KLIP 2 [0s–10s] — "THE LAST ROLL"
+
+\`\`\`
+[0s-4s] Step-printing slow motion. Raka berjalan di gang yang basah.
+         Pantulan cahaya warung di genangan air. Kamera terangkat — ia merekam.
+
+[4s-7s] CLOSE-UP: wajah nenek tua di balik gerobak nasi goreng. Senyum ompong kaya raya.
+         Raka merekam. Mata berkaca-kaca tapi senyum tersungging.
+
+[7s-10s] MACRO INSERT: Roll film terakhir di tangannya.
+          Label tulisan tangan: "ROLL 12 — TERAKHIR"
+\`\`\`
+
+---
+
+🛑 **MANDATORY HARD STOP (TURN 2 COMPLETE — PHASE 1 SCRIPT)**
+Ketik **ACC Naskah** atau **Lanjut** untuk menyetujui naskah.`,
+      timestamp: '09:01 AM',
+    },
+    {
+      id: 'dm5', role: 'user',
+      content: 'ACC Naskah',
+      timestamp: '09:02 AM',
+    },
+    {
+      id: 'dm6', role: 'ai',
+      content: `## FASE 2 & 3 — SPATIAL BLUEPRINT & ASSET SPECS
+
+---
+
+### SPATIAL BLUEPRINT V2 — Gang Kemang Lama
+
+**[NORTH]** Tembok bata merah, cat mengelupas, lumut hijau di nat bawah
+**[SOUTH]** Warung nasi goreng — neon "ES JERUK" kuning-oranye
+**[EAST]** Gang berlanjut ke kegelapan, cahaya jalan 30m jauhnya
+**[FLOOR]** Aspal retak dengan genangan air memantulkan neon
+
+---
+
+### CharSheet — RAKA
+
+\`\`\`
+3-panel casting reference on pure white background. Indonesian male, 24yo,
+sun-darkened warm brown skin, deep-set eyes, faint stubble. Cream linen shirt
+(2 buttons open), navy trousers, rubber sandals. Bolex H16 camera on neck strap.
+Shot on iPhone 15 Pro 24mm f/1.7, zero airbrushing. --ar 16:9 --style raw
+\`\`\`
+
+---
+
+### EnvSheet — Gang Kemang Lama
+
+\`\`\`
+Narrow Jakarta alley (gang), Kemang, circa 1990s. Night, heavy rain.
+Red brick walls with peeling white paint. Neon-lit warung on right.
+Wet asphalt reflecting orange-yellow neon. Single tungsten bulb at entrance.
+Shot on Kodak Portra 400 film. --ar 16:9 --style raw
+\`\`\`
+
+---
+
+🛑 **MANDATORY HARD STOP (TURN 3 COMPLETE)**
+Ketik **ACC Assets** atau **Lanjut** untuk output FASE 4 & 5 (Prompt Video + Storyboard).`,
+      timestamp: '09:02 AM',
+    },
+    {
+      id: 'dm7', role: 'user',
+      content: 'ACC Assets',
+      timestamp: '09:03 AM',
+    },
+    {
+      id: 'dm8', role: 'ai',
+      content: `## FASE 4 — MASTER VIDEO PROMPT
+
+---
+
+### KLIP 1 — "THE FILMMAKER'S PRAYER"
+
+\`\`\`
+[PROSE & IN-LINE SPATIAL & GLOBAL LOCK]: [0s-3s] [NIGHT, KEMANG GANG]
+In an organic human-held medium shot, Raka (@image_char) — 24yo Indonesian
+male in wrinkled cream linen shirt, single Bolex H16 16mm camera hanging
+on neck — stands frozen under corrugated tin roof, heavy rain curtain
+in foreground, warm orange neon warung glow bleeding onto wet asphalt
+midground. [3s-6s] [RACK FOCUS] Fingers press aperture dial in rhythmic
+clicks. Off-screen voice cuts through rain. [6s-10s] Eyes close one beat.
+Single slow exhale. Raka speaking quietly in fluent Indonesian: "Sebentar
+lagi, Paman. Sebentar lagi." [LOCK: cream linen + navy trousers | gang:
+red brick, wet asphalt, single tungsten | zero duplicate characters]
+
+[ACTING & LIGHTING SCIENCE]: Wong Kar-Wai intimate social realism. Calm
+grounded gaze, occasional single eyelid motion every 4-5s. Warm Indonesian
+skin, velvet complexion, zero speckling. Deakins Practical Chiaroscuro:
+single 2800K tungsten key, deep shadow separation, natural rain diffusion.
+32-bit float audio, rain ambience, clear vocal headroom. [COLOR GRADE]:
+Kodak Portra warm shadows, muted cyan-green midtones, deep blacks.
+
+[CAMERA SCIENCE & KINETIC PHYSICS]: [SUBJECT MOTION: static breath, finger
+clicks on aperture] [CAMERA MOTION: human-held shoulder-rig, gentle breath
+sway, 24fps, 180-degree shutter]. Panavision DXL2, Primo 70, Light Iron
+Color 3, f/1.4 creamy bokeh. Real-time 1.0x. Zero duplicates.
+\`\`\`
+
+---
+
+## FASE 5 — AUDIT CLEARANCE
+
+| # | Check | Status |
+|---|-------|--------|
+| 1 | Action-First <3s | ✅ |
+| 2 | Single-Tag Reference | ✅ |
+| 3 | Full-Body Wardrobe Lock | ✅ |
+| 4 | Spatial Blueprint V2 | ✅ |
+| 5 | Deakins Practical Light | ✅ |
+| 6 | Char Cap ≤1950 | ✅ ~1,842 |
+
+**🎬 FINAL DELIVERY COMPLETE — Prompt siap di-generate di Kling/Seedance/Sora.**`,
+      timestamp: '09:03 AM',
+    },
+  ],
+};
+
 const HOME_MODELS: SelectOption[] = [
   { value: 'openai/gpt-5.6-sol',         label: 'GPT-5.6 Sol'     },
   { value: 'moonshotai/kimi-k3',          label: 'Kimi K3'         },
@@ -117,8 +392,12 @@ function App() {
 
   /* ── Sessions ── */
   const [sessions, setSessions] = useState<ChatSession[]>(() => {
-    try { const s = localStorage.getItem('chat_sessions'); return s ? JSON.parse(s) : []; }
-    catch { return []; }
+    try {
+      const s = localStorage.getItem('chat_sessions');
+      if (s) { const parsed = JSON.parse(s); return parsed.length > 0 ? parsed : [DEMO_SESSION]; }
+      return [DEMO_SESSION];
+    }
+    catch { return [DEMO_SESSION]; }
   });
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() =>
     localStorage.getItem('active_session_id')
@@ -128,6 +407,7 @@ function App() {
     if (activeSessionId) localStorage.setItem('active_session_id', activeSessionId);
     else localStorage.removeItem('active_session_id');
   }, [activeSessionId]);
+  useEffect(() => { localStorage.setItem('director_assets', JSON.stringify(assets)); }, [assets]);
 
   const activeSession = sessions.find(s => s.id === activeSessionId);
   const activeMessages = activeSession?.messages ?? [];
@@ -198,7 +478,10 @@ function App() {
   const [selectedHomeModel, setSelectedHomeModel]   = useState('openai/gpt-5.6-sol');
 
   /* ── Generated Assets ── */
-  const [assets, setAssets] = useState<Array<{id: string; type: 'Image'|'Video'; url: string; prompt: string; model: string; modelName: string; ts: string}>>([]);
+  const [assets, setAssets] = useState<Array<{id: string; type: 'Image'|'Video'; url: string; prompt: string; model: string; modelName: string; ts: string}>>(() => {
+    try { const s = localStorage.getItem('director_assets'); return s ? JSON.parse(s) : []; }
+    catch { return []; }
+  });
 
   /* ── Media settings ── */
   const [aspectRatioImg, setAspectRatioImg] = useState('16:9');
@@ -418,8 +701,10 @@ function App() {
 
   /* ── Classes & Styling ────────────────────────────────────────── */
   const navItems: { id: TabKey; label: string; icon: React.ElementType }[] = [
-    { id: 'Home',   label: 'Home',   icon: Home         },
-    { id: 'Assets', label: 'Assets', icon: FolderKanban },
+    { id: 'Home',   label: 'Home',      icon: Home         },
+    { id: 'Image',  label: 'Image Lab', icon: ImageIcon    },
+    { id: 'Video',  label: 'Video Lab', icon: Video        },
+    { id: 'Assets', label: 'Assets',    icon: FolderKanban },
   ];
 
   const tabCfg = (id: TabKey) => TAB_CFG[id];
@@ -490,7 +775,11 @@ function App() {
                       ? isLight ? `bg-blue-50 ${tc.accentL}` : `bg-white/8 ${tc.accent}`
                       : isLight ? 'text-slate-600 hover:bg-black/5' : 'text-slate-400 hover:bg-white/6'}`}
                 >
-                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br ${tc.grad}`} />
+                  <span className={`flex h-4 w-4 shrink-0 items-center justify-center`}>
+                    {s.tab === 'Image' ? <ImageIcon size={10} className={activeSessionId === s.id ? (isLight ? tc.accentL : tc.accent) : ''} /> :
+                     s.tab === 'Video' ? <Video size={10} className={activeSessionId === s.id ? (isLight ? tc.accentL : tc.accent) : ''} /> :
+                     <Home size={10} className={activeSessionId === s.id ? (isLight ? tc.accentL : tc.accent) : ''} />}
+                  </span>
                   <span className="flex-1 truncate">{s.title}</span>
                   <span onClick={e => deleteSession(e, s.id)}
                     className={`shrink-0 rounded-lg p-1 opacity-0 transition group-hover:opacity-100 ${isLight ? 'hover:text-red-500' : 'hover:text-red-400'}`}>
@@ -665,8 +954,8 @@ function App() {
                           </button>
                         </div>
                       )}
-                      <div className={`whitespace-pre-wrap text-[14px] leading-[1.75] ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                        {msg.content}
+                      <div className={`text-[14px] ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        {msg.role === 'ai' ? <MarkdownText text={msg.content} isLight={isLight} /> : <span className="whitespace-pre-wrap leading-[1.75]">{msg.content}</span>}
                       </div>
                       <div className={`mt-2 text-right text-[10px] ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{msg.timestamp}</div>
                     </div>
