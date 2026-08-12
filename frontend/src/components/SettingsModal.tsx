@@ -23,10 +23,6 @@ interface SettingsModalProps {
   setNegPrompt: (v: string) => void;
   format: string;
   setFormat: (v: string) => void;
-  guidance: string;
-  setGuidance: (v: string) => void;
-  steps: string;
-  setSteps: (v: string) => void;
   seed: string;
   setSeed: (v: string) => void;
   resolution: string;
@@ -63,8 +59,6 @@ export function SettingsModal({
   duration, setDuration,
   negPrompt, setNegPrompt,
   format, setFormat,
-  guidance, setGuidance,
-  steps, setSteps,
   seed, setSeed,
   resolution, setResolution,
   generateAudio, setGenerateAudio,

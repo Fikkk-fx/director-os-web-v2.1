@@ -1224,10 +1224,6 @@ function App() {
         setNegPrompt={generateMode === 'Image' ? setNegPromptImg : setNegPromptVid}
         format={formatImg}
         setFormat={setFormatImg}
-        guidance={guidanceImg}
-        setGuidance={setGuidanceImg}
-        steps={stepsImg}
-        setSteps={setStepsImg}
         seed={seedImg}
         setSeed={setSeedImg}
         resolution={resolution}
